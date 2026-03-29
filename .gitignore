@@ -1,0 +1,13 @@
+# Lean 4 build artifacts
+/build/
+/.lake/
+/lake-packages/
+/lake-manifest.json
+
+# Editor
+.vscode/
+*.olean
+
+# OS
+.DS_Store
+Thumbs.db
