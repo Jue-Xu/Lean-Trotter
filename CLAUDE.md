@@ -1,4 +1,6 @@
-# Lie–Trotter Product Formula — Lean 4 Proof Blueprint
+# Lie–Trotter Product Formula — Lean 4 Formalization
+
+## Status: ✅ Complete (0 sorry's, full build passes)
 
 ## Goal
 
@@ -11,9 +13,17 @@ for elements $A, B$ in a complete normed algebra $\mathfrak{A}$ over $\mathbb{R}
 ```lean
 theorem lie_trotter (A B : 𝔸) :
     Filter.Tendsto
-      (fun n : ℕ => (exp 𝕂 ((n : 𝕂)⁻¹ • A) * exp 𝕂 ((n : 𝕂)⁻¹ • B)) ^ n)
-      atTop (nhds (exp 𝕂 (A + B)))
+      (fun n : ℕ => (exp ((n : 𝕂)⁻¹ • A) * exp ((n : 𝕂)⁻¹ • B)) ^ n)
+      atTop (nhds (exp (A + B)))
 ```
+
+## Constraints
+
+- **Lean:** 4.29.0-rc8 (via `lean-toolchain`)
+- **Mathlib:** latest master (commit `06a46dae` pinned in `lake-manifest.json`)
+- **Typeclass requirements:** `[NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]`
+- `NormOneClass 𝔸` is required for `norm_pow_le` in newer Mathlib
+- `include 𝕂 in` is needed before lemmas where `𝕂` appears in proofs but not types (since `exp` no longer takes a field parameter)
 
 ---
 
@@ -51,7 +61,8 @@ Lean-Trotter/
 ├── LieTrotter.lean            ← root import file
 ├── lakefile.lean
 ├── lean-toolchain
-└── BLUEPRINT.md
+├── CLAUDE.md              ← this file (project goals, decisions, constraints)
+└── CHANGELOG.md           ← lab notes (completed tasks, failed approaches)
 ```
 
 ---
@@ -99,11 +110,11 @@ Lean-Trotter/
 
 ---
 
-#### Task C: Quadratic Step Error (🔶 1 sorry remains)
+#### Task C: Quadratic Step Error (✅ Done)
 
 | Sub-task | Statement | Difficulty | Status |
 |----------|-----------|------------|--------|
-| C1. `norm_exp_mul_exp_sub_exp_add'` | $\|e^a e^b - e^{a+b}\| \le 2\|a\|\|b\| e^{\|a\|+\|b\|}$ | Hard | 🔶 (1 sorry: `norm_exp_cross_term_le`) |
+| C1. `norm_exp_mul_exp_sub_exp_add'` | $\|e^a e^b - e^{a+b}\| \le 2\|a\|\|b\| e^{\|a\|+\|b\|}$ | Hard | ✅ Proved |
 | C2. `lie_trotter_step_error` | $\|e^{A/n} e^{B/n} - e^{(A+B)/n}\| \le \frac{\|A\|\|B\|}{n^2} e^{(\|A\|+\|B\|)/n}$ | Medium | ✅ Proved |
 
 **File:** `LieTrotter/StepError.lean`
@@ -115,8 +126,10 @@ The proof uses a cleaner strategy than the second-order expansion:
 2. **Triangle inequality**: Both parts bounded by $(e^{\|a\|}-1)(e^{\|b\|}-1)$, giving $\le 2(e^{\|a\|}-1)(e^{\|b\|}-1)$
 3. **Final bound** via `exp_sub_one_le_mul_exp`: $(e^s-1)(e^t-1) \le st \cdot e^{s+t}$
 
-**Remaining sorry**: `norm_exp_cross_term_le` — proves $\|e^{a+b} - e^a - e^b + 1\| \le (e^{\|a\|}-1)(e^{\|b\|}-1)$.
-This requires a power series argument: at each order $k \ge 2$, $\|(a+b)^k - a^k - b^k\| \le (\|a\|+\|b\|)^k - \|a\|^k - \|b\|^k$ (cross terms only), then sum to get $(e^{\|a\|+\|b\|} - 1 - (\|a\|+\|b\|)) - (e^{\|a\|} - 1 - \|a\|) - (e^{\|b\|} - 1 - \|b\|) = e^{\|a\|+\|b\|} - e^{\|a\|} - e^{\|b\|} + 1 = (e^{\|a\|}-1)(e^{\|b\|}-1)$.
+**C1 cross-term bound** (`norm_exp_cross_term_le`): proved via inductive lemma
+`norm_pow_add_sub_pow_sub_pow`: $\|(a+b)^m - a^m - b^m\| \le (\|a\|+\|b\|)^m - \|a\|^m - \|b\|^m$ for $m \ge 1$,
+using the identity $(a+b)^{m+1} - a^{m+1} - b^{m+1} = (a+b)((a+b)^m - a^m - b^m) + ab^m + ba^m$.
+Then tsum assembly sums to $(e^{\|a\|}-1)(e^{\|b\|}-1)$ via `Real.exp_add` and `ring`.
 
 **C2** proved by applying C1 with $a = A/n$, $b = B/n$, using `norm_smul`, `norm_inv`, `RCLike.norm_natCast`, and `field_simp; ring`.
 
@@ -145,12 +158,12 @@ This requires a power series argument: at each order $k \ge 2$, $\|(a+b)^k - a^k
 
 ### Track 4 — Assembly
 
-#### Task E: Main Theorem (🔶 2 sorry's remain in E1)
+#### Task E: Main Theorem (✅ Done)
 
 | Sub-task | Statement | Difficulty | Status |
 |----------|-----------|------------|--------|
-| E1. `lie_trotter_error_rate` | $\exists C > 0,\; \|P_n^n - e^{A+B}\| \le C/n$ | Medium | 🔶 (2 sorry's: max bound + final calc) |
-| E2. `lie_trotter` | $P_n^n \to e^{A+B}$ | Easy | ✅ Proved (modulo E1) |
+| E1. `lie_trotter_error_rate` | $\exists C > 0,\; \|P_n^n - e^{A+B}\| \le C/n$ | Medium | ✅ Proved |
+| E2. `lie_trotter` | $P_n^n \to e^{A+B}$ | Easy | ✅ Proved |
 
 **File:** `LieTrotter/Assembly.lean`
 
@@ -186,18 +199,18 @@ These are nice-to-haves once the main theorem compiles without `sorry`.
 ```
 Phase 1 (parallel):    A (✅)     B1,B2 (✅)     D2 (✅)
                          │           │               │
-Phase 2 (parallel):    A (done)   B3,B4 (✅)     D1 (✅)
+Phase 2 (parallel):    A (✅)     B3,B4 (✅)     D1 (✅)
                                      │
-Phase 3:                           C1 (🔶)  ← 1 sorry: norm_exp_cross_term_le
+Phase 3:                           C1 (✅)
                                      │
 Phase 4:                           C2 (✅)
                                      │
-Phase 5:              E1 (🔶)  ← 2 sorry's: max bound + final calc
-                        │
-Phase 6:              E2 (✅)
+Phase 5:                           E1 (✅)
+                                     │
+Phase 6:                           E2 (✅)
 ```
 
-**Critical path:** ~~B3 → B4 →~~ C1 (cross-term) → E1 (assembly calc)
+**All tasks complete.** Critical path was: B3 → B4 → C1 → C2 → E1 → E2
 
 ---
 
@@ -245,34 +258,40 @@ Phase 6:              E2 (✅)
 
 ```bash
 cd Lean-Trotter
-lake update
-lake exe cache get    # download Mathlib oleans (~3 GB)
-lake build            # type-checks; will warn on sorry's
+export PATH="$HOME/.elan/bin:$PATH"  # if lake not on PATH
+lake update            # fetch Mathlib + dependencies
+lake exe cache get     # download Mathlib oleans (~3 GB)
+lake build             # type-checks all modules
 ```
+
+Expected: `Build completed successfully` with only lint warnings about unused section variables.
 
 ---
 
 ## `sorry` Census
 
-| File | Count | Lemmas |
-|------|-------|--------|
-| `LieTrotter/Telescoping.lean` | 0 | — |
-| `LieTrotter/ExpBounds.lean` | 0 | — |
-| `LieTrotter/StepError.lean` | 1 | `norm_exp_cross_term_le` (private helper for C1) |
-| `LieTrotter/ExpDivPow.lean` | 0 | — |
-| `LieTrotter/Assembly.lean` | 2 | `h_max` bound + final calc step in E1 |
-| **Total** | **3** | |
+| File | Count |
+|------|-------|
+| `LieTrotter/Telescoping.lean` | 0 |
+| `LieTrotter/ExpBounds.lean` | 0 |
+| `LieTrotter/StepError.lean` | 0 |
+| `LieTrotter/ExpDivPow.lean` | 0 |
+| `LieTrotter/Assembly.lean` | 0 |
+| **Total** | **0** |
 
-### Remaining sorry details
+## Design Decisions
 
-1. **`norm_exp_cross_term_le`** (StepError.lean:47) — `‖e^{a+b} - e^a - e^b + 1‖ ≤ (e^{\|a\|}-1)(e^{\|b\|}-1)`.
-   Requires power series termwise bound: at order $k \ge 2$, the "cross terms" of $(a+b)^k$ satisfy $\|(a+b)^k - a^k - b^k\| \le (\|a\|+\|b\|)^k - \|a\|^k - \|b\|^k$. Sum and use $e^{s+t} - e^s - e^t + 1 = (e^s-1)(e^t-1)$.
+1. **Algebraic factorization for C1** (instead of second-order expansion): Used
+   $e^a e^b - e^{a+b} = (e^a-1)(e^b-1) - (e^{a+b}-e^a-e^b+1)$
+   to split into two terms each bounded by $(e^s-1)(e^t-1)$. This avoids the tedious cross-term bookkeeping of the expansion approach.
 
-2. **`h_max`** (Assembly.lean:58) — `max ‖P‖ ‖Q‖ ≤ exp((‖A‖+‖B‖)/n)`.
-   Follows from B1 + `norm_mul_le` for ‖P‖ and B1 + `norm_add_le` for ‖Q‖.
+2. **Inductive cross-term bound**: Proved $\|(a+b)^m - a^m - b^m\| \le (\|a\|+\|b\|)^m - \|a\|^m - \|b\|^m$ by induction using the identity $(a+b)^{m+1} - a^{m+1} - b^{m+1} = (a+b)((a+b)^m-a^m-b^m) + ab^m + ba^m$. Works in non-commutative algebras without multinomial expansion.
 
-3. **Final calc** (Assembly.lean:69) — Simplify $n \cdot \frac{2\|A\|\|B\|}{n^2} \cdot e^{s/n} \cdot e^{s/n}^{n-1} \le C/n$.
-   Uses $e^{s/n}^n = e^s$ (exact equality via `Real.exp_natMul`) and algebra.
+3. **`include 𝕂 in` pattern**: Since `NormedSpace.exp` no longer takes a field parameter in newer Mathlib, `𝕂` doesn't appear in lemma types involving `exp`. Use `include 𝕂 in` before each lemma that needs `𝕂` in its proof body (for `exp_tsum_form`, `exp_summable`, etc.).
+
+4. **`NormOneClass 𝔸`**: Required in newer Mathlib for `norm_pow_le` to work. Added to all section variable declarations.
+
+5. **Error constant**: `C = 2‖A‖‖B‖ exp(2(‖A‖+‖B‖)) + 1` — the `+1` absorbs the slack from `exp(s) ≤ exp(2s)` and ensures `C > 0` even when `A = 0` or `B = 0`.
 
 ---
 
