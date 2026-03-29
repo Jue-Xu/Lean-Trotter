@@ -25,6 +25,7 @@ Key identity: since `a/n` commutes with itself, we get
 The scalar algebra step `n • (n⁻¹ • a) = a` uses `smul_smul` + `mul_inv_cancel`.
 -/
 
+omit [NormOneClass 𝔸] in
 include 𝕂 in
 /-- `exp(a/n)^n = exp(a)` in a complete normed algebra. -/
 lemma exp_div_pow (a : 𝔸) (n : ℕ) (hn : 0 < n) :
@@ -41,6 +42,7 @@ lemma exp_div_pow (a : 𝔸) (n : ℕ) (hn : 0 < n) :
 `‖exp(c • a)‖ ≤ exp(‖c‖ · ‖a‖)` from B1 and `‖c • a‖ ≤ ‖c‖ · ‖a‖`.
 -/
 
+omit [CompleteSpace 𝔸] in
 include 𝕂 in
 /-- `‖exp(c • a)‖ ≤ exp(‖c‖ · ‖a‖)`. -/
 lemma norm_exp_smul_le (c : 𝕂) (a : 𝔸) :

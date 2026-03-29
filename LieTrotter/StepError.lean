@@ -28,7 +28,7 @@ Then expand the product and bound each cross term.
 -/
 
 -- Auxiliary: Real.exp x - 1 ≤ x * Real.exp x for x ≥ 0
-private lemma exp_sub_one_le_mul_exp {x : ℝ} (hx : 0 ≤ x) :
+private lemma exp_sub_one_le_mul_exp {x : ℝ} (_hx : 0 ≤ x) :
     Real.exp x - 1 ≤ x * Real.exp x := by
   have h1 := Real.add_one_le_exp (-x)
   have hexp_pos := Real.exp_pos x
@@ -39,6 +39,7 @@ private lemma exp_sub_one_le_mul_exp {x : ℝ} (hx : 0 ≤ x) :
   linarith
 
 -- Auxiliary: ‖(a+b)^m - a^m - b^m‖ ≤ (‖a‖+‖b‖)^m - ‖a‖^m - ‖b‖^m for m ≥ 1
+omit [CompleteSpace 𝔸] in
 private lemma norm_pow_add_sub_pow_sub_pow (a b : 𝔸) :
     ∀ m : ℕ, 1 ≤ m →
       ‖(a + b) ^ m - a ^ m - b ^ m‖ ≤

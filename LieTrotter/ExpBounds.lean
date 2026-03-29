@@ -29,6 +29,7 @@ variable {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClas
 -/
 
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 include 𝕂 in
 lemma exp_tsum_form (a : 𝔸) :
     exp a = ∑' n, (((Nat.factorial n : 𝕂)⁻¹) • a ^ n : 𝔸) := by
@@ -36,12 +37,14 @@ lemma exp_tsum_form (a : 𝔸) :
     congrFun (NormedSpace.exp_eq_tsum (𝕂 := 𝕂) (𝔸 := 𝔸)) a
 
 
+omit [NormOneClass 𝔸] in
 include 𝕂 in
 lemma exp_summable (a : 𝔸) :
     Summable (fun n => (((Nat.factorial n : 𝕂)⁻¹) • a ^ n : 𝔸)) := by
   simpa [inv_natCast_smul_eq 𝕂] using
     NormedSpace.expSeries_summable' (𝕂 := 𝕂) a
 
+omit [CompleteSpace 𝔸] in
 /-- The norm of each term `(n!)⁻¹ • a^n` is bounded by `‖a‖^n / n!`. -/
 lemma norm_exp_term_le (a : 𝔸) (n : ℕ) :
     ‖(((Nat.factorial n : 𝕂)⁻¹) • a ^ n : 𝔸)‖ ≤ ‖a‖ ^ n / (Nat.factorial n : ℝ) := by
@@ -64,6 +67,7 @@ lemma real_exp_eq_tsum (x : ℝ) :
 ## B1: Norm bound on the exponential
 -/
 
+omit [CompleteSpace 𝔸] in
 include 𝕂 in
 lemma norm_exp_le (a : 𝔸) : ‖exp a‖ ≤ Real.exp ‖a‖ := by
   rw [exp_tsum_form (𝕂 := 𝕂), real_exp_eq_tsum]
