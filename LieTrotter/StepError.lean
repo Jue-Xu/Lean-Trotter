@@ -516,6 +516,120 @@ theorem norm_exp_cross_tail_le (a b : 𝔸) :
         ring
 
 /-!
+## C1c: Refined Lie-Trotter error with commutator extracted
+
+`exp(x)exp(y) - exp(x+y) = (xy-yx)/2 + R'(x,y)`
+
+where `‖R'(x,y)‖ ≤ (3/2) ‖x‖ ‖y‖ (‖x‖+‖y‖) exp(‖x‖+‖y‖)`.
+-/
+
+-- Sub-lemma A: ‖(exp(x)-1)(exp(y)-1) - xy‖ bound
+include 𝕂 in
+private lemma norm_exp_sub_one_mul_exp_sub_one_sub_mul_le (x y : 𝔸) :
+    ‖(exp x - 1) * (exp y - 1) - x * y‖ ≤
+      ‖x‖ ^ 2 / 2 * Real.exp ‖x‖ * (Real.exp ‖y‖ - 1) +
+      ‖x‖ * (‖y‖ ^ 2 / 2 * Real.exp ‖y‖) := by
+  -- Algebraic identity: (e^x-1)(e^y-1) - xy = (e^x-1-x)(e^y-1) + x(e^y-1-y)
+  have alg : (exp x - 1) * (exp y - 1) - x * y =
+      (exp x - 1 - x) * (exp y - 1) + x * (exp y - 1 - y) := by noncomm_ring
+  rw [alg]
+  calc ‖(exp x - 1 - x) * (exp y - 1) + x * (exp y - 1 - y)‖
+      ≤ ‖(exp x - 1 - x) * (exp y - 1)‖ + ‖x * (exp y - 1 - y)‖ := norm_add_le _ _
+    _ ≤ ‖exp x - 1 - x‖ * ‖exp y - 1‖ + ‖x‖ * ‖exp y - 1 - y‖ := by
+        gcongr <;> exact norm_mul_le _ _
+    _ ≤ (‖x‖ ^ 2 / 2 * Real.exp ‖x‖) * (Real.exp ‖y‖ - 1) +
+        ‖x‖ * (‖y‖ ^ 2 / 2 * Real.exp ‖y‖) := by
+        gcongr
+        · exact norm_exp_sub_one_sub_le (𝕂 := 𝕂) x
+        · exact norm_exp_sub_one_le (𝕂 := 𝕂) y
+        · exact norm_exp_sub_one_sub_le (𝕂 := 𝕂) y
+
+-- Main refined bound: extract commutator from Lie-Trotter error
+include 𝕂 in
+/-- **Refined Lie-Trotter error**: after extracting the commutator `(xy-yx)/2`,
+    the remainder is cubic:
+    `‖exp(x)exp(y) - exp(x+y) - (2⁻¹)•(xy-yx)‖ ≤ (3/2)‖x‖‖y‖(‖x‖+‖y‖) exp(‖x‖+‖y‖)` -/
+theorem norm_exp_mul_exp_sub_exp_add_sub_comm_le (x y : 𝔸) :
+    ‖exp x * exp y - exp (x + y) - (2 : 𝕂)⁻¹ • (x * y - y * x)‖ ≤
+      3 / 2 * ‖x‖ * ‖y‖ * (‖x‖ + ‖y‖) * Real.exp (‖x‖ + ‖y‖) := by
+  -- Step 1: Algebraic identity
+  -- exp(x)exp(y) - exp(x+y) = (exp(x)-1)(exp(y)-1) - cross(x,y)
+  -- where cross(x,y) = exp(x+y) - exp(x) - exp(y) + 1
+  -- So exp(x)exp(y) - exp(x+y) - (2⁻¹)•(xy-yx)
+  --   = [(exp(x)-1)(exp(y)-1) - xy] - [cross(x,y) - (2⁻¹)•(xy+yx)]
+  -- since xy - (2⁻¹)•(xy+yx) = (2⁻¹)•(xy-yx)
+  have alg : exp x * exp y - exp (x + y) - (2 : 𝕂)⁻¹ • (x * y - y * x) =
+      ((exp x - 1) * (exp y - 1) - x * y) -
+      (exp (x + y) - exp x - exp y + 1 -
+        (2 : 𝕂)⁻¹ • ((x + y) ^ 2 - x ^ 2 - y ^ 2)) := by
+    have h2 : (2 : 𝕂)⁻¹ • ((x + y) ^ 2 - x ^ 2 - y ^ 2) =
+        (2 : 𝕂)⁻¹ • (x * y + y * x) := by
+      congr 1; ring
+    rw [h2]
+    have key : x * y - (2 : 𝕂)⁻¹ • (x * y + y * x) =
+        (2 : 𝕂)⁻¹ • (x * y - y * x) := by
+      have h2inv : (2 : 𝕂)⁻¹ + (2 : 𝕂)⁻¹ = 1 := by
+        field_simp; norm_num
+      rw [show x * y = (1 : 𝕂) • (x * y) from (one_smul _ _).symm,
+          show (1 : 𝕂) = (2 : 𝕂)⁻¹ + (2 : 𝕂)⁻¹ from h2inv.symm,
+          add_smul, smul_sub]
+      abel
+    -- After rewriting, both sides have (2⁻¹)•(xy+yx) as a common smul term
+    -- Set it as a variable so noncomm_ring can handle the pure ring identity
+    set t := (2 : 𝕂)⁻¹ • (x * y + y * x)
+    -- key says: x * y - t = (2⁻¹)•(x*y - y*x)
+    -- So: LHS = exp x * exp y - exp (x + y) - (x * y - t)
+    --        = exp x * exp y - exp (x + y) - x * y + t
+    -- RHS = ((exp x - 1) * (exp y - 1) - x * y) - (exp (x + y) - exp x - exp y + 1 - t)
+    -- Both simplify to the same thing
+    rw [← key]
+    noncomm_ring
+  rw [alg]
+  -- Step 2: Triangle inequality
+  calc ‖((exp x - 1) * (exp y - 1) - x * y) -
+        (exp (x + y) - exp x - exp y + 1 -
+          (2 : 𝕂)⁻¹ • ((x + y) ^ 2 - x ^ 2 - y ^ 2))‖
+      ≤ ‖(exp x - 1) * (exp y - 1) - x * y‖ +
+        ‖exp (x + y) - exp x - exp y + 1 -
+          (2 : 𝕂)⁻¹ • ((x + y) ^ 2 - x ^ 2 - y ^ 2)‖ := norm_sub_le _ _
+    _ ≤ (‖x‖ ^ 2 / 2 * Real.exp ‖x‖ * (Real.exp ‖y‖ - 1) +
+          ‖x‖ * (‖y‖ ^ 2 / 2 * Real.exp ‖y‖)) +
+        ((Real.exp ‖x‖ - 1) * (Real.exp ‖y‖ - 1) - ‖x‖ * ‖y‖) := by
+        gcongr
+        · exact norm_exp_sub_one_mul_exp_sub_one_sub_mul_le (𝕂 := 𝕂) x y
+        · exact norm_exp_cross_tail_le (𝕂 := 𝕂) x y
+    _ ≤ 3 / 2 * ‖x‖ * ‖y‖ * (‖x‖ + ‖y‖) * Real.exp (‖x‖ + ‖y‖) := by
+        -- Bound sub_A: use exp(t)-1 ≤ t·exp(t)
+        have hs := norm_nonneg x
+        have ht := norm_nonneg y
+        have h_ea := exp_sub_one_le_mul_exp hs  -- exp(‖x‖)-1 ≤ ‖x‖·exp(‖x‖)
+        have h_eb := exp_sub_one_le_mul_exp ht  -- exp(‖y‖)-1 ≤ ‖y‖·exp(‖y‖)
+        -- Bound the cross_tail: (exp(s)-1)(exp(t)-1) - st ≤ st(s+t)exp(s+t)
+        have h_cross := exp_sub_one_mul_sub_le hs ht
+        -- Now combine: all terms are ≤ C·‖x‖·‖y‖·(‖x‖+‖y‖)·exp(‖x‖+‖y‖)
+        -- sub_A term 1: ‖x‖²/2·exp(‖x‖)·(exp(‖y‖)-1) ≤ ‖x‖²‖y‖/2·exp(‖x‖+‖y‖)
+        have h1 : ‖x‖ ^ 2 / 2 * Real.exp ‖x‖ * (Real.exp ‖y‖ - 1) ≤
+            ‖x‖ ^ 2 * ‖y‖ / 2 * Real.exp (‖x‖ + ‖y‖) := by
+          have : Real.exp ‖x‖ * (Real.exp ‖y‖ - 1) ≤
+              Real.exp ‖x‖ * (‖y‖ * Real.exp ‖y‖) := by gcongr
+          calc ‖x‖ ^ 2 / 2 * Real.exp ‖x‖ * (Real.exp ‖y‖ - 1)
+              ≤ ‖x‖ ^ 2 / 2 * (Real.exp ‖x‖ * (‖y‖ * Real.exp ‖y‖)) := by
+                nlinarith [Real.exp_pos ‖x‖, sq_nonneg ‖x‖,
+                  Real.add_one_le_exp ‖y‖]
+            _ = ‖x‖ ^ 2 * ‖y‖ / 2 * Real.exp (‖x‖ + ‖y‖) := by
+                rw [Real.exp_add]; ring
+        -- sub_A term 2: ‖x‖·‖y‖²/2·exp(‖y‖) ≤ ‖x‖·‖y‖²/2·exp(‖x‖+‖y‖)
+        have h2 : ‖x‖ * (‖y‖ ^ 2 / 2 * Real.exp ‖y‖) ≤
+            ‖x‖ * ‖y‖ ^ 2 / 2 * Real.exp (‖x‖ + ‖y‖) := by
+          have : Real.exp ‖y‖ ≤ Real.exp (‖x‖ + ‖y‖) := by
+            gcongr; linarith
+          nlinarith [sq_nonneg ‖y‖]
+        -- Now: total ≤ ‖x‖²‖y‖/2 · E + ‖x‖‖y‖²/2 · E + ‖x‖‖y‖(‖x‖+‖y‖) · E
+        --           = ‖x‖‖y‖(‖x‖+‖y‖)/2 · E + ‖x‖‖y‖(‖x‖+‖y‖) · E
+        --           = (3/2)‖x‖‖y‖(‖x‖+‖y‖) · E
+        nlinarith [Real.exp_pos (‖x‖ + ‖y‖)]
+
+/-!
 ## C2: Lie-Trotter step error
 
 Specialization of C1 to `a = A/n`, `b = B/n`:
