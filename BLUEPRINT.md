@@ -74,95 +74,83 @@ Lean-Trotter/
 
 ### Track 2 — Analysis (exponential series)
 
-#### Task B: Exponential Remainder Bounds (🔴 Not started)
+#### Task B: Exponential Remainder Bounds (✅ Done)
 
 | Sub-task | Statement | Difficulty | Status |
 |----------|-----------|------------|--------|
-| B1. `norm_exp_le` | $\|e^a\| \le e^{\|a\|}$ | Easy | 🔴 |
-| B2. `norm_exp_sub_one_le` | $\|e^a - 1\| \le e^{\|a\|} - 1$ | Easy | 🔴 |
-| B3. `exp_sub_one_sub_bound_real` | $e^x - 1 - x \le \frac{x^2}{2} e^x$ for $x \ge 0$ | Medium | 🔴 |
-| B4. `norm_exp_sub_one_sub_le` | $\|e^a - 1 - a\| \le \frac{\|a\|^2}{2} e^{\|a\|}$ | Medium | 🔴 |
+| B1. `norm_exp_le` | $\|e^a\| \le e^{\|a\|}$ | Easy | ✅ Proved |
+| B2. `norm_exp_sub_one_le` | $\|e^a - 1\| \le e^{\|a\|} - 1$ | Easy | ✅ Proved |
+| B3. `exp_sub_one_sub_bound_real` | $e^x - 1 - x \le \frac{x^2}{2} e^x$ for $x \ge 0$ | Medium | ✅ Proved |
+| B4. `norm_exp_sub_one_sub_le` | $\|e^a - 1 - a\| \le \frac{\|a\|^2}{2} e^{\|a\|}$ | Medium | ✅ Proved |
 
 **File:** `LieTrotter/ExpBounds.lean`
 
 **Proof strategies:**
 
-- **B1–B2:** Follow from the power series $e^a = \sum a^k/k!$, triangle inequality, and comparison with the real exponential. Mathlib has `NormedSpace.exp_series_summable` and `norm_tsum_le_tsum_norm`. Check if `NormedSpace.norm_exp_le_of_norm_le` or similar already exists.
+**Proof techniques used:**
 
-- **B3 (real analysis):**
-  $$e^x - 1 - x = \sum_{k=2}^{\infty} \frac{x^k}{k!} \le \frac{x^2}{2} \sum_{j=0}^{\infty} \frac{x^j}{j!} = \frac{x^2}{2} e^x$$
-  Uses $k! \ge 2 \cdot (k-2)!$ for $k \ge 2$. In Lean: work with `Real.hasSum_exp` or `Real.exp_eq_tsum`, shift the index by 2, bound factorials with `Nat.factorial_pos` and explicit arithmetic.
+- **B1–B2:** Write `exp` as `∑' n, (n!)⁻¹ • a^n` via `exp_tsum_form`, apply `norm_tsum_le_tsum_norm`, bound each term by `‖a‖^n/n!` via `norm_exp_term_le`, recognize RHS as `Real.exp ‖a‖`. B2 shifts the index by 1 using `tsum_eq_zero_add`.
 
-- **B4:** Combine B3 with the norm series bound. Write $e^a - 1 - a = \sum_{k \ge 2} a^k/k!$, take norms, reduce to the real bound B3 applied to $\|a\|$.
+- **B3:** Write `exp(x)-1-x = ∑' n, x^{n+2}/(n+2)!`, prove termwise `x^{n+2}/(n+2)! ≤ x²/2 · x^n/n!` using auxiliary `two_mul_factorial_le : 2·n! ≤ (n+2)!`, sum via `tsum_le_tsum`, factor out `x²/2` via `tsum_mul_left`.
 
-**Estimated lines:** ~80
+- **B4:** Same shifted-series technique as B2 (shift by 2), bound norms by `‖a‖^{n+2}/(n+2)!`, recognize sum as `exp(‖a‖)-1-‖a‖`, then apply B3.
+
+**Actual lines:** ~170 (including 7 private helper lemmas for the `expSeries`/`tsum` interface)
 
 ---
 
-#### Task C: Quadratic Step Error (🔴 Not started — HARDEST)
+#### Task C: Quadratic Step Error (🔶 1 sorry remains)
 
 | Sub-task | Statement | Difficulty | Status |
 |----------|-----------|------------|--------|
-| C1. `norm_exp_mul_exp_sub_exp_add'` | $\|e^a e^b - e^{a+b}\| \le 2\|a\|\|b\| e^{\|a\|+\|b\|}$ | Hard | 🔴 |
-| C2. `lie_trotter_step_error` | $\|e^{A/n} e^{B/n} - e^{(A+B)/n}\| \le \frac{\|A\|\|B\|}{n^2} e^{(\|A\|+\|B\|)/n}$ | Medium | 🔴 |
+| C1. `norm_exp_mul_exp_sub_exp_add'` | $\|e^a e^b - e^{a+b}\| \le 2\|a\|\|b\| e^{\|a\|+\|b\|}$ | Hard | 🔶 (1 sorry: `norm_exp_cross_term_le`) |
+| C2. `lie_trotter_step_error` | $\|e^{A/n} e^{B/n} - e^{(A+B)/n}\| \le \frac{\|A\|\|B\|}{n^2} e^{(\|A\|+\|B\|)/n}$ | Medium | ✅ Proved |
 
 **File:** `LieTrotter/StepError.lean`
 
-**C1 is the critical lemma.** Three possible approaches, in order of feasibility:
+**C1 proof approach (algebraic factorization):**
 
-1. **Second-order expansion (recommended):**
-   Write $e^a = 1 + a + R_a$, $e^b = 1 + b + R_b$ with $\|R_a\| \le \|a\|^2 e^{\|a\|}/2$.
-   Then $e^a e^b - e^{a+b} = ab + \text{(remainder cross terms)} - R_{a+b}$.
-   Bound each piece. The $ab$ term gives $\|a\|\|b\|$; remainders give higher-order terms that are absorbed into the constant 2.
+The proof uses a cleaner strategy than the second-order expansion:
+1. **Algebraic identity** (by `ring`): $e^a e^b - e^{a+b} = (e^a-1)(e^b-1) - (e^{a+b} - e^a - e^b + 1)$
+2. **Triangle inequality**: Both parts bounded by $(e^{\|a\|}-1)(e^{\|b\|}-1)$, giving $\le 2(e^{\|a\|}-1)(e^{\|b\|}-1)$
+3. **Final bound** via `exp_sub_one_le_mul_exp`: $(e^s-1)(e^t-1) \le st \cdot e^{s+t}$
 
-   **Con:** The bookkeeping is tedious — many cross terms to bound individually.
+**Remaining sorry**: `norm_exp_cross_term_le` — proves $\|e^{a+b} - e^a - e^b + 1\| \le (e^{\|a\|}-1)(e^{\|b\|}-1)$.
+This requires a power series argument: at each order $k \ge 2$, $\|(a+b)^k - a^k - b^k\| \le (\|a\|+\|b\|)^k - \|a\|^k - \|b\|^k$ (cross terms only), then sum to get $(e^{\|a\|+\|b\|} - 1 - (\|a\|+\|b\|)) - (e^{\|a\|} - 1 - \|a\|) - (e^{\|b\|} - 1 - \|b\|) = e^{\|a\|+\|b\|} - e^{\|a\|} - e^{\|b\|} + 1 = (e^{\|a\|}-1)(e^{\|b\|}-1)$.
 
-2. **Integral formula (cleaner math, heavier Lean):**
-   $$e^{a} e^{b} - e^{a+b} = \int_0^1 e^{sa}\,[a,b]\,e^{(1-s)(a+b)}\,e^{sb}\,ds + \text{h.o.t.}$$
-   Requires `MeasureTheory.integral` (Bochner integral) which exists in Mathlib but involves significant API overhead.
+**C2** proved by applying C1 with $a = A/n$, $b = B/n$, using `norm_smul`, `norm_inv`, `RCLike.norm_natCast`, and `field_simp; ring`.
 
-3. **Double series manipulation:**
-   Expand both sides as double/single power series, cancel terms order by order. The cancellation at order $m$ involves multinomial coefficients vs binomial. Feasible but very fiddly in Lean.
-
-**Recommendation:** Start with approach 1. If the cross-term bookkeeping becomes unmanageable, explore whether a weaker bound (e.g., with a larger constant) simplifies the proof while still giving $O(\|a\|\|b\|)$.
-
-**C2** follows from C1 by substituting $a = A/n$, $b = B/n$ and using $\|c \cdot x\| = |c| \cdot \|x\|$.
-
-**Estimated lines:** ~100
+**Actual lines:** ~130
 
 ---
 
 ### Track 3 — Connecting Lemmas
 
-#### Task D: `exp(a/n)^n = exp(a)` (🔶 Medium)
+#### Task D: `exp(a/n)^n = exp(a)` (✅ Done)
 
 | Sub-task | Statement | Difficulty | Status |
 |----------|-----------|------------|--------|
-| D1. `exp_div_pow` | $(e^{a/n})^n = e^a$ for $n > 0$ | Medium | 🔴 |
-| D2. `norm_exp_smul_le` | $\|e^{c \cdot a}\| \le e^{\|c\| \|a\|}$ | Easy | 🔴 |
+| D1. `exp_div_pow` | $(e^{a/n})^n = e^a$ for $n > 0$ | Medium | ✅ Proved |
+| D2. `norm_exp_smul_le` | $\|e^{c \cdot a}\| \le e^{\|c\| \|a\|}$ | Easy | ✅ Proved |
 
 **File:** `LieTrotter/ExpDivPow.lean`
 
-**D1 proof:**
-- $a/n$ commutes with itself, so $e^{a/n} \cdot e^{a/n} = e^{2a/n}$ by `exp_add_of_commute`.
-- By induction (or `exp_nsmul` if it exists): $e^{a/n}^n = e^{n \cdot a/n} = e^a$.
-- The scalar algebra step $n \cdot (n^{-1} \cdot a) = a$ needs `smul_smul` + `mul_inv_cancel` in the scalar field.
-- **Mathlib search targets:** `exp_nsmul`, `exp_nat_mul`, `exp_smul_comm`, `Commute.exp_add`.
+**D1 proof (4 lines):** `rw [← exp_nsmul]; congr 1; rw [nsmul_eq_smul_cast 𝕂 n, smul_smul, mul_inv_cancel₀, one_smul]; exact Nat.cast_ne_zero.mpr (by omega)`
 
-**D2** follows from `norm_exp_le` (B1) and `norm_smul_le`.
+**D2 proof:** `norm_exp_le` (B1) composed with `norm_smul_le` via `gcongr`.
 
-**Estimated lines:** ~30
+**Actual lines:** ~20
 
 ---
 
 ### Track 4 — Assembly
 
-#### Task E: Main Theorem (🔶 Structure done, needs sorry-filling)
+#### Task E: Main Theorem (🔶 2 sorry's remain in E1)
 
 | Sub-task | Statement | Difficulty | Status |
 |----------|-----------|------------|--------|
-| E1. `lie_trotter_error_rate` | $\exists C > 0,\; \|P_n^n - e^{A+B}\| \le C/n$ | Medium | 🔶 (structure done, 4 sorry's) |
-| E2. `lie_trotter` | $P_n^n \to e^{A+B}$ | Easy | 🔶 (done modulo E1) |
+| E1. `lie_trotter_error_rate` | $\exists C > 0,\; \|P_n^n - e^{A+B}\| \le C/n$ | Medium | 🔶 (2 sorry's: max bound + final calc) |
+| E2. `lie_trotter` | $P_n^n \to e^{A+B}$ | Easy | ✅ Proved (modulo E1) |
 
 **File:** `LieTrotter/Assembly.lean`
 
@@ -196,20 +184,20 @@ These are nice-to-haves once the main theorem compiles without `sorry`.
 ## Dependency DAG (build order)
 
 ```
-Phase 1 (parallel):    A (✅)     B1,B2 (🔴)     D2 (🔴)
+Phase 1 (parallel):    A (✅)     B1,B2 (✅)     D2 (✅)
                          │           │               │
-Phase 2 (parallel):    A (done)   B3,B4 (🔴)     D1 (🔴)
+Phase 2 (parallel):    A (done)   B3,B4 (✅)     D1 (✅)
                                      │
-Phase 3:                           C1 (🔴)  ← blocks on B4
+Phase 3:                           C1 (🔶)  ← 1 sorry: norm_exp_cross_term_le
                                      │
-Phase 4:                           C2 (🔴)  ← blocks on C1
+Phase 4:                           C2 (✅)
                                      │
-Phase 5:              E1 (🔶)  ← blocks on A, C2, D1
+Phase 5:              E1 (🔶)  ← 2 sorry's: max bound + final calc
                         │
-Phase 6:              E2 (🔶)  ← blocks on E1
+Phase 6:              E2 (✅)
 ```
 
-**Critical path:** B3 → B4 → C1 → C2 → E1 → E2
+**Critical path:** ~~B3 → B4 →~~ C1 (cross-term) → E1 (assembly calc)
 
 ---
 
@@ -229,12 +217,27 @@ Phase 6:              E2 (🔶)  ← blocks on E1
 | `exists_nat_gt` | Archimedean property | `Order.Bounds.Basic` |
 | `norm_tsum_le_tsum_norm` | $\|\sum a_k\| \le \sum \|a_k\|$ | `Topology.Algebra.InfiniteSum` |
 
-### Needs verification (search Mathlib before implementing)
+### Verified and used
 
-- `exp_nsmul` or `exp_nat_mul` — may give `exp(a)^n = exp(n•a)` directly
-- `NormedSpace.norm_exp_le` — may already bound `‖exp(a)‖`
-- `expSeries_apply` — access to individual terms of the exponential series
-- `Real.exp_bound` or `Real.exp_bound'` — Taylor remainder bounds for real exp
+| Lean Name | Math | Used in |
+|-----------|------|---------|
+| `NormedSpace.exp_nsmul` | $e^{n \cdot x} = (e^x)^n$ | D1 |
+| `NormedSpace.expSeries_summable` | summability of exp series | B1–B4 |
+| `Real.hasSum_exp` | `Real.exp x` as a `HasSum` | B1–B4 |
+| `Real.summable_pow_div_factorial` | $\sum x^n/n!$ is summable | B1–B4 |
+| `Real.add_one_le_exp` | $1 + x \le e^x$ | C1 helper |
+| `norm_tsum_le_tsum_norm` | $\|\sum a_k\| \le \sum \|a_k\|$ | B1, B2, B4 |
+| `tsum_le_tsum` | termwise comparison for tsums | B1–B4 |
+| `tsum_eq_zero_add` | $\sum_{n \ge 0} = f(0) + \sum_{n \ge 1}$ | B2, B3, B4 |
+| `tsum_mul_left` | $\sum c \cdot f(n) = c \cdot \sum f(n)$ | B3 |
+| `nsmul_eq_smul_cast` | $n \bullet x = (n : \mathbb{K}) \cdot x$ | D1 |
+| `RCLike.norm_natCast` | $\|(n : \mathbb{K})\| = n$ | C2 |
+
+### Not in Mathlib (proved ourselves)
+
+- `norm_exp_le` — $\|e^a\| \le e^{\|a\|}$ for general Banach algebras (only `Complex.norm_exp_le_exp_norm` exists for ℂ)
+- `exp_sub_one_sub_bound_real` — $e^x - 1 - x \le x^2/2 \cdot e^x$
+- `norm_exp_sub_one_le` — $\|e^a - 1\| \le e^{\|a\|} - 1$
 
 ---
 
@@ -254,11 +257,22 @@ lake build            # type-checks; will warn on sorry's
 | File | Count | Lemmas |
 |------|-------|--------|
 | `LieTrotter/Telescoping.lean` | 0 | — |
-| `LieTrotter/ExpBounds.lean` | 4 | B1, B2, B3, B4 |
-| `LieTrotter/StepError.lean` | 2 | C1, C2 |
-| `LieTrotter/ExpDivPow.lean` | 2 | D1, D2 |
-| `LieTrotter/Assembly.lean` | ~4 | calc chain steps in E1 |
-| **Total** | **~12** | |
+| `LieTrotter/ExpBounds.lean` | 0 | — |
+| `LieTrotter/StepError.lean` | 1 | `norm_exp_cross_term_le` (private helper for C1) |
+| `LieTrotter/ExpDivPow.lean` | 0 | — |
+| `LieTrotter/Assembly.lean` | 2 | `h_max` bound + final calc step in E1 |
+| **Total** | **3** | |
+
+### Remaining sorry details
+
+1. **`norm_exp_cross_term_le`** (StepError.lean:47) — `‖e^{a+b} - e^a - e^b + 1‖ ≤ (e^{\|a\|}-1)(e^{\|b\|}-1)`.
+   Requires power series termwise bound: at order $k \ge 2$, the "cross terms" of $(a+b)^k$ satisfy $\|(a+b)^k - a^k - b^k\| \le (\|a\|+\|b\|)^k - \|a\|^k - \|b\|^k$. Sum and use $e^{s+t} - e^s - e^t + 1 = (e^s-1)(e^t-1)$.
+
+2. **`h_max`** (Assembly.lean:58) — `max ‖P‖ ‖Q‖ ≤ exp((‖A‖+‖B‖)/n)`.
+   Follows from B1 + `norm_mul_le` for ‖P‖ and B1 + `norm_add_le` for ‖Q‖.
+
+3. **Final calc** (Assembly.lean:69) — Simplify $n \cdot \frac{2\|A\|\|B\|}{n^2} \cdot e^{s/n} \cdot e^{s/n}^{n-1} \le C/n$.
+   Uses $e^{s/n}^n = e^s$ (exact equality via `Real.exp_natMul`) and algebra.
 
 ---
 
