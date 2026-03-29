@@ -29,19 +29,19 @@ variable {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [CompleteSpa
 -/
 
 /-- Each term of `expSeries` applied to constant `a` equals `(n!)⁻¹ • a^n`. -/
-private lemma expSeries_apply_eq (a : 𝔸) (n : ℕ) :
+protected lemma expSeries_apply_eq (a : 𝔸) (n : ℕ) :
     (expSeries 𝕂 𝔸 n) (fun _ => a) = (n ! : 𝕂)⁻¹ • a ^ n := by
   simp only [expSeries, ContinuousMultilinearMap.smul_apply,
     ContinuousMultilinearMap.mkPiAlgebraFin_apply, Fin.prod_const]
 
 /-- The exponential as a tsum of `(n!)⁻¹ • a^n`. -/
-private lemma exp_tsum_form (a : 𝔸) :
+lemma exp_tsum_form (a : 𝔸) :
     exp 𝕂 a = ∑' n, ((n ! : 𝕂)⁻¹ • a ^ n : 𝔸) := by
   show (expSeries 𝕂 𝔸).sum a = _
   simp only [FormalMultilinearSeries.sum, expSeries_apply_eq]
 
 /-- Summability of the exponential series terms `(n!)⁻¹ • a^n`. -/
-private lemma exp_summable (a : 𝔸) :
+lemma exp_summable (a : 𝔸) :
     Summable fun n => ((n ! : 𝕂)⁻¹ • a ^ n : 𝔸) := by
   have h := expSeries_summable (𝕂 := 𝕂) (𝔸 := 𝔸) a
   simp only [show (fun n => (expSeries 𝕂 𝔸 n) fun _ => a) =
@@ -49,19 +49,19 @@ private lemma exp_summable (a : 𝔸) :
   exact h
 
 /-- The norm of each term `(n!)⁻¹ • a^n` is bounded by `‖a‖^n / n!`. -/
-private lemma norm_exp_term_le (a : 𝔸) (n : ℕ) :
+lemma norm_exp_term_le (a : 𝔸) (n : ℕ) :
     ‖((n ! : 𝕂)⁻¹ • a ^ n : 𝔸)‖ ≤ ‖a‖ ^ n / (n ! : ℝ) := by
   rw [norm_smul, norm_inv, RCLike.norm_natCast, div_eq_inv_mul]
   gcongr
   exact norm_pow_le a n
 
 /-- Summability of x^n / n! for real x. -/
-private lemma real_exp_summable (x : ℝ) :
+lemma real_exp_summable (x : ℝ) :
     Summable fun n => x ^ n / (n ! : ℝ) :=
   Real.summable_pow_div_factorial x
 
 /-- Real exp as a tsum. -/
-private lemma real_exp_eq_tsum (x : ℝ) :
+lemma real_exp_eq_tsum (x : ℝ) :
     Real.exp x = ∑' n, x ^ n / (n ! : ℝ) :=
   (Real.hasSum_exp x).tsum_eq.symm
 

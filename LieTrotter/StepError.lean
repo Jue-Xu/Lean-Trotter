@@ -37,14 +37,214 @@ private lemma exp_sub_one_le_mul_exp {x : ℝ} (hx : 0 ≤ x) :
   rw [← Real.exp_add, neg_add_cancel, Real.exp_zero] at h2
   linarith
 
+-- Auxiliary: ‖(a+b)^m - a^m - b^m‖ ≤ (‖a‖+‖b‖)^m - ‖a‖^m - ‖b‖^m for m ≥ 1
+private lemma norm_pow_add_sub_pow_sub_pow (a b : 𝔸) :
+    ∀ m : ℕ, 1 ≤ m →
+      ‖(a + b) ^ m - a ^ m - b ^ m‖ ≤
+        (‖a‖ + ‖b‖) ^ m - ‖a‖ ^ m - ‖b‖ ^ m := by
+  intro m hm
+  induction m with
+  | zero => omega
+  | succ n ih =>
+    cases n with
+    | zero =>
+      -- m = 1: (a+b)^1 - a^1 - b^1 = 0, both sides are 0
+      simp only [pow_one]
+      have lhs_zero : (a + b) - a - b = (0 : 𝔸) := by abel
+      have rhs_zero : (‖a‖ + ‖b‖) - ‖a‖ - ‖b‖ = (0 : ℝ) := by ring
+      rw [lhs_zero, rhs_zero, norm_zero]
+    | succ k =>
+      -- m = k + 2, inductive step from k + 1 ≥ 1
+      have hk1 : 1 ≤ k + 1 := by omega
+      have ih' := ih hk1
+      -- Algebraic identity:
+      -- (a+b)^(k+2) - a^(k+2) - b^(k+2) =
+      --   (a+b) * ((a+b)^(k+1) - a^(k+1) - b^(k+1)) + a * b^(k+1) + b * a^(k+1)
+      have alg_id : (a + b) ^ (k + 2) - a ^ (k + 2) - b ^ (k + 2) =
+          (a + b) * ((a + b) ^ (k + 1) - a ^ (k + 1) - b ^ (k + 1)) +
+          a * b ^ (k + 1) + b * a ^ (k + 1) := by ring
+      rw [alg_id]
+      -- Bound: ‖X + Y + Z‖ ≤ ‖X‖ + ‖Y‖ + ‖Z‖
+      have h_tri : ‖(a + b) * ((a + b) ^ (k + 1) - a ^ (k + 1) - b ^ (k + 1)) +
+          a * b ^ (k + 1) + b * a ^ (k + 1)‖ ≤
+          ‖(a + b) * ((a + b) ^ (k + 1) - a ^ (k + 1) - b ^ (k + 1))‖ +
+          ‖a * b ^ (k + 1)‖ + ‖b * a ^ (k + 1)‖ := by
+        calc ‖(a + b) * ((a + b) ^ (k + 1) - a ^ (k + 1) - b ^ (k + 1)) +
+              a * b ^ (k + 1) + b * a ^ (k + 1)‖
+            ≤ ‖(a + b) * ((a + b) ^ (k + 1) - a ^ (k + 1) - b ^ (k + 1)) +
+              a * b ^ (k + 1)‖ + ‖b * a ^ (k + 1)‖ := norm_add_le _ _
+          _ ≤ (‖(a + b) * ((a + b) ^ (k + 1) - a ^ (k + 1) - b ^ (k + 1))‖ +
+              ‖a * b ^ (k + 1)‖) + ‖b * a ^ (k + 1)‖ := by
+              gcongr; exact norm_add_le _ _
+          _ = _ := by ring
+      -- Bound each term
+      have h1 : ‖(a + b) * ((a + b) ^ (k + 1) - a ^ (k + 1) - b ^ (k + 1))‖ ≤
+          (‖a‖ + ‖b‖) * ((‖a‖ + ‖b‖) ^ (k + 1) - ‖a‖ ^ (k + 1) - ‖b‖ ^ (k + 1)) := by
+        calc ‖(a + b) * ((a + b) ^ (k + 1) - a ^ (k + 1) - b ^ (k + 1))‖
+            ≤ ‖a + b‖ * ‖(a + b) ^ (k + 1) - a ^ (k + 1) - b ^ (k + 1)‖ :=
+              norm_mul_le _ _
+          _ ≤ (‖a‖ + ‖b‖) * ‖(a + b) ^ (k + 1) - a ^ (k + 1) - b ^ (k + 1)‖ :=
+              mul_le_mul_of_nonneg_right (norm_add_le a b) (norm_nonneg _)
+          _ ≤ (‖a‖ + ‖b‖) * ((‖a‖ + ‖b‖) ^ (k + 1) - ‖a‖ ^ (k + 1) - ‖b‖ ^ (k + 1)) := by
+              exact mul_le_mul_of_nonneg_left ih' (by positivity)
+      have h2 : ‖a * b ^ (k + 1)‖ ≤ ‖a‖ * ‖b‖ ^ (k + 1) := by
+        calc ‖a * b ^ (k + 1)‖ ≤ ‖a‖ * ‖b ^ (k + 1)‖ := norm_mul_le _ _
+          _ ≤ ‖a‖ * ‖b‖ ^ (k + 1) := by gcongr; exact norm_pow_le b (k + 1)
+      have h3 : ‖b * a ^ (k + 1)‖ ≤ ‖b‖ * ‖a‖ ^ (k + 1) := by
+        calc ‖b * a ^ (k + 1)‖ ≤ ‖b‖ * ‖a ^ (k + 1)‖ := norm_mul_le _ _
+          _ ≤ ‖b‖ * ‖a‖ ^ (k + 1) := by gcongr; exact norm_pow_le a (k + 1)
+      -- Combine and use ring
+      have real_id : (‖a‖ + ‖b‖) * ((‖a‖ + ‖b‖) ^ (k + 1) - ‖a‖ ^ (k + 1) - ‖b‖ ^ (k + 1)) +
+          ‖a‖ * ‖b‖ ^ (k + 1) + ‖b‖ * ‖a‖ ^ (k + 1) =
+          (‖a‖ + ‖b‖) ^ (k + 2) - ‖a‖ ^ (k + 2) - ‖b‖ ^ (k + 2) := by ring
+      linarith
+
 -- Auxiliary: bound on the cross term ‖exp(a+b) - exp(a) - exp(b) + 1‖
--- This requires a power series argument (bounding termwise:
--- ‖(a+b)^k - a^k - b^k‖ ≤ (‖a‖+‖b‖)^k - ‖a‖^k - ‖b‖^k for k ≥ 2,
--- then summing to get (e^‖a‖ - 1)(e^‖b‖ - 1)).
 private lemma norm_exp_cross_term_le (a b : 𝔸) :
     ‖exp 𝕂 (a + b) - exp 𝕂 a - exp 𝕂 b + 1‖ ≤
       (Real.exp ‖a‖ - 1) * (Real.exp ‖b‖ - 1) := by
-  sorry
+  -- Summability of the three exp series
+  have hsumm_ab := exp_summable (𝕂 := 𝕂) (a + b)
+  have hsumm_a := exp_summable (𝕂 := 𝕂) a
+  have hsumm_b := exp_summable (𝕂 := 𝕂) b
+  -- Shifted summability (n ↦ n+1)
+  have hsumm1_ab : Summable fun n => (((↑(n + 1)! : 𝕂)⁻¹ • (a + b) ^ (n + 1)) : 𝔸) :=
+    hsumm_ab.comp_injective (fun _ _ h => by omega)
+  have hsumm1_a : Summable fun n => (((↑(n + 1)! : 𝕂)⁻¹ • a ^ (n + 1)) : 𝔸) :=
+    hsumm_a.comp_injective (fun _ _ h => by omega)
+  have hsumm1_b : Summable fun n => (((↑(n + 1)! : 𝕂)⁻¹ • b ^ (n + 1)) : 𝔸) :=
+    hsumm_b.comp_injective (fun _ _ h => by omega)
+  -- Summability of the cross term series (n ↦ n+1)
+  have hsumm1_cross : Summable fun n =>
+      ((↑(n + 1)! : 𝕂)⁻¹ • ((a + b) ^ (n + 1) - a ^ (n + 1) - b ^ (n + 1)) : 𝔸) := by
+    have h1 := hsumm1_ab.sub hsumm1_a
+    have h2 := h1.sub hsumm1_b
+    refine h2.congr (fun n => ?_)
+    simp only [smul_sub]
+  -- Shifted summability (n ↦ n+2) for the cross term
+  have hsumm2_cross : Summable fun n =>
+      ((↑(n + 2)! : 𝕂)⁻¹ • ((a + b) ^ (n + 2) - a ^ (n + 2) - b ^ (n + 2)) : 𝔸) :=
+    hsumm1_cross.comp_injective (fun _ _ h => by omega)
+  -- Step 1: Express the cross term as a tsum
+  -- exp(a+b) - exp(a) - exp(b) + 1 = (exp(a+b)-1) - (exp(a)-1) - (exp(b)-1)
+  --   = ∑'_{n≥0} (n+1)!⁻¹ • ((a+b)^(n+1) - a^(n+1) - b^(n+1))
+  have cross_eq_shifted1 : exp 𝕂 (a + b) - exp 𝕂 a - exp 𝕂 b + 1 =
+      ∑' n, ((↑(n + 1)! : 𝕂)⁻¹ • ((a + b) ^ (n + 1) - a ^ (n + 1) - b ^ (n + 1)) : 𝔸) := by
+    have hab_eq : exp 𝕂 (a + b) - 1 =
+        ∑' n, ((↑(n + 1)! : 𝕂)⁻¹ • (a + b) ^ (n + 1) : 𝔸) := by
+      rw [exp_tsum_form (𝕂 := 𝕂), tsum_eq_zero_add hsumm_ab]
+      simp [pow_zero, Nat.factorial_zero, Nat.cast_one, inv_one, one_smul]; abel
+    have ha_eq : exp 𝕂 a - 1 =
+        ∑' n, ((↑(n + 1)! : 𝕂)⁻¹ • a ^ (n + 1) : 𝔸) := by
+      rw [exp_tsum_form (𝕂 := 𝕂), tsum_eq_zero_add hsumm_a]
+      simp [pow_zero, Nat.factorial_zero, Nat.cast_one, inv_one, one_smul]; abel
+    have hb_eq : exp 𝕂 b - 1 =
+        ∑' n, ((↑(n + 1)! : 𝕂)⁻¹ • b ^ (n + 1) : 𝔸) := by
+      rw [exp_tsum_form (𝕂 := 𝕂), tsum_eq_zero_add hsumm_b]
+      simp [pow_zero, Nat.factorial_zero, Nat.cast_one, inv_one, one_smul]; abel
+    have rearrange : exp 𝕂 (a + b) - exp 𝕂 a - exp 𝕂 b + 1 =
+        (exp 𝕂 (a + b) - 1) - (exp 𝕂 a - 1) - (exp 𝕂 b - 1) := by ring
+    rw [rearrange, hab_eq, ha_eq, hb_eq,
+        ← tsum_sub hsumm1_ab hsumm1_a, ← tsum_sub (hsumm1_ab.sub hsumm1_a) hsumm1_b]
+    congr 1; ext n; simp only [smul_sub]
+  -- The n=0 term of the +1-shifted series is 0: (a+b)^1 - a^1 - b^1 = 0
+  -- So peel it off to get the +2-shifted series
+  have cross_eq : exp 𝕂 (a + b) - exp 𝕂 a - exp 𝕂 b + 1 =
+      ∑' n, ((↑(n + 2)! : 𝕂)⁻¹ • ((a + b) ^ (n + 2) - a ^ (n + 2) - b ^ (n + 2)) : 𝔸) := by
+    rw [cross_eq_shifted1, tsum_eq_zero_add hsumm1_cross]
+    simp only [pow_one, Nat.factorial_one, Nat.cast_one, inv_one, one_smul]
+    have h0 : (a + b) - a - b = (0 : 𝔸) := by abel
+    rw [h0, zero_add]
+  -- Step 2: Bound the norm using norm_tsum_le_tsum_norm and the inductive bound
+  -- Real-side summability
+  have hrsumm := real_exp_summable (‖a‖ + ‖b‖)
+  have hrsumm_a := real_exp_summable ‖a‖
+  have hrsumm_b := real_exp_summable ‖b‖
+  have hrsumm2r : Summable fun n =>
+      ((‖a‖ + ‖b‖) ^ (n + 2) - ‖a‖ ^ (n + 2) - ‖b‖ ^ (n + 2)) / ((n + 2)! : ℝ) := by
+    have h1 : Summable fun n => (‖a‖ + ‖b‖) ^ (n + 2) / ((n + 2)! : ℝ) :=
+      hrsumm.comp_injective (fun _ _ h => by omega)
+    have h2 : Summable fun n => ‖a‖ ^ (n + 2) / ((n + 2)! : ℝ) :=
+      hrsumm_a.comp_injective (fun _ _ h => by omega)
+    have h3 : Summable fun n => ‖b‖ ^ (n + 2) / ((n + 2)! : ℝ) :=
+      hrsumm_b.comp_injective (fun _ _ h => by omega)
+    have h4 := (h1.sub h2).sub h3
+    refine h4.congr (fun n => ?_); ring
+  -- Norm bound on each term of the cross series
+  have hterm_norm : ∀ n, ‖((↑(n + 2)! : 𝕂)⁻¹ •
+      ((a + b) ^ (n + 2) - a ^ (n + 2) - b ^ (n + 2)) : 𝔸)‖ ≤
+      ((‖a‖ + ‖b‖) ^ (n + 2) - ‖a‖ ^ (n + 2) - ‖b‖ ^ (n + 2)) / ((n + 2)! : ℝ) := by
+    intro n
+    rw [norm_smul, norm_inv, RCLike.norm_natCast, div_eq_inv_mul]
+    apply mul_le_mul_of_nonneg_left (norm_pow_add_sub_pow_sub_pow a b (n + 2) (by omega))
+    positivity
+  -- Summability of norms
+  have hnsumm : Summable fun n =>
+      ‖((↑(n + 2)! : 𝕂)⁻¹ • ((a + b) ^ (n + 2) - a ^ (n + 2) - b ^ (n + 2)) : 𝔸)‖ :=
+    summable_of_nonneg_of_le (fun _ => norm_nonneg _) hterm_norm hrsumm2r
+  -- Main estimate
+  rw [cross_eq]
+  calc ‖∑' n, ((↑(n + 2)! : 𝕂)⁻¹ •
+        ((a + b) ^ (n + 2) - a ^ (n + 2) - b ^ (n + 2)) : 𝔸)‖
+      ≤ ∑' n, ‖((↑(n + 2)! : 𝕂)⁻¹ •
+        ((a + b) ^ (n + 2) - a ^ (n + 2) - b ^ (n + 2)) : 𝔸)‖ :=
+        norm_tsum_le_tsum_norm hnsumm
+    _ ≤ ∑' n, ((‖a‖ + ‖b‖) ^ (n + 2) - ‖a‖ ^ (n + 2) - ‖b‖ ^ (n + 2)) /
+        ((n + 2)! : ℝ) :=
+        tsum_le_tsum hterm_norm hnsumm hrsumm2r
+    _ = (Real.exp ‖a‖ - 1) * (Real.exp ‖b‖ - 1) := by
+        -- Step 3: Evaluate the real tsum
+        -- ∑'_n ((s+t)^(n+2) - s^(n+2) - t^(n+2)) / (n+2)!
+        -- = (exp(s+t) - 1 - (s+t)) - (exp(s) - 1 - s) - (exp(t) - 1 - t)
+        -- = exp(s+t) - exp(s) - exp(t) + 1
+        -- = (exp(s) - 1)(exp(t) - 1)   [by exp_add and ring]
+        have hrsumm1_ab : Summable fun n => (‖a‖ + ‖b‖) ^ (n + 1) / ((n + 1)! : ℝ) :=
+          hrsumm.comp_injective (fun _ _ h => by omega)
+        have hrsumm2_ab : Summable fun n => (‖a‖ + ‖b‖) ^ (n + 2) / ((n + 2)! : ℝ) :=
+          hrsumm.comp_injective (fun _ _ h => by omega)
+        have hrsumm1_a : Summable fun n => ‖a‖ ^ (n + 1) / ((n + 1)! : ℝ) :=
+          hrsumm_a.comp_injective (fun _ _ h => by omega)
+        have hrsumm2_a : Summable fun n => ‖a‖ ^ (n + 2) / ((n + 2)! : ℝ) :=
+          hrsumm_a.comp_injective (fun _ _ h => by omega)
+        have hrsumm1_b : Summable fun n => ‖b‖ ^ (n + 1) / ((n + 1)! : ℝ) :=
+          hrsumm_b.comp_injective (fun _ _ h => by omega)
+        have hrsumm2_b : Summable fun n => ‖b‖ ^ (n + 2) / ((n + 2)! : ℝ) :=
+          hrsumm_b.comp_injective (fun _ _ h => by omega)
+        -- Rewrite the tsum by splitting
+        have split_tsum :
+            (∑' n, ((‖a‖ + ‖b‖) ^ (n + 2) - ‖a‖ ^ (n + 2) - ‖b‖ ^ (n + 2)) /
+              ((n + 2)! : ℝ)) =
+            (∑' n, (‖a‖ + ‖b‖) ^ (n + 2) / ((n + 2)! : ℝ)) -
+            (∑' n, ‖a‖ ^ (n + 2) / ((n + 2)! : ℝ)) -
+            (∑' n, ‖b‖ ^ (n + 2) / ((n + 2)! : ℝ)) := by
+          rw [← tsum_sub hrsumm2_ab hrsumm2_a,
+              ← tsum_sub (hrsumm2_ab.sub hrsumm2_a) hrsumm2_b]
+          congr 1; ext n; ring
+        rw [split_tsum]
+        -- Each ∑'_n x^(n+2)/(n+2)! = exp(x) - 1 - x
+        have eval_ab : ∑' n, (‖a‖ + ‖b‖) ^ (n + 2) / ((n + 2)! : ℝ) =
+            Real.exp (‖a‖ + ‖b‖) - 1 - (‖a‖ + ‖b‖) := by
+          rw [real_exp_eq_tsum, tsum_eq_zero_add hrsumm]
+          simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one]
+          rw [tsum_eq_zero_add hrsumm1_ab]
+          simp only [pow_one, Nat.factorial_one, Nat.cast_one, div_one]
+          ring
+        have eval_a : ∑' n, ‖a‖ ^ (n + 2) / ((n + 2)! : ℝ) =
+            Real.exp ‖a‖ - 1 - ‖a‖ := by
+          rw [real_exp_eq_tsum, tsum_eq_zero_add hrsumm_a]
+          simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one]
+          rw [tsum_eq_zero_add hrsumm1_a]
+          simp only [pow_one, Nat.factorial_one, Nat.cast_one, div_one]
+          ring
+        have eval_b : ∑' n, ‖b‖ ^ (n + 2) / ((n + 2)! : ℝ) =
+            Real.exp ‖b‖ - 1 - ‖b‖ := by
+          rw [real_exp_eq_tsum, tsum_eq_zero_add hrsumm_b]
+          simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one]
+          rw [tsum_eq_zero_add hrsumm1_b]
+          simp only [pow_one, Nat.factorial_one, Nat.cast_one, div_one]
+          ring
+        rw [eval_ab, eval_a, eval_b, Real.exp_add]
+        ring
 
 /-- **Key estimate**: `‖exp(a) exp(b) - exp(a+b)‖ ≤ 2 ‖a‖ ‖b‖ exp(‖a‖+‖b‖)`.
     This is the hardest lemma in the formalization. -/
