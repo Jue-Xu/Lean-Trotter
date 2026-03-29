@@ -12,6 +12,3 @@ require mathlib from git
 @[default_target]
 lean_lib «LieTrotter» where
   srcDir := "."
-
-lean_lib «LieTrotterDetail» where
-  srcDir := "."
