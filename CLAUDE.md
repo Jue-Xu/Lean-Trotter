@@ -291,7 +291,7 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 
 4. **`NormOneClass 𝔸`**: Required in newer Mathlib for `norm_pow_le` to work. Added to all section variable declarations.
 
-5. **Error constant**: `C = 2‖A‖‖B‖ exp(2(‖A‖+‖B‖)) + 1` — the `+1` absorbs the slack from `exp(s) ≤ exp(2s)` and ensures `C > 0` even when `A = 0` or `B = 0`.
+5. **Error constant**: `C = 2‖A‖‖B‖ exp(‖A‖+‖B‖) + 1` — the `+1` ensures `C > 0` even when `A = 0` or `B = 0`. The bound `2‖A‖‖B‖ exp(‖A‖+‖B‖) / n` is tight (matches the calc chain exactly); only the `+1/n` is slack.
 
 ---
 

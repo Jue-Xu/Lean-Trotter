@@ -33,12 +33,12 @@ Proof:
 -/
 
 /-- **Convergence rate**: the Lie-Trotter error is O(1/n).
-    `‖(exp(A/n) exp(B/n))^n - exp(A+B)‖ ≤ C/n` -/
+    `‖(exp(A/n) exp(B/n))^n - exp(A+B)‖ ≤ (2‖A‖‖B‖ exp(‖A‖+‖B‖) + 1) / n` -/
 theorem lie_trotter_error_rate (A B : 𝔸) :
     ∃ C > 0, ∀ n : ℕ, 0 < n →
       ‖(exp ((n : 𝕂)⁻¹ • A) * exp ((n : 𝕂)⁻¹ • B)) ^ n -
        exp (A + B)‖ ≤ C / n := by
-  refine ⟨2 * ‖A‖ * ‖B‖ * Real.exp (2 * (‖A‖ + ‖B‖)) + 1, by positivity, ?_⟩
+  refine ⟨2 * ‖A‖ * ‖B‖ * Real.exp (‖A‖ + ‖B‖) + 1, by positivity, ?_⟩
   intro n hn
   -- Step 1: Rewrite exp(A+B) = exp((A+B)/n)^n
   have hpow : exp (A + B) = (exp ((n : 𝕂)⁻¹ • (A + B))) ^ n :=
@@ -88,43 +88,26 @@ theorem lie_trotter_error_rate (A B : 𝔸) :
     _ ≤ n * (2 * ‖A‖ * ‖B‖ / (n : ℝ) ^ 2 * Real.exp ((‖A‖ + ‖B‖) / n)) *
         (Real.exp ((‖A‖ + ‖B‖) / n)) ^ (n - 1) := by
         gcongr
-    _ ≤ (2 * ‖A‖ * ‖B‖ * Real.exp (2 * (‖A‖ + ‖B‖)) + 1) / n := by
-        set s := ‖A‖ + ‖B‖ with hs_def
+    _ ≤ (2 * ‖A‖ * ‖B‖ * Real.exp (‖A‖ + ‖B‖) + 1) / n := by
+        set s := ‖A‖ + ‖B‖
         have hn_pos : (0 : ℝ) < (n : ℝ) := Nat.cast_pos.mpr hn
-        have hn_ne : (n : ℝ) ≠ 0 := ne_of_gt hn_pos
-        have hs_nonneg : 0 ≤ s := by positivity
         have h_pow : Real.exp (s / ↑n) * Real.exp (s / ↑n) ^ (n - 1) =
             Real.exp (s / ↑n) ^ n := by
           cases n with
           | zero => omega
           | succ m => simp [pow_succ']
         have h_exp_pow : Real.exp (s / ↑n) ^ n = Real.exp s := by
-          rw [← Real.exp_nat_mul]
-          congr 1
-          field_simp
-        have h_collapse : Real.exp (s / ↑n) * Real.exp (s / ↑n) ^ (n - 1) =
-            Real.exp s := by rw [h_pow, h_exp_pow]
+          rw [← Real.exp_nat_mul]; congr 1; field_simp
         have h_lhs : ↑n * (2 * ‖A‖ * ‖B‖ / (↑n) ^ 2 * Real.exp (s / ↑n)) *
             Real.exp (s / ↑n) ^ (n - 1) =
             2 * ‖A‖ * ‖B‖ * Real.exp s / ↑n := by
-          have h_regroup : ↑n * (2 * ‖A‖ * ‖B‖ / (↑n) ^ 2 * Real.exp (s / ↑n)) *
+          have : ↑n * (2 * ‖A‖ * ‖B‖ / (↑n) ^ 2 * Real.exp (s / ↑n)) *
               Real.exp (s / ↑n) ^ (n - 1) =
               ↑n * (2 * ‖A‖ * ‖B‖ / (↑n) ^ 2) *
               (Real.exp (s / ↑n) * Real.exp (s / ↑n) ^ (n - 1)) := by ring
-          rw [h_regroup, h_collapse]
-          field_simp
+          rw [this, h_pow, h_exp_pow]; field_simp
         rw [h_lhs]
-        have h_num : 2 * ‖A‖ * ‖B‖ * Real.exp s ≤
-            2 * ‖A‖ * ‖B‖ * Real.exp (2 * s) + 1 := by
-          have h_exp_le : Real.exp s ≤ Real.exp (2 * s) := by
-            gcongr; linarith
-          have h_ab_nonneg : 0 ≤ 2 * ‖A‖ * ‖B‖ := by positivity
-          calc 2 * ‖A‖ * ‖B‖ * Real.exp s
-              ≤ 2 * ‖A‖ * ‖B‖ * Real.exp (2 * s) :=
-                mul_le_mul_of_nonneg_left h_exp_le h_ab_nonneg
-            _ ≤ 2 * ‖A‖ * ‖B‖ * Real.exp (2 * s) + 1 :=
-                le_add_of_nonneg_right zero_le_one
-        exact (div_le_div_iff_of_pos_right hn_pos).mpr h_num
+        exact (div_le_div_iff_of_pos_right hn_pos).mpr (le_add_of_nonneg_right zero_le_one)
 
 /-!
 ## E2: Main Theorem

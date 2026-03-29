@@ -4,7 +4,7 @@
 
 - [ ] **Contribute `norm_exp_le` to Mathlib** — We proved `‖exp a‖ ≤ exp ‖a‖` for general Banach algebras; Mathlib only has `Complex.norm_exp_le_exp_norm` for `ℂ`. The helpers `norm_exp_sub_one_le`, `exp_sub_one_sub_bound_real`, and `norm_exp_sub_one_sub_le` are also natural additions. File a Mathlib4 PR from `ExpBounds.lean`.
 
-- [ ] **Tighten the error constant** — Current bound: `C = 2‖A‖‖B‖ exp(2(‖A‖+‖B‖)) + 1`. The tight constant is `C = 2‖A‖‖B‖ exp(‖A‖+‖B‖)`. The `exp(2s)` slack comes from `exp(s) ≤ exp(2s)` in the final calc step; the `+1` ensures `C > 0` when `A = 0` or `B = 0`. Fix: handle `A = 0 ∨ B = 0` as a trivial case (formula is exact), then use the tight constant for the nontrivial case.
+- [x] **Tighten the error constant** — Tightened from `C = 2‖A‖‖B‖ exp(2(‖A‖+‖B‖)) + 1` to `C = 2‖A‖‖B‖ exp(‖A‖+‖B‖) + 1`. The `+1` remains for `C > 0`; only `1/n` slack.
 
 ## Medium priority
 
