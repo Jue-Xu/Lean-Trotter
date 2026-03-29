@@ -310,6 +310,212 @@ theorem norm_exp_mul_exp_sub_exp_add' (a b : 𝔸) :
   linarith
 
 /-!
+## C1b: Cross-term tail bound (k ≥ 3)
+
+The cross term `exp(a+b) - exp(a) - exp(b) + 1` has a power series starting at k=2.
+The k=2 term is `((a+b)² - a² - b²)/2`. We bound the remainder (k ≥ 3 tail).
+-/
+
+-- Real bound: (exp(s)-1)(exp(t)-1) - st ≤ st(s+t) exp(s+t) for s,t ≥ 0
+lemma exp_sub_one_mul_sub_le {s t : ℝ} (hs : 0 ≤ s) (ht : 0 ≤ t) :
+    (Real.exp s - 1) * (Real.exp t - 1) - s * t ≤
+      s * t * (s + t) * Real.exp (s + t) := by
+  -- Step 1: (e^s-1)(e^t-1) ≤ st·e^(s+t)
+  have h1 : (Real.exp s - 1) * (Real.exp t - 1) ≤
+      s * t * Real.exp (s + t) := by
+    calc (Real.exp s - 1) * (Real.exp t - 1)
+        ≤ (s * Real.exp s) * (t * Real.exp t) := by
+          apply mul_le_mul (exp_sub_one_le_mul_exp hs) (exp_sub_one_le_mul_exp ht)
+          · linarith [Real.add_one_le_exp t]
+          · positivity
+      _ = s * t * (Real.exp s * Real.exp t) := by ring
+      _ = s * t * Real.exp (s + t) := by rw [Real.exp_add]
+  -- Step 2: st·e^(s+t) - st ≤ st(s+t)·e^(s+t)
+  have h2 : s * t * Real.exp (s + t) - s * t ≤
+      s * t * (s + t) * Real.exp (s + t) := by
+    have : s * t * Real.exp (s + t) - s * t = s * t * (Real.exp (s + t) - 1) := by ring
+    rw [this]
+    have h5 : Real.exp (s + t) - 1 ≤ (s + t) * Real.exp (s + t) :=
+      exp_sub_one_le_mul_exp (by linarith)
+    have hst : 0 ≤ s * t := mul_nonneg hs ht
+    calc s * t * (Real.exp (s + t) - 1)
+        ≤ s * t * ((s + t) * Real.exp (s + t)) := by
+          gcongr
+      _ = s * t * (s + t) * Real.exp (s + t) := by ring
+  linarith
+
+-- The cross term with its k=2 part subtracted
+include 𝕂 in
+theorem norm_exp_cross_tail_le (a b : 𝔸) :
+    ‖exp (a + b) - exp a - exp b + 1 -
+      ((2 : 𝕂)⁻¹ • ((a + b) ^ 2 - a ^ 2 - b ^ 2))‖ ≤
+      (Real.exp ‖a‖ - 1) * (Real.exp ‖b‖ - 1) - ‖a‖ * ‖b‖ := by
+  -- Summability
+  have hsumm_ab := exp_summable (𝕂 := 𝕂) (a + b)
+  have hsumm_a := exp_summable (𝕂 := 𝕂) a
+  have hsumm_b := exp_summable (𝕂 := 𝕂) b
+  have hsumm1_ab : Summable fun n => (((↑(n + 1)! : 𝕂)⁻¹ • (a + b) ^ (n + 1)) : 𝔸) :=
+    hsumm_ab.comp_injective (fun _ _ h => by omega)
+  have hsumm1_a : Summable fun n => (((↑(n + 1)! : 𝕂)⁻¹ • a ^ (n + 1)) : 𝔸) :=
+    hsumm_a.comp_injective (fun _ _ h => by omega)
+  have hsumm1_b : Summable fun n => (((↑(n + 1)! : 𝕂)⁻¹ • b ^ (n + 1)) : 𝔸) :=
+    hsumm_b.comp_injective (fun _ _ h => by omega)
+  have hsumm1_cross : Summable fun n =>
+      ((↑(n + 1)! : 𝕂)⁻¹ • ((a + b) ^ (n + 1) - a ^ (n + 1) - b ^ (n + 1)) : 𝔸) := by
+    have h1 := hsumm1_ab.sub hsumm1_a
+    have h2 := h1.sub hsumm1_b
+    refine h2.congr (fun n => ?_)
+    simp only [smul_sub]
+  have hsumm2_cross : Summable fun n =>
+      ((↑(n + 2)! : 𝕂)⁻¹ • ((a + b) ^ (n + 2) - a ^ (n + 2) - b ^ (n + 2)) : 𝔸) :=
+    hsumm1_cross.comp_injective (fun _ _ h => by omega)
+  have hsumm3_cross : Summable fun n =>
+      ((↑(n + 3)! : 𝕂)⁻¹ • ((a + b) ^ (n + 3) - a ^ (n + 3) - b ^ (n + 3)) : 𝔸) :=
+    hsumm1_cross.comp_injective (fun _ _ h => by omega)
+  -- Express cross as tsum starting at k=2
+  have cross_eq : exp (a + b) - exp a - exp b + 1 =
+      ∑' n, ((↑(n + 2)! : 𝕂)⁻¹ • ((a + b) ^ (n + 2) - a ^ (n + 2) - b ^ (n + 2)) : 𝔸) := by
+    have cross_eq_shifted1 : exp (a + b) - exp a - exp b + 1 =
+        ∑' n, ((↑(n + 1)! : 𝕂)⁻¹ • ((a + b) ^ (n + 1) - a ^ (n + 1) - b ^ (n + 1)) : 𝔸) := by
+      have hab_eq : exp (a + b) - 1 =
+          ∑' n, ((↑(n + 1)! : 𝕂)⁻¹ • (a + b) ^ (n + 1) : 𝔸) := by
+        rw [exp_tsum_form (𝕂 := 𝕂), hsumm_ab.tsum_eq_zero_add]
+        simp [pow_zero, Nat.factorial_zero, Nat.cast_one, inv_one, one_smul]
+      have ha_eq : exp a - 1 =
+          ∑' n, ((↑(n + 1)! : 𝕂)⁻¹ • a ^ (n + 1) : 𝔸) := by
+        rw [exp_tsum_form (𝕂 := 𝕂), hsumm_a.tsum_eq_zero_add]
+        simp [pow_zero, Nat.factorial_zero, Nat.cast_one, inv_one, one_smul]
+      have hb_eq : exp b - 1 =
+          ∑' n, ((↑(n + 1)! : 𝕂)⁻¹ • b ^ (n + 1) : 𝔸) := by
+        rw [exp_tsum_form (𝕂 := 𝕂), hsumm_b.tsum_eq_zero_add]
+        simp [pow_zero, Nat.factorial_zero, Nat.cast_one, inv_one, one_smul]
+      have rearrange : exp (a + b) - exp a - exp b + 1 =
+          (exp (a + b) - 1) - (exp a - 1) - (exp b - 1) := by abel
+      rw [rearrange, hab_eq, ha_eq, hb_eq,
+          ← hsumm1_ab.tsum_sub hsumm1_a, ← (hsumm1_ab.sub hsumm1_a).tsum_sub hsumm1_b]
+      congr 1; ext n; simp only [smul_sub]
+    rw [cross_eq_shifted1, hsumm1_cross.tsum_eq_zero_add]
+    simp only [Nat.zero_add, pow_one, Nat.factorial_one, Nat.cast_one, inv_one, one_smul]
+    have h0 : (a + b) - a - b = (0 : 𝔸) := by abel
+    rw [h0, zero_add]
+  -- The k=2 term: (2!)⁻¹ • ((a+b)^2 - a^2 - b^2)
+  have k2_term : (2 : 𝕂)⁻¹ • ((a + b) ^ 2 - a ^ 2 - b ^ 2) =
+      ((↑(0 + 2)! : 𝕂)⁻¹ • ((a + b) ^ (0 + 2) - a ^ (0 + 2) - b ^ (0 + 2)) : 𝔸) := by
+    simp [Nat.factorial]
+  -- Express the tail as tsum starting at k=3
+  have tail_eq :
+      exp (a + b) - exp a - exp b + 1 -
+        (2 : 𝕂)⁻¹ • ((a + b) ^ 2 - a ^ 2 - b ^ 2) =
+      ∑' n, ((↑(n + 3)! : 𝕂)⁻¹ • ((a + b) ^ (n + 3) - a ^ (n + 3) - b ^ (n + 3)) : 𝔸) := by
+    rw [cross_eq, k2_term, hsumm2_cross.tsum_eq_zero_add]
+    abel
+  rw [tail_eq]
+  -- Real-side summability
+  have hrsumm := real_exp_summable (‖a‖ + ‖b‖)
+  have hrsumm_a := real_exp_summable ‖a‖
+  have hrsumm_b := real_exp_summable ‖b‖
+  have hrsumm3r : Summable fun n =>
+      ((‖a‖ + ‖b‖) ^ (n + 3) - ‖a‖ ^ (n + 3) - ‖b‖ ^ (n + 3)) / ((n + 3)! : ℝ) := by
+    have h1 : Summable fun n => (‖a‖ + ‖b‖) ^ (n + 3) / ((n + 3)! : ℝ) :=
+      hrsumm.comp_injective (fun _ _ h => by omega)
+    have h2 : Summable fun n => ‖a‖ ^ (n + 3) / ((n + 3)! : ℝ) :=
+      hrsumm_a.comp_injective (fun _ _ h => by omega)
+    have h3 : Summable fun n => ‖b‖ ^ (n + 3) / ((n + 3)! : ℝ) :=
+      hrsumm_b.comp_injective (fun _ _ h => by omega)
+    have h4 := (h1.sub h2).sub h3
+    refine h4.congr (fun n => ?_); ring
+  -- Norm bound on each term
+  have hterm_norm : ∀ n, ‖((↑(n + 3)! : 𝕂)⁻¹ •
+      ((a + b) ^ (n + 3) - a ^ (n + 3) - b ^ (n + 3)) : 𝔸)‖ ≤
+      ((‖a‖ + ‖b‖) ^ (n + 3) - ‖a‖ ^ (n + 3) - ‖b‖ ^ (n + 3)) / ((n + 3)! : ℝ) := by
+    intro n
+    rw [norm_smul, norm_inv, RCLike.norm_natCast, div_eq_inv_mul]
+    apply mul_le_mul_of_nonneg_left (norm_pow_add_sub_pow_sub_pow a b (n + 3) (by omega))
+    positivity
+  have hnsumm : Summable fun n =>
+      ‖((↑(n + 3)! : 𝕂)⁻¹ • ((a + b) ^ (n + 3) - a ^ (n + 3) - b ^ (n + 3)) : 𝔸)‖ :=
+    hrsumm3r.of_nonneg_of_le (fun _ => norm_nonneg _) hterm_norm
+  -- Main estimate
+  calc ‖∑' n, ((↑(n + 3)! : 𝕂)⁻¹ •
+        ((a + b) ^ (n + 3) - a ^ (n + 3) - b ^ (n + 3)) : 𝔸)‖
+      ≤ ∑' n, ‖((↑(n + 3)! : 𝕂)⁻¹ •
+        ((a + b) ^ (n + 3) - a ^ (n + 3) - b ^ (n + 3)) : 𝔸)‖ :=
+        norm_tsum_le_tsum_norm hnsumm
+    _ ≤ ∑' n, ((‖a‖ + ‖b‖) ^ (n + 3) - ‖a‖ ^ (n + 3) - ‖b‖ ^ (n + 3)) /
+        ((n + 3)! : ℝ) :=
+        hnsumm.tsum_le_tsum hterm_norm hrsumm3r
+    _ = (Real.exp ‖a‖ - 1) * (Real.exp ‖b‖ - 1) - ‖a‖ * ‖b‖ := by
+        -- The k≥3 tail = full cross sum - k=2 term
+        -- Full cross sum = (exp(s)-1)(exp(t)-1), and k=2 term = st
+        have hrsumm1_ab : Summable fun n => (‖a‖ + ‖b‖) ^ (n + 1) / ((n + 1)! : ℝ) :=
+          hrsumm.comp_injective (fun _ _ h => by omega)
+        have hrsumm2_ab : Summable fun n => (‖a‖ + ‖b‖) ^ (n + 2) / ((n + 2)! : ℝ) :=
+          hrsumm.comp_injective (fun _ _ h => by omega)
+        have hrsumm3_ab : Summable fun n => (‖a‖ + ‖b‖) ^ (n + 3) / ((n + 3)! : ℝ) :=
+          hrsumm.comp_injective (fun _ _ h => by omega)
+        have hrsumm1_a : Summable fun n => ‖a‖ ^ (n + 1) / ((n + 1)! : ℝ) :=
+          hrsumm_a.comp_injective (fun _ _ h => by omega)
+        have hrsumm2_a : Summable fun n => ‖a‖ ^ (n + 2) / ((n + 2)! : ℝ) :=
+          hrsumm_a.comp_injective (fun _ _ h => by omega)
+        have hrsumm3_a : Summable fun n => ‖a‖ ^ (n + 3) / ((n + 3)! : ℝ) :=
+          hrsumm_a.comp_injective (fun _ _ h => by omega)
+        have hrsumm1_b : Summable fun n => ‖b‖ ^ (n + 1) / ((n + 1)! : ℝ) :=
+          hrsumm_b.comp_injective (fun _ _ h => by omega)
+        have hrsumm2_b : Summable fun n => ‖b‖ ^ (n + 2) / ((n + 2)! : ℝ) :=
+          hrsumm_b.comp_injective (fun _ _ h => by omega)
+        have hrsumm3_b : Summable fun n => ‖b‖ ^ (n + 3) / ((n + 3)! : ℝ) :=
+          hrsumm_b.comp_injective (fun _ _ h => by omega)
+        have hrsumm2r : Summable fun n =>
+            ((‖a‖ + ‖b‖) ^ (n + 2) - ‖a‖ ^ (n + 2) - ‖b‖ ^ (n + 2)) / ((n + 2)! : ℝ) := by
+          have h4 := (hrsumm2_ab.sub hrsumm2_a).sub hrsumm2_b
+          refine h4.congr (fun n => ?_); ring
+        -- Split: k≥3 tail = full sum (k≥2) - k=2 term
+        have split_tsum :
+            (∑' n, ((‖a‖ + ‖b‖) ^ (n + 3) - ‖a‖ ^ (n + 3) - ‖b‖ ^ (n + 3)) /
+              ((n + 3)! : ℝ)) =
+            (∑' n, ((‖a‖ + ‖b‖) ^ (n + 2) - ‖a‖ ^ (n + 2) - ‖b‖ ^ (n + 2)) /
+              ((n + 2)! : ℝ)) -
+            ((‖a‖ + ‖b‖) ^ 2 - ‖a‖ ^ 2 - ‖b‖ ^ 2) / (2 : ℝ) := by
+          rw [hrsumm2r.tsum_eq_zero_add]
+          simp only [Nat.zero_add, Nat.factorial]
+          ring
+        rw [split_tsum]
+        -- Evaluate the full sum (k≥2)
+        have split_full :
+            (∑' n, ((‖a‖ + ‖b‖) ^ (n + 2) - ‖a‖ ^ (n + 2) - ‖b‖ ^ (n + 2)) /
+              ((n + 2)! : ℝ)) =
+            (∑' n, (‖a‖ + ‖b‖) ^ (n + 2) / ((n + 2)! : ℝ)) -
+            (∑' n, ‖a‖ ^ (n + 2) / ((n + 2)! : ℝ)) -
+            (∑' n, ‖b‖ ^ (n + 2) / ((n + 2)! : ℝ)) := by
+          rw [← hrsumm2_ab.tsum_sub hrsumm2_a,
+              ← (hrsumm2_ab.sub hrsumm2_a).tsum_sub hrsumm2_b]
+          congr 1; ext n; ring
+        -- Each ∑'_n x^(n+2)/(n+2)! = exp(x) - 1 - x
+        have eval_ab : ∑' n, (‖a‖ + ‖b‖) ^ (n + 2) / ((n + 2)! : ℝ) =
+            Real.exp (‖a‖ + ‖b‖) - 1 - (‖a‖ + ‖b‖) := by
+          rw [real_exp_eq_tsum, hrsumm.tsum_eq_zero_add]
+          simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one]
+          rw [hrsumm1_ab.tsum_eq_zero_add]
+          simp only [Nat.zero_add, pow_one, Nat.factorial_one, Nat.cast_one, div_one]
+          ring
+        have eval_a : ∑' n, ‖a‖ ^ (n + 2) / ((n + 2)! : ℝ) =
+            Real.exp ‖a‖ - 1 - ‖a‖ := by
+          rw [real_exp_eq_tsum, hrsumm_a.tsum_eq_zero_add]
+          simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one]
+          rw [hrsumm1_a.tsum_eq_zero_add]
+          simp only [Nat.zero_add, pow_one, Nat.factorial_one, Nat.cast_one, div_one]
+          ring
+        have eval_b : ∑' n, ‖b‖ ^ (n + 2) / ((n + 2)! : ℝ) =
+            Real.exp ‖b‖ - 1 - ‖b‖ := by
+          rw [real_exp_eq_tsum, hrsumm_b.tsum_eq_zero_add]
+          simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one]
+          rw [hrsumm1_b.tsum_eq_zero_add]
+          simp only [Nat.zero_add, pow_one, Nat.factorial_one, Nat.cast_one, div_one]
+          ring
+        rw [split_full, eval_ab, eval_a, eval_b, Real.exp_add]
+        ring
+
+/-!
 ## C2: Lie-Trotter step error
 
 Specialization of C1 to `a = A/n`, `b = B/n`:
