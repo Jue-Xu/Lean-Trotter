@@ -28,11 +28,10 @@ The scalar algebra step `n • (n⁻¹ • a) = a` uses `smul_smul` + `mul_inv_c
 /-- `exp(a/n)^n = exp(a)` in a complete normed algebra. -/
 lemma exp_div_pow (a : 𝔸) (n : ℕ) (hn : 0 < n) :
     (exp 𝕂 ((n : 𝕂)⁻¹ • a)) ^ n = exp 𝕂 a := by
-  -- Mathlib has NormedSpace.exp_nsmul: exp(n • x) = exp(x) ^ n
-  -- So exp(x)^n = exp(n • x)
-  -- With x = (n:𝕂)⁻¹ • a: exp((n:𝕂)⁻¹ • a)^n = exp(n • ((n:𝕂)⁻¹ • a))
-  -- n • ((n:𝕂)⁻¹ • a) = (n : 𝕂) • ((n:𝕂)⁻¹ • a) = (n * n⁻¹) • a = 1 • a = a
-  sorry
+  rw [← exp_nsmul]
+  congr 1
+  rw [nsmul_eq_smul_cast 𝕂 n, smul_smul, mul_inv_cancel₀, one_smul]
+  exact Nat.cast_ne_zero.mpr (by omega)
 
 /-!
 ## D2: Norm bound for scalar-smul exponential
