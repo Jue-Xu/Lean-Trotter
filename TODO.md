@@ -8,7 +8,8 @@
 
 ## Medium priority
 
-- [ ] **Strang splitting (F2)** — Prove symmetric Lie-Trotter: `(exp(A/2n) exp(B/n) exp(A/2n))^n → exp(A+B)` with `O(1/n²)` error. Reuses Tracks A–D; the new ingredient is showing the first-order commutator cancels in the symmetric product, giving a step error of `O(1/n³)` instead of `O(1/n²)`. Relevant for Hamiltonian simulation.
+- [x] **Strang splitting convergence (F2a)** — Proved `(exp(A/2n) exp(B/n) exp(A/2n))^n → exp(A+B)` at O(1/n) rate using C1 applied twice. File: `LieTrotter/StrangSplitting.lean`.
+- [ ] **Strang splitting O(1/n²) rate (F2b)** — Upgrade to O(1/n²) convergence. Requires proving cubic step error O(1/n³) via third-order expansion showing second-order commutator cancels by symmetry.
 
 - [ ] **Matrix specialization (F1)** — Prove `matrix_lie_trotter` for `Matrix (Fin d) (Fin d) ℂ`. Should be a one-liner applying `lie_trotter` once the `NormOneClass` instance is verified for the matrix norm. Connects to quantum computing applications.
 
