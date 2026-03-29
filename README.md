@@ -2,7 +2,7 @@
 
 A Lean 4 formalization of the **Lie–Trotter product formula** for complete normed algebras:
 
-$$e^{A+B} = \lim_{n \to \infty} \left(e^{A/n}\, e^{B/n}\right)^n$$
+$$e^{A+B} = \lim_{n \to \infty} \left(e^{A/n}\cdot e^{B/n}\right)^n$$
 
 ## Status
 
