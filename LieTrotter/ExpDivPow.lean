@@ -14,7 +14,7 @@ open NormedSpace
 open scoped BigOperators
 
 variable {𝕂 : Type*} [RCLike 𝕂]
-variable {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [CompleteSpace 𝔸]
+variable {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
 
 /-!
 ## D1: exp(a/n)^n = exp(a)
@@ -25,12 +25,14 @@ Key identity: since `a/n` commutes with itself, we get
 The scalar algebra step `n • (n⁻¹ • a) = a` uses `smul_smul` + `mul_inv_cancel`.
 -/
 
+include 𝕂 in
 /-- `exp(a/n)^n = exp(a)` in a complete normed algebra. -/
 lemma exp_div_pow (a : 𝔸) (n : ℕ) (hn : 0 < n) :
-    (exp 𝕂 ((n : 𝕂)⁻¹ • a)) ^ n = exp 𝕂 a := by
+    (exp ((n : 𝕂)⁻¹ • a)) ^ n = exp a := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ 𝕂 𝔸
   rw [← exp_nsmul]
   congr 1
-  rw [nsmul_eq_smul_cast 𝕂 n, smul_smul, mul_inv_cancel₀, one_smul]
+  rw [← Nat.cast_smul_eq_nsmul 𝕂 n, smul_smul, mul_inv_cancel₀, one_smul]
   exact Nat.cast_ne_zero.mpr (by omega)
 
 /-!
@@ -39,11 +41,12 @@ lemma exp_div_pow (a : 𝔸) (n : ℕ) (hn : 0 < n) :
 `‖exp(c • a)‖ ≤ exp(‖c‖ · ‖a‖)` from B1 and `‖c • a‖ ≤ ‖c‖ · ‖a‖`.
 -/
 
+include 𝕂 in
 /-- `‖exp(c • a)‖ ≤ exp(‖c‖ · ‖a‖)`. -/
 lemma norm_exp_smul_le (c : 𝕂) (a : 𝔸) :
-    ‖exp 𝕂 (c • a)‖ ≤ Real.exp (‖c‖ * ‖a‖) := by
-  calc ‖exp 𝕂 (c • a)‖
-      ≤ Real.exp ‖c • a‖ := norm_exp_le (c • a)
+    ‖exp (c • a)‖ ≤ Real.exp (‖c‖ * ‖a‖) := by
+  calc ‖exp (c • a)‖
+      ≤ Real.exp ‖c • a‖ := norm_exp_le (𝕂 := 𝕂) (c • a)
     _ ≤ Real.exp (‖c‖ * ‖a‖) := by
         gcongr
         exact norm_smul_le c a
