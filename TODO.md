@@ -1,0 +1,21 @@
+# TODO
+
+## High priority
+
+- [ ] **Contribute `norm_exp_le` to Mathlib** — We proved `‖exp a‖ ≤ exp ‖a‖` for general Banach algebras; Mathlib only has `Complex.norm_exp_le_exp_norm` for `ℂ`. The helpers `norm_exp_sub_one_le`, `exp_sub_one_sub_bound_real`, and `norm_exp_sub_one_sub_le` are also natural additions. File a Mathlib4 PR from `ExpBounds.lean`.
+
+- [ ] **Tighten the error constant** — Current bound: `C = 2‖A‖‖B‖ exp(2(‖A‖+‖B‖)) + 1`. The tight constant is `C = 2‖A‖‖B‖ exp(‖A‖+‖B‖)`. The `exp(2s)` slack comes from `exp(s) ≤ exp(2s)` in the final calc step; the `+1` ensures `C > 0` when `A = 0` or `B = 0`. Fix: handle `A = 0 ∨ B = 0` as a trivial case (formula is exact), then use the tight constant for the nontrivial case.
+
+## Medium priority
+
+- [ ] **Strang splitting (F2)** — Prove symmetric Lie-Trotter: `(exp(A/2n) exp(B/n) exp(A/2n))^n → exp(A+B)` with `O(1/n²)` error. Reuses Tracks A–D; the new ingredient is showing the first-order commutator cancels in the symmetric product, giving a step error of `O(1/n³)` instead of `O(1/n²)`. Relevant for Hamiltonian simulation.
+
+- [ ] **Matrix specialization (F1)** — Prove `matrix_lie_trotter` for `Matrix (Fin d) (Fin d) ℂ`. Should be a one-liner applying `lie_trotter` once the `NormOneClass` instance is verified for the matrix norm. Connects to quantum computing applications.
+
+## Low priority
+
+- [ ] **Write a short formalization note** — 2-page writeup for ITP/CPP documenting: (1) the algebraic factorization trick for C1 vs. the standard second-order expansion, (2) the `include 𝕂 in` pattern for Mathlib's field-free `exp` API, (3) the Mathlib gap we filled (`norm_exp_le` for general Banach algebras).
+
+- [ ] **Clean up lint warnings** — The `mathlib: repository has local changes` warning appears because `lake update` modified the local Mathlib checkout. Running `lake update` fresh in a clean clone resolves this. Not a real issue but worth noting for CI.
+
+- [ ] **Remove `import Mathlib.Tactic`** — Replace with specific tactic imports (`Mathlib.Tactic.NoncommRing`, `Mathlib.Tactic.Positivity`, etc.) in `Telescoping.lean` and `ExpBounds.lean` for faster compilation.
