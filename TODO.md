@@ -29,24 +29,30 @@
   ```
   Telescopes into a sum of pairwise C1-type bounds. Estimate: ~150 lines. Reuses all existing infrastructure.
 
-- [ ] **Fourth-order Suzuki formula (H1)** — Two-phase approach:
+- [ ] **Fourth-order Suzuki formula (H1)** — BCH-free approach via Suzuki's composition argument:
 
-  **Phase 1 (O(1/n²), feasible ~200 lines):** Define $S_4$ as a composition of five $S_2$ (Strang) steps with time fractions $p, p, 1-4p, p, p$ where $p = 1/(4-4^{1/3})$. Prove convergence at O(1/n²) by composing five cubic step errors — no cancellation needed, same rate as plain Strang but establishes the $S_4$ definition and composition infrastructure.
+  **Key insight (no BCH needed):** The Strang splitting $S_2(t)$ satisfies:
+  1. $S_2(t) = e^{Ht} + E(t)$ where $\|E(t)\| = O(t^3)$ — our existing cubic bound
+  2. $S_2(-t) = e^{-Ht} + E'(t)$ where $\|E'(t)\| = O(t^3)$ — time-reversal (follows from the palindromic structure)
+  3. The error $E(t)$ is an **odd function** of $t$ (only odd powers), so no $t^4$ term
 
-  **Phase 2 (O(1/n⁴), hard ~500+ lines):** Prove the actual fourth-order rate by showing the third-order BCH terms cancel: $4p^3 + (1-4p)^3 = 0$ kills the leading error. Three sub-approaches:
-  - (a) Formalize enough BCH to show $S_2(t) = e^{Ht + c_3 t^3 + O(t^5)}$ and the cancellation
-  - (b) Fifth-order remainder bound (B7) + direct fourth-order matching
-  - (c) Suzuki's composition lemma: second-order method → fourth-order via the specific $p$
+  Suzuki's composition: $S_4(t) = S_2(pt)^2 \cdot S_2((1-4p)t) \cdot S_2(pt)^2$ with $p = 1/(4-4^{1/3})$.
+  The constraint $4p^3 + (1-4p)^3 = 0$ cancels the $t^3$ error, jumping to $O(t^5)$ step error → $O(1/n^4)$ total.
 
-  **Complications:** The constant $p = 1/(4-4^{1/3})$ is irrational (need `Real.rpow`). Multi-operator case follows by composing five multi-operator Strang steps.
+  **Implementation plan:**
+  1. Prove time-reversal: $\|S_2(-t) - e^{-Ht}\| = O(t^3)$ (~50 lines, follows from palindromic symmetry)
+  2. Prove error parity: $S_2(t) + S_2(-t) = 2e^{Ht} + O(t^4)$, i.e., even-order errors vanish (~100 lines)
+  3. Define $S_4$ as the five-fold composition with abstract time fractions (~30 lines)
+  4. Prove: if $\sum p_i = 1$ and $\sum p_i^3 = 0$ and error is odd, then composition is $O(t^5)$ (~150 lines)
+  5. Verify $p = 1/(4-4^{1/3})$ satisfies $4p^3 + (1-4p)^3 = 0$ (~20 lines, `Real.rpow` + `nlinarith`)
+  6. Assembly: $O(1/n^5)$ step error → $O(1/n^4)$ total (~50 lines)
+  7. Multi-operator case: compose five multi-operator Strang steps (~100 lines)
 
-  Both phases start with the 2-operator case (A+B), then generalize to multi-operator via the same recursive palindromic structure.
+  **Estimated total: ~500 lines.** No BCH formalization needed.
 
-- [ ] **Truncated BCH bounds (H1.5)** — Prerequisite for H1 Phase 2. We do NOT need the full infinite BCH series $\ln(e^A e^B) = A + B + [A,B]/2 + \cdots$ (that's a research-level formalization involving Bernoulli numbers and iterated commutators). What we need is the **truncated BCH to order 3**:
+- [ ] **Truncated BCH bounds (separate project: [Lean-BCH](https://github.com/Jue-Xu/Lean-BCH))** — Independent formalization of:
   $$e^A e^B = e^{A+B+[A,B]/2+R_3}, \qquad \|R_3\| \le C(\|A\|^2\|B\| + \|A\|\|B\|^2) e^{\|A\|+\|B\|}$$
-  We already have most of this: `norm_exp_mul_exp_sub_exp_add_sub_comm_le` extracts $[A,B]/2$ from $e^A e^B - e^{A+B}$ with cubic remainder. What's still needed:
-  - The **symmetric BCH**: $e^{A/2} e^B e^{A/2} = e^{A+B+c_3[A,[A,B]]+\cdots}$ with explicit $c_3 = -1/24$ and fifth-order remainder
-  - Showing $S_4$'s composition with $4p^3+(1-4p)^3=0$ kills the $c_3$ term
+  Bridges Mathlib's algebraic Lie bracket `⁅·,·⁆` to the analytic exponential. Not a prerequisite for H1 (the BCH-free approach above avoids it), but valuable as a standalone library for Lie group integrators, Magnus expansion, etc.
 
   This extends our existing commutator extraction machinery (B5, C1-refined) rather than requiring a new framework. Estimated: ~300 lines on top of existing infrastructure.
 
