@@ -188,7 +188,7 @@ Then tsum assembly sums to $(e^{\|a\|}-1)(e^{\|b\|}-1)$ via `Real.exp_add` and `
 | Sub-task | Statement | Priority | Status |
 |----------|-----------|----------|--------|
 | F1. `matrix_lie_trotter` | Specialization to `Matrix (Fin d) (Fin d) ℂ` | Low | 🔴 |
-| F2. `symmetric_lie_trotter` | Strang splitting: $e^{A+B} = \lim (e^{A/2n} e^{B/n} e^{A/2n})^n$ | Low | 🔴 |
+| F2. `symmetric_lie_trotter` | Strang splitting: $e^{A+B} = \lim (e^{A/2n} e^{B/n} e^{A/2n})^n$ with O(1/n²) rate | Low | ✅ |
 
 These are nice-to-haves once the main theorem compiles without `sorry`.
 
