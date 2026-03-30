@@ -29,9 +29,18 @@
   ```
   Telescopes into a sum of pairwise C1-type bounds. Estimate: ~150 lines. Reuses all existing infrastructure.
 
-- [ ] **Fourth-order Suzuki formula (H1)** — Prove convergence of the Suzuki S₄ integrator:
-  $$S_4(t) = S_2(p\,t)\, S_2(p\,t)\, S_2((1-4p)\,t)\, S_2(p\,t)\, S_2(p\,t), \quad p = \frac{1}{4-4^{1/3}}$$
-  where $S_2(t) = e^{At/2}\,e^{Bt}\,e^{At/2}$ is the Strang splitting. This is the standard fourth-order integrator used in quantum simulation. The proof composes five Strang steps and shows the third-order error cancels by Suzuki's recursive construction. Requires showing $S_4(t/n)^n$ converges at O(1/n⁴). The irrational constant $p$ adds complexity (need `Real.rpow` or explicit algebraic number handling).
+- [ ] **Fourth-order Suzuki formula (H1)** — Two-phase approach:
+
+  **Phase 1 (O(1/n²), feasible ~200 lines):** Define $S_4$ as a composition of five $S_2$ (Strang) steps with time fractions $p, p, 1-4p, p, p$ where $p = 1/(4-4^{1/3})$. Prove convergence at O(1/n²) by composing five cubic step errors — no cancellation needed, same rate as plain Strang but establishes the $S_4$ definition and composition infrastructure.
+
+  **Phase 2 (O(1/n⁴), hard ~500+ lines):** Prove the actual fourth-order rate by showing the third-order BCH terms cancel: $4p^3 + (1-4p)^3 = 0$ kills the leading error. Three sub-approaches:
+  - (a) Formalize enough BCH to show $S_2(t) = e^{Ht + c_3 t^3 + O(t^5)}$ and the cancellation
+  - (b) Fifth-order remainder bound (B7) + direct fourth-order matching
+  - (c) Suzuki's composition lemma: second-order method → fourth-order via the specific $p$
+
+  **Complications:** The constant $p = 1/(4-4^{1/3})$ is irrational (need `Real.rpow`). Multi-operator case follows by composing five multi-operator Strang steps.
+
+  Both phases start with the 2-operator case (A+B), then generalize to multi-operator via the same recursive palindromic structure.
 
 - [ ] **General Suzuki hierarchy (H2)** — Prove convergence of the $2k$-th order Suzuki formula $S_{2k}$ defined recursively:
   $$S_{2k}(t) = S_{2k-2}(p_k t)^2\, S_{2k-2}((1-4p_k)t)\, S_{2k-2}(p_k t)^2, \quad p_k = \frac{1}{4-4^{1/(2k-1)}}$$
