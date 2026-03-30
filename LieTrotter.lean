@@ -16,6 +16,7 @@ We prove the Lie–Trotter product formula for elements in a complete normed alg
 - `LieTrotter.ExpDivPow` — exp(a/n)^n = exp(a)
 - `LieTrotter.Assembly` — convergence rate and main theorem
 - `LieTrotter.StrangSplitting` — symmetric Lie-Trotter (Strang splitting)
+- `LieTrotter.MultiOperator` — multi-operator generalization (A₁+⋯+Aₘ)
 
 ## References
 
@@ -29,3 +30,4 @@ import LieTrotter.StepError
 import LieTrotter.ExpDivPow
 import LieTrotter.Assembly
 import LieTrotter.StrangSplitting
+import LieTrotter.MultiOperator
