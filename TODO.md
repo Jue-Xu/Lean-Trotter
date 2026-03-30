@@ -2,7 +2,15 @@
 
 ## High priority
 
-- [ ] **Contribute `norm_exp_le` to Mathlib** — We proved `‖exp a‖ ≤ exp ‖a‖` for general Banach algebras; Mathlib only has `Complex.norm_exp_le_exp_norm` for `ℂ`. The helpers `norm_exp_sub_one_le`, `exp_sub_one_sub_bound_real`, and `norm_exp_sub_one_sub_le` are also natural additions. File a Mathlib4 PR from `ExpBounds.lean`.
+- [ ] **Contribute `norm_exp_le` to Mathlib** — We proved `‖exp a‖ ≤ exp ‖a‖` for general Banach algebras; Mathlib only has `Complex.norm_exp_le_exp_norm` for `ℂ`. The helpers `norm_exp_sub_one_le`, `exp_sub_one_sub_bound_real`, and `norm_exp_sub_one_sub_le` are also natural additions.
+
+  **PR readiness assessment** (cleanup needed before submitting):
+  1. Weaken `[NormOneClass 𝔸]` → use `norm_pow_le'` (works with just `[NormedRing 𝔸]`)
+  2. Remove `include 𝕂 in` pattern (non-standard for Mathlib); use section variables instead
+  3. Follow Mathlib naming: `norm_exp_le` → `norm_exp_le_exp_norm`, etc.
+  4. Drop redundant helpers (`real_exp_summable`, `real_exp_eq_tsum` already in Mathlib)
+  5. Target file: `Mathlib.Analysis.Normed.Algebra.Exponential` (modify existing, not new file)
+  6. Open a Zulip thread first to confirm maintainer interest before investing effort
 
 - [x] **Tighten the error constant** — Tightened from `C = 2‖A‖‖B‖ exp(2(‖A‖+‖B‖)) + 1` to `C = 2‖A‖‖B‖ exp(‖A‖+‖B‖) + 1`. The `+1` remains for `C > 0`; only `1/n` slack.
 
