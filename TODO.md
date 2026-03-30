@@ -29,6 +29,14 @@
   ```
   Telescopes into a sum of pairwise C1-type bounds. Estimate: ~150 lines. Reuses all existing infrastructure.
 
+- [ ] **Fourth-order Suzuki formula (H1)** — Prove convergence of the Suzuki S₄ integrator:
+  $$S_4(t) = S_2(p\,t)\, S_2(p\,t)\, S_2((1-4p)\,t)\, S_2(p\,t)\, S_2(p\,t), \quad p = \frac{1}{4-4^{1/3}}$$
+  where $S_2(t) = e^{At/2}\,e^{Bt}\,e^{At/2}$ is the Strang splitting. This is the standard fourth-order integrator used in quantum simulation. The proof composes five Strang steps and shows the third-order error cancels by Suzuki's recursive construction. Requires showing $S_4(t/n)^n$ converges at O(1/n⁴). The irrational constant $p$ adds complexity (need `Real.rpow` or explicit algebraic number handling).
+
+- [ ] **General Suzuki hierarchy (H2)** — Prove convergence of the $2k$-th order Suzuki formula $S_{2k}$ defined recursively:
+  $$S_{2k}(t) = S_{2k-2}(p_k t)^2\, S_{2k-2}((1-4p_k)t)\, S_{2k-2}(p_k t)^2, \quad p_k = \frac{1}{4-4^{1/(2k-1)}}$$
+  This gives O(1/n^{2k}) convergence. Very ambitious — requires induction on the Suzuki order $k$ and tracking error cancellation at each level. Likely a separate project.
+
 - [ ] **Matrix specialization (F1)** — Prove `matrix_lie_trotter` for `Matrix (Fin d) (Fin d) ℂ`. Should be a one-liner applying `lie_trotter` once the `NormOneClass` instance is verified for the matrix norm. Connects to quantum computing applications.
 
 ## Low priority
