@@ -165,8 +165,8 @@ where R'(x,y) is the cubic remainder from `norm_exp_mul_exp_sub_exp_add_sub_comm
 include 𝕂 in
 theorem norm_exp_mul_exp_mul_exp_sub_exp_add_cubic (a b : 𝔸) :
     ‖exp a * exp b * exp a - exp (a + b + a)‖ ≤
-      (7 / 2 * ‖a‖ ^ 2 * ‖b‖ + 5 / 2 * ‖a‖ * ‖b‖ ^ 2 +
-       3 / 2 * ‖a‖ ^ 3 + 3 * ‖a‖ ^ 2 * ‖b‖) *
+      (7 * ‖a‖ ^ 2 * ‖b‖ + 3 * ‖a‖ * ‖b‖ ^ 2 +
+       3 * ‖a‖ ^ 3) *
         Real.exp (2 * ‖a‖ + ‖b‖) := by
   -- Algebraic splitting (same as quadratic proof)
   have alg : exp a * exp b * exp a - exp (a + b + a) =
@@ -192,7 +192,7 @@ theorem norm_exp_mul_exp_mul_exp_sub_exp_add_cubic (a b : 𝔸) :
     -- since (ba-ab)/2 + (ab-ba)/2 = 0
     have neg_comm : (2 : 𝕂)⁻¹ • (a * b - b * a) =
         -((2 : 𝕂)⁻¹ • (b * a - a * b)) := by
-      rw [smul_neg, neg_sub]
+      rw [← smul_neg, neg_sub]
     -- Rearrange: all three terms sum to the original
     -- After rw [neg_comm], set s as opaque so noncomm_ring sees a pure ring identity
     rw [neg_comm]
@@ -226,7 +226,7 @@ theorem norm_exp_mul_exp_mul_exp_sub_exp_add_cubic (a b : 𝔸) :
             _ ≤ (Real.exp ‖a‖ - 1) * ‖(2 : 𝕂)⁻¹ • (b * a - a * b)‖ := by
                 gcongr; exact norm_exp_sub_one_le (𝕂 := 𝕂) a
             _ ≤ (Real.exp ‖a‖ - 1) * (‖a‖ * ‖b‖) := by
-                gcongr
+                apply mul_le_mul_of_nonneg_left _ (by linarith [Real.add_one_le_exp ‖a‖, norm_nonneg a])
                 -- ‖2⁻¹‖ = 1/2 and ‖ba-ab‖ ≤ 2‖a‖‖b‖, so product ≤ ‖a‖‖b‖
                 calc ‖(2 : 𝕂)⁻¹ • (b * a - a * b)‖
                     ≤ ‖(2 : 𝕂)⁻¹‖ * ‖b * a - a * b‖ := norm_smul_le _ _
@@ -250,8 +250,8 @@ theorem norm_exp_mul_exp_mul_exp_sub_exp_add_cubic (a b : 𝔸) :
         · -- Term 3: R'(a, b+a)
           exact norm_exp_mul_exp_sub_exp_add_sub_comm_le (𝕂 := 𝕂) a (b + a)
     -- Simplify the bound
-    _ ≤ (7 / 2 * ‖a‖ ^ 2 * ‖b‖ + 5 / 2 * ‖a‖ * ‖b‖ ^ 2 +
-         3 / 2 * ‖a‖ ^ 3 + 3 * ‖a‖ ^ 2 * ‖b‖) *
+    _ ≤ (7 * ‖a‖ ^ 2 * ‖b‖ + 3 * ‖a‖ * ‖b‖ ^ 2 +
+         3 * ‖a‖ ^ 3) *
           Real.exp (2 * ‖a‖ + ‖b‖) := by
         have ha := norm_nonneg a
         have hb := norm_nonneg b
@@ -265,12 +265,13 @@ theorem norm_exp_mul_exp_mul_exp_sub_exp_add_cubic (a b : 𝔸) :
           rw [← Real.exp_add]; congr 1; ring
         -- exp(‖a‖ + ‖b+a‖) ≤ exp(2‖a‖ + ‖b‖)
         have hexp2 : Real.exp (‖a‖ + ‖b + a‖) ≤ Real.exp (2 * ‖a‖ + ‖b‖) := by
-          gcongr; linarith [hba]
+          apply Real.exp_le_exp_of_le; linarith [hba]
         -- Term 1: (exp(‖a‖)-1)·‖a‖·‖b‖ ≤ ‖a‖²·‖b‖·exp(‖a‖)
         have t1 : (Real.exp ‖a‖ - 1) * (‖a‖ * ‖b‖) ≤
             ‖a‖ ^ 2 * ‖b‖ * Real.exp (2 * ‖a‖ + ‖b‖) := by
           calc (Real.exp ‖a‖ - 1) * (‖a‖ * ‖b‖)
-              ≤ ‖a‖ * Real.exp ‖a‖ * (‖a‖ * ‖b‖) := by nlinarith
+              ≤ ‖a‖ * Real.exp ‖a‖ * (‖a‖ * ‖b‖) := by
+                apply mul_le_mul_of_nonneg_right h_ea (mul_nonneg ha hb)
             _ = ‖a‖ ^ 2 * ‖b‖ * Real.exp ‖a‖ := by ring
             _ ≤ ‖a‖ ^ 2 * ‖b‖ * Real.exp (2 * ‖a‖ + ‖b‖) := by
                 gcongr; linarith
@@ -285,10 +286,14 @@ theorem norm_exp_mul_exp_mul_exp_sub_exp_add_cubic (a b : 𝔸) :
         --       ≤ (3/2)·‖a‖·(‖a‖+‖b‖)·(2‖a‖+‖b‖)·exp(2‖a‖+‖b‖)
         have t3 : 3 / 2 * ‖a‖ * ‖b + a‖ * (‖a‖ + ‖b + a‖) * Real.exp (‖a‖ + ‖b + a‖) ≤
             3 / 2 * ‖a‖ * (‖a‖ + ‖b‖) * (2 * ‖a‖ + ‖b‖) * Real.exp (2 * ‖a‖ + ‖b‖) := by
-          gcongr
-          · exact hba
-          · linarith [hba]
-          · linarith [hba]
+          have h1 : ‖a‖ + ‖b + a‖ ≤ 2 * ‖a‖ + ‖b‖ := by linarith [hba]
+          calc 3 / 2 * ‖a‖ * ‖b + a‖ * (‖a‖ + ‖b + a‖) * Real.exp (‖a‖ + ‖b + a‖)
+              ≤ 3 / 2 * ‖a‖ * (‖a‖ + ‖b‖) * (‖a‖ + ‖b + a‖) * Real.exp (‖a‖ + ‖b + a‖) := by
+                gcongr
+            _ ≤ 3 / 2 * ‖a‖ * (‖a‖ + ‖b‖) * (2 * ‖a‖ + ‖b‖) * Real.exp (‖a‖ + ‖b + a‖) := by
+                gcongr
+            _ ≤ 3 / 2 * ‖a‖ * (‖a‖ + ‖b‖) * (2 * ‖a‖ + ‖b‖) * Real.exp (2 * ‖a‖ + ‖b‖) := by
+                gcongr
         -- Combine: expand and collect
         -- t1: ‖a‖²‖b‖ · E
         -- t2: (3/2)·‖a‖·‖b‖·(‖a‖+‖b‖) · E = (3/2)(‖a‖²‖b‖ + ‖a‖‖b‖²) · E
@@ -310,9 +315,9 @@ include 𝕂 in
 private theorem strang_step_error_cubic (A B : 𝔸) (n : ℕ) (hn : 0 < n) :
     ‖exp ((2 * (n : 𝕂))⁻¹ • A) * exp ((n : 𝕂)⁻¹ • B) *
       exp ((2 * (n : 𝕂))⁻¹ • A) - exp ((n : 𝕂)⁻¹ • (A + B))‖ ≤
-      (7 / 2 * ‖A‖ ^ 2 * ‖B‖ + 5 / 2 * ‖A‖ * ‖B‖ ^ 2 +
-       3 / 2 * ‖A‖ ^ 3 + 3 * ‖A‖ ^ 2 * ‖B‖) /
-        (4 * (n : ℝ) ^ 3) * Real.exp ((‖A‖ + ‖B‖) / n) := by
+      (7 / 4 * ‖A‖ ^ 2 * ‖B‖ + 3 / 2 * ‖A‖ * ‖B‖ ^ 2 +
+       3 / 8 * ‖A‖ ^ 3) /
+        (n : ℝ) ^ 3 * Real.exp ((‖A‖ + ‖B‖) / n) := by
   have hsmul : (2 * (n : 𝕂))⁻¹ • A + (n : 𝕂)⁻¹ • B + (2 * (n : 𝕂))⁻¹ • A =
       (n : 𝕂)⁻¹ • (A + B) := symmetric_smul_eq (𝕂 := 𝕂) A B n hn
   rw [← hsmul]
@@ -334,14 +339,13 @@ private theorem strang_step_error_cubic (A B : 𝔸) (n : ℕ) (hn : 0 < n) :
     rw [norm_smul, norm_inv_n, div_eq_inv_mul]
   rw [norm_a, norm_b] at h_gen
   calc ‖exp a * exp b * exp a - exp (a + b + a)‖
-      ≤ (7 / 2 * (‖A‖ / (2 * ↑n)) ^ 2 * (‖B‖ / ↑n) +
-         5 / 2 * (‖A‖ / (2 * ↑n)) * (‖B‖ / ↑n) ^ 2 +
-         3 / 2 * (‖A‖ / (2 * ↑n)) ^ 3 +
-         3 * (‖A‖ / (2 * ↑n)) ^ 2 * (‖B‖ / ↑n)) *
+      ≤ (7 * (‖A‖ / (2 * ↑n)) ^ 2 * (‖B‖ / ↑n) +
+         3 * (‖A‖ / (2 * ↑n)) * (‖B‖ / ↑n) ^ 2 +
+         3 * (‖A‖ / (2 * ↑n)) ^ 3) *
         Real.exp (2 * (‖A‖ / (2 * ↑n)) + ‖B‖ / ↑n) := h_gen
-    _ = (7 / 2 * ‖A‖ ^ 2 * ‖B‖ + 5 / 2 * ‖A‖ * ‖B‖ ^ 2 +
-         3 / 2 * ‖A‖ ^ 3 + 3 * ‖A‖ ^ 2 * ‖B‖) /
-          (4 * (↑n) ^ 3) * Real.exp ((‖A‖ + ‖B‖) / ↑n) := by
+    _ = (7 / 4 * ‖A‖ ^ 2 * ‖B‖ + 3 / 2 * ‖A‖ * ‖B‖ ^ 2 +
+         3 / 8 * ‖A‖ ^ 3) /
+          (↑n) ^ 3 * Real.exp ((‖A‖ + ‖B‖) / ↑n) := by
       field_simp; ring
 
 /-!
@@ -353,8 +357,8 @@ theorem strang_error_rate_sq (A B : 𝔸) :
     ∃ C > 0, ∀ n : ℕ, 0 < n →
       ‖(exp ((2 * (n : 𝕂))⁻¹ • A) * exp ((n : 𝕂)⁻¹ • B) *
         exp ((2 * (n : 𝕂))⁻¹ • A)) ^ n - exp (A + B)‖ ≤ C / n ^ 2 := by
-  set c := (7 / 2 * ‖A‖ ^ 2 * ‖B‖ + 5 / 2 * ‖A‖ * ‖B‖ ^ 2 +
-       3 / 2 * ‖A‖ ^ 3 + 3 * ‖A‖ ^ 2 * ‖B‖) / 4
+  set c := 7 / 4 * ‖A‖ ^ 2 * ‖B‖ + 3 / 2 * ‖A‖ * ‖B‖ ^ 2 +
+       3 / 8 * ‖A‖ ^ 3
   refine ⟨c * Real.exp (‖A‖ + ‖B‖) + 1, by positivity, ?_⟩
   intro n hn
   -- Step 1: Rewrite exp(A+B) = exp((A+B)/n)^n
@@ -437,7 +441,7 @@ theorem strang_error_rate_sq (A B : 𝔸) :
               (Real.exp (s / ↑n) * Real.exp (s / ↑n) ^ (n - 1)) := by ring
           rw [this, h_pow, h_exp_pow]
           have : (↑n : ℝ) / (↑n) ^ 3 = 1 / (↑n) ^ 2 := by
-            field_simp; ring
+            field_simp
           rw [this]; ring
         rw [h_lhs]
         have hn2_pos : (0 : ℝ) < (↑n) ^ 2 := by positivity
@@ -473,7 +477,7 @@ theorem symmetric_lie_trotter (A B : 𝔸) :
         apply div_le_div_of_nonneg_left hC_pos.le (by positivity) _
         calc (n : ℝ) = (n : ℝ) ^ 1 := (pow_one _).symm
           _ ≤ (n : ℝ) ^ 2 := by
-              exact pow_le_pow_right hn_cast (by omega)
+              exact pow_le_pow_right₀ hn_cast (by omega)
     _ ≤ C / (N + 1) := by
         apply div_le_div_of_nonneg_left hC_pos.le (by positivity : (0:ℝ) < N + 1)
         exact_mod_cast hn

@@ -28,7 +28,7 @@ Then expand the product and bound each cross term.
 -/
 
 -- Auxiliary: Real.exp x - 1 ≤ x * Real.exp x for x ≥ 0
-private lemma exp_sub_one_le_mul_exp {x : ℝ} (_hx : 0 ≤ x) :
+lemma exp_sub_one_le_mul_exp {x : ℝ} (_hx : 0 ≤ x) :
     Real.exp x - 1 ≤ x * Real.exp x := by
   have h1 := Real.add_one_le_exp (-x)
   have hexp_pos := Real.exp_pos x
@@ -564,15 +564,18 @@ theorem norm_exp_mul_exp_sub_exp_add_sub_comm_le (x y : 𝔸) :
         (2 : 𝕂)⁻¹ • ((x + y) ^ 2 - x ^ 2 - y ^ 2)) := by
     have h2 : (2 : 𝕂)⁻¹ • ((x + y) ^ 2 - x ^ 2 - y ^ 2) =
         (2 : 𝕂)⁻¹ • (x * y + y * x) := by
-      congr 1; ring
+      congr 1; noncomm_ring
     rw [h2]
     have key : x * y - (2 : 𝕂)⁻¹ • (x * y + y * x) =
         (2 : 𝕂)⁻¹ • (x * y - y * x) := by
-      have h2inv : (2 : 𝕂)⁻¹ + (2 : 𝕂)⁻¹ = 1 := by
-        field_simp; norm_num
-      rw [show x * y = (1 : 𝕂) • (x * y) from (one_smul _ _).symm,
-          show (1 : 𝕂) = (2 : 𝕂)⁻¹ + (2 : 𝕂)⁻¹ from h2inv.symm,
-          add_smul, smul_sub]
+      have h2inv : (2 : 𝕂)⁻¹ + (2 : 𝕂)⁻¹ = 1 := by field_simp; norm_num
+      have lhs : x * y - (2 : 𝕂)⁻¹ • (x * y + y * x) =
+          (2 : 𝕂)⁻¹ • (x * y) + (2 : 𝕂)⁻¹ • (x * y) -
+          ((2 : 𝕂)⁻¹ • (x * y) + (2 : 𝕂)⁻¹ • (y * x)) := by
+        rw [smul_add]
+        congr 1
+        rw [← add_smul, h2inv, one_smul]
+      rw [lhs, smul_sub]
       abel
     -- After rewriting, both sides have (2⁻¹)•(xy+yx) as a common smul term
     -- Set it as a variable so noncomm_ring can handle the pure ring identity
@@ -621,13 +624,21 @@ theorem norm_exp_mul_exp_sub_exp_add_sub_comm_le (x y : 𝔸) :
         -- sub_A term 2: ‖x‖·‖y‖²/2·exp(‖y‖) ≤ ‖x‖·‖y‖²/2·exp(‖x‖+‖y‖)
         have h2 : ‖x‖ * (‖y‖ ^ 2 / 2 * Real.exp ‖y‖) ≤
             ‖x‖ * ‖y‖ ^ 2 / 2 * Real.exp (‖x‖ + ‖y‖) := by
-          have : Real.exp ‖y‖ ≤ Real.exp (‖x‖ + ‖y‖) := by
+          have hexp_le : Real.exp ‖y‖ ≤ Real.exp (‖x‖ + ‖y‖) := by
             gcongr; linarith
-          nlinarith [sq_nonneg ‖y‖]
-        -- Now: total ≤ ‖x‖²‖y‖/2 · E + ‖x‖‖y‖²/2 · E + ‖x‖‖y‖(‖x‖+‖y‖) · E
-        --           = ‖x‖‖y‖(‖x‖+‖y‖)/2 · E + ‖x‖‖y‖(‖x‖+‖y‖) · E
-        --           = (3/2)‖x‖‖y‖(‖x‖+‖y‖) · E
-        nlinarith [Real.exp_pos (‖x‖ + ‖y‖)]
+          have : ‖x‖ * (‖y‖ ^ 2 / 2 * Real.exp ‖y‖) =
+              ‖x‖ * ‖y‖ ^ 2 / 2 * Real.exp ‖y‖ := by ring
+          rw [this]
+          exact mul_le_mul_of_nonneg_left hexp_le (by positivity)
+        -- Total ≤ ‖x‖²‖y‖/2·E + ‖x‖‖y‖²/2·E + ‖x‖‖y‖(‖x‖+‖y‖)·E = 3/2·‖x‖‖y‖(‖x‖+‖y‖)·E
+        set E := Real.exp (‖x‖ + ‖y‖)
+        have hE : 0 < E := Real.exp_pos _
+        -- ‖x‖²‖y‖/2 + ‖x‖‖y‖²/2 = ‖x‖‖y‖(‖x‖+‖y‖)/2
+        have hab : ‖x‖ ^ 2 * ‖y‖ / 2 + ‖x‖ * ‖y‖ ^ 2 / 2 =
+            ‖x‖ * ‖y‖ * (‖x‖ + ‖y‖) / 2 := by nlinarith
+        -- cross term ≤ ‖x‖‖y‖(‖x‖+‖y‖)·E
+        -- so total ≤ (1/2 + 1) · ‖x‖‖y‖(‖x‖+‖y‖)·E = 3/2·...
+        nlinarith [mul_nonneg (mul_nonneg hs ht) (add_nonneg hs ht)]
 
 /-!
 ## C2: Lie-Trotter step error
