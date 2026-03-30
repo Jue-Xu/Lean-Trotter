@@ -23,7 +23,15 @@
 
 ## Low priority
 
-- [ ] **Write a short formalization note** — 2-page writeup for ITP/CPP documenting: (1) the algebraic factorization trick for C1 vs. the standard second-order expansion, (2) the `include 𝕂 in` pattern for Mathlib's field-free `exp` API, (3) the Mathlib gap we filled (`norm_exp_le` for general Banach algebras).
+## Publication / dissemination
+
+- [ ] **Zulip announcement + arXiv note** (do first, low effort) — Post to `#general` on [leanprover.zulipchat.com](https://leanprover.zulipchat.com/) announcing the formalization. Write a 1–2 page arXiv companion note (cs.LO or quant-ph) with the repo link. Gets immediate community visibility.
+
+- [ ] **ITP/CPP formalization pearl** (medium effort, peer-reviewed) — 2–4 page short paper covering: (1) the algebraic factorization trick for C1 vs. the standard BCH approach, (2) the commutator cancellation for the cubic Strang bound, (3) the Mathlib API gap (`norm_exp_le` for general Banach algebras). Check submission deadlines.
+
+- [ ] **Companion citation for physics papers** — If writing a paper on Hamiltonian simulation or Trotter error bounds, cite this repo as mechanically verified. The O(1/n²) Strang result is directly relevant to quantum simulation.
+
+## Code cleanup
 
 - [ ] **Clean up lint warnings** — The `mathlib: repository has local changes` warning appears because `lake update` modified the local Mathlib checkout. Running `lake update` fresh in a clean clone resolves this. Not a real issue but worth noting for CI.
 
