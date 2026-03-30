@@ -2,15 +2,17 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-lightblue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-A Lean 4 formalization of the **Lie-Trotter product formula** and **Strang splitting** for complete normed algebras.
+A Lean 4 formalization of the **Lie-Trotter product formula** and **Strang splitting** for complete normed algebras, including multi-operator generalizations.
 
-**First-order (Lie-Trotter):**
+**First-order (Lie-Trotter):** step error $O(1/n^2)$, total error $O(1/n)$
 
-$$e^{A+B} = \lim_{n \to \infty} \left(e^{A/n}\cdot e^{B/n}\right)^n, \qquad \left\lVert \left(e^{A/n}\cdot e^{B/n}\right)^n - e^{A+B} \right\rVert = O(1/n)$$
+$$e^{A+B} = \lim_{n \to \infty} \left(e^{A/n}\cdot e^{B/n}\right)^n, \qquad \left\lVert \left(e^{A/n}\cdot e^{B/n}\right)^n - e^{A+B} \right\rVert \le \frac{C}{n}$$
 
-**Second-order (Strang splitting):**
+**Second-order (Strang splitting):** step error $O(1/n^3)$, total error $O(1/n^2)$
 
-$$e^{A+B} = \lim_{n \to \infty} \left(e^{A/2n}\cdot e^{B/n}\cdot e^{A/2n}\right)^n, \qquad \left\lVert \left(e^{A/2n}\cdot e^{B/n}\cdot e^{A/2n}\right)^n - e^{A+B} \right\rVert = O(1/n^2)$$
+$$e^{A+B} = \lim_{n \to \infty} \left(e^{A/2n}\cdot e^{B/n}\cdot e^{A/2n}\right)^n, \qquad \left\lVert \left(e^{A/2n}\cdot e^{B/n}\cdot e^{A/2n}\right)^n - e^{A+B} \right\rVert \le \frac{C}{n^2}$$
+
+Both formulas are also proved for **any finite number of operators** $A_1, \ldots, A_m$.
 
 ## Status
 
@@ -18,16 +20,23 @@ $$e^{A+B} = \lim_{n \to \infty} \left(e^{A/2n}\cdot e^{B/n}\cdot e^{A/2n}\right)
 
 ### Main results
 
-| Theorem | Statement | Rate |
-|---------|-----------|------|
-| `lie_trotter` | $(e^{A/n} e^{B/n})^n \to e^{A+B}$ | O(1/n) |
-| `symmetric_lie_trotter` | $(e^{A/2n} e^{B/n} e^{A/2n})^n \to e^{A+B}$ | **O(1/n²)** |
-| `lie_trotter_error_rate` | $\lVert(e^{A/n} e^{B/n})^n - e^{A+B}\rVert \le C/n$ | explicit $C$ |
-| `strang_error_rate_sq` | $\lVert(e^{A/2n} e^{B/n} e^{A/2n})^n - e^{A+B}\rVert \le C/n^2$ | explicit $C$ |
-| `norm_exp_mul_exp_sub_exp_add'` | $\lVert e^a e^b - e^{a+b}\rVert \le 2\lVert a\rVert\lVert b\rVert\, e^{\lVert a\rVert+\lVert b\rVert}$ | quadratic |
-| `norm_exp_mul_exp_mul_exp_sub_exp_add_cubic` | $\lVert e^a e^b e^a - e^{2a+b}\rVert = O(\lVert a\rVert^2\lVert b\rVert)$ | cubic |
-| `lie_trotter_list` | $(\prod_i e^{A_i/n})^n \to e^{\sum_i A_i}$ for any finite list | O(1/n) |
-| `symmetric_lie_trotter_list` | $(e^{A_1/2n}\cdots e^{A_m/n}\cdots e^{A_1/2n})^n \to e^{\sum_i A_i}$ | **O(1/n²)** |
+#### Convergence theorems (total error after $n$ steps)
+
+| Theorem | Formula | Total error | Operators |
+|---------|---------|-------------|-----------|
+| `lie_trotter` | $(e^{A/n} e^{B/n})^n \to e^{A+B}$ | $O(1/n)$ | 2 |
+| `symmetric_lie_trotter` | $(e^{A/2n} e^{B/n} e^{A/2n})^n \to e^{A+B}$ | $O(1/n^2)$ | 2 |
+| `lie_trotter_list` | $(\prod_i e^{A_i/n})^n \to e^{\sum_i A_i}$ | $O(1/n)$ | $m$ |
+| `symmetric_lie_trotter_list` | palindromic product $\to e^{\sum_i A_i}$ | $O(1/n^2)$ | $m$ |
+
+#### Step error bounds (single-step approximation)
+
+| Theorem | Bound | Order |
+|---------|-------|-------|
+| `norm_exp_mul_exp_sub_exp_add'` | $\lVert e^a e^b - e^{a+b}\rVert \le 2\lVert a\rVert\lVert b\rVert\, e^{\lVert a\rVert+\lVert b\rVert}$ | $O(\lVert a\rVert\lVert b\rVert)$ |
+| `norm_exp_mul_exp_mul_exp_sub_exp_add_cubic` | $\lVert e^a e^b e^a - e^{2a+b}\rVert \le C\, e^{2\lVert a\rVert+\lVert b\rVert}$ | $O(\lVert a\rVert^2\lVert b\rVert)$ |
+
+> **Note on "order":** A $k$-th order method has step error $O(1/n^{k+1})$ and total error $O(1/n^k)$ after $n$ steps, because the telescoping assembly multiplies by $n$.
 
 ### Module structure
 
@@ -55,7 +64,7 @@ lake build
 
 ## Proof outline
 
-### Standard Lie-Trotter (O(1/n))
+### Standard Lie-Trotter (first-order, O(1/n) total error)
 
 1. **Telescoping** (Track A): $X^n - Y^n = \sum_{k<n} X^k(X-Y)Y^{n-1-k}$, giving $\lVert X^n - Y^n\rVert \le n\lVert X-Y\rVert M^{n-1}$.
 
@@ -63,15 +72,21 @@ lake build
 
 3. **Quadratic step error** (Track C): $\lVert e^a e^b - e^{a+b}\rVert \le 2\lVert a\rVert\lVert b\rVert\, e^{\lVert a\rVert+\lVert b\rVert}$, via the factorization $e^a e^b - e^{a+b} = (e^a-1)(e^b-1) - (e^{a+b}-e^a-e^b+1)$ and an inductive cross-term bound.
 
-4. **Assembly** (Tracks D+E): $P_n = e^{A/n}e^{B/n}$, $Q_n = e^{(A+B)/n}$, telescoping gives $\lVert P_n^n - Q_n^n\rVert \le n \cdot O(1/n^2) \cdot e^{O(1)} = O(1/n)$.
+4. **Assembly** (Tracks D+E): Set $P_n = e^{A/n}e^{B/n}$, $Q_n = e^{(A+B)/n}$. Telescoping gives $\lVert P_n^n - Q_n^n\rVert \le n \cdot \underbrace{O(1/n^2)}_{\text{step error}} \cdot e^{O(1)} = O(1/n)$.
 
-### Strang splitting (O(1/n²))
+### Strang splitting (second-order, O(1/n²) total error)
 
-5. **Commutator extraction**: Factor $e^a e^b - e^{a+b} = [a,b]/2 + R(a,b)$ where $R$ is cubic. The commutator $[a,b]$ cancels by symmetry in the product $e^a e^b e^a$.
+5. **Commutator extraction**: Factor $e^a e^b - e^{a+b} = [a,b]/2 + R(a,b)$ where $R$ is cubic. The commutator $[a,b]$ cancels by symmetry in $e^a e^b e^a$.
 
-6. **Cubic step error**: $\lVert e^a e^b e^a - e^{2a+b}\rVert = O(\lVert a\rVert^2\lVert b\rVert + \lVert a\rVert\lVert b\rVert^2)$, giving step error $O(1/n^3)$ with $a = A/2n$, $b = B/n$.
+6. **Cubic step error**: $\lVert e^a e^b e^a - e^{2a+b}\rVert = O(\lVert a\rVert^2\lVert b\rVert + \lVert a\rVert\lVert b\rVert^2)$. With $a = A/2n$, $b = B/n$, this is $O(1/n^3)$.
 
-7. **Assembly**: Telescoping with the cubic step error gives $O(1/n^2)$ convergence.
+7. **Assembly**: Telescoping with cubic step error: $n \cdot \underbrace{O(1/n^3)}_{\text{step error}} \cdot e^{O(1)} = O(1/n^2)$.
+
+### Multi-operator generalizations
+
+8. **First-order** ($m$ operators): Induction on the list, peeling off one factor and applying the quadratic step error.
+
+9. **Second-order** ($m$ operators): Recursive palindromic product $S_n(A_1, \ldots, A_m) = e^{A_1/2n} \cdot S_n(A_2, \ldots, A_m) \cdot e^{A_1/2n}$. Induction reduces each step to the 2-operator cubic Strang bound.
 
 ## References
 
