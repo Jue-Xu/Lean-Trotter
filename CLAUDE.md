@@ -296,6 +296,42 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 
 ---
 
+## Lessons Learned
+
+Patterns and anti-patterns from this formalization, useful for future Lean projects.
+
+### Proof strategy
+
+- **Find the clean factorization on paper first.** The C1 bound via $(e^a-1)(e^b-1) - \text{cross}$ was half the length of the direct second-order expansion. The Strang cubic bound via commutator extraction was the only approach that worked at all. Spend time on the math before touching Lean.
+
+- **If your bound is weaker than expected, find the cancellation.** Applying C1 twice to the symmetric product gave O(1/n²) step error (= O(1/n) overall), not the expected O(1/n³). The missing ingredient was the commutator cancellation $[a,b] + (-[a,b]) = 0$. The math tells you when you're missing structure.
+
+- **sorry-driven development.** Write all theorem statements with `sorry`, verify they compose, then fill bottom-up. The sorry census (22→9→3→0) is your project dashboard. Treat `sorry` like a type-checked TODO.
+
+- **The `+1` trick for existential witnesses.** Every `∃ C > 0` used `C = (tight bound) + 1` to ensure positivity when the tight bound could be zero. Don't waste time case-splitting on degeneracies.
+
+### Lean / Mathlib workflow
+
+- **Pin your Mathlib version from day one.** Don't run `lake update` mid-project. Our unplanned 4.16→4.29 port took significant effort. When you do port, treat it as a separate task — don't mix math changes with API migration.
+
+- **Copy the closest existing proof.** B2 copied from B1, B4 from B2, Assembly from the telescoping pattern. Proofs written by pattern-matching against existing code compiled on first try. Proofs written "mathematically correct but Lean-naive" took multiple iterations.
+
+- **`ring` vs `noncomm_ring`.** `ring` silently fails on non-commutative goals (produces an unsolved goal, not an error). Always use `noncomm_ring` in non-commutative algebras. This bit us multiple times.
+
+- **`include 𝕂 in` must come before doc comments**, not after. And `variable (𝕂) in` doesn't work when `𝕂` only appears in the proof body (Lean drops unused type-level variables). This was our most time-consuming Lean 4.29 issue.
+
+- **`nlinarith` needs explicit hints for products.** For goals like `a*b*c ≤ d*e*f`, provide intermediate `have` steps with `mul_le_mul_of_nonneg_left` rather than hoping `nlinarith` finds the factorization.
+
+### Agent workflow
+
+- **Agents excel at "fill this sorry given these lemmas."** Parallel agents on B1-B4, C1-C2, D1 (independent tasks with clear specs) worked perfectly.
+
+- **Agents struggle with "figure out the right approach."** The Strang O(1/n²) agent tried three approaches and hit rate limits. Do the mathematical thinking yourself, delegate the Lean typing.
+
+- **Record failed approaches in CHANGELOG.** The `variable (𝕂) in` saga, `omega` on non-linear goals, the triple-product expansion — recording WHY something failed prevented re-attempting dead ends across sessions.
+
+---
+
 ## References
 
 1. H. Trotter, "On the product of semi-groups of operators," *Proc. AMS* 10(4), 1959.
