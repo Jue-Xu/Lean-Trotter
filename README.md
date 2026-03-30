@@ -27,6 +27,7 @@ $$e^{A+B} = \lim_{n \to \infty} \left(e^{A/2n}\cdot e^{B/n}\cdot e^{A/2n}\right)
 | `norm_exp_mul_exp_sub_exp_add'` | $\lVert e^a e^b - e^{a+b}\rVert \le 2\lVert a\rVert\lVert b\rVert\, e^{\lVert a\rVert+\lVert b\rVert}$ | quadratic |
 | `norm_exp_mul_exp_mul_exp_sub_exp_add_cubic` | $\lVert e^a e^b e^a - e^{2a+b}\rVert = O(\lVert a\rVert^2\lVert b\rVert)$ | cubic |
 | `lie_trotter_list` | $(\prod_i e^{A_i/n})^n \to e^{\sum_i A_i}$ for any finite list | O(1/n) |
+| `symmetric_lie_trotter_list` | $(e^{A_1/2n}\cdots e^{A_m/n}\cdots e^{A_1/2n})^n \to e^{\sum_i A_i}$ | **O(1/n²)** |
 
 ### Module structure
 
@@ -38,7 +39,8 @@ LieTrotter/
 ├── ExpDivPow.lean         — exp(a/n)^n = exp(a)
 ├── Assembly.lean          — O(1/n) convergence rate + main theorem
 ├── StrangSplitting.lean   — symmetric Lie-Trotter with O(1/n²) rate
-└── MultiOperator.lean     — multi-operator generalization (A₁+⋯+Aₘ)
+├── MultiOperator.lean     — multi-operator first-order (A₁+⋯+Aₘ)
+└── MultiStrang.lean       — multi-operator symmetric Strang with O(1/n²)
 ```
 
 ## Building

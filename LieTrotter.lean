@@ -31,3 +31,4 @@ import LieTrotter.ExpDivPow
 import LieTrotter.Assembly
 import LieTrotter.StrangSplitting
 import LieTrotter.MultiOperator
+import LieTrotter.MultiStrang
