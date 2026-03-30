@@ -28,6 +28,7 @@ Both formulas are also proved for **any finite number of operators** $A_1, \ldot
 | `symmetric_lie_trotter` | $(e^{A/2n} e^{B/n} e^{A/2n})^n \to e^{A+B}$ | $O(1/n^2)$ | 2 |
 | `lie_trotter_list` | $(\prod_i e^{A_i/n})^n \to e^{\sum_i A_i}$ | $O(1/n)$ | $m$ |
 | `symmetric_lie_trotter_list` | palindromic product $\to e^{\sum_i A_i}$ | $O(1/n^2)$ | $m$ |
+| `suzuki4_convergence` | $S_4(1/n)^n \to e^{A+B}$ where $S_4 = S_2^2 \cdot S_2 \cdot S_2^2$ | $O(1/n^2)$* | 2 |
 
 #### Step error bounds (single-step approximation)
 
@@ -49,7 +50,8 @@ LieTrotter/
 ├── Assembly.lean          — O(1/n) convergence rate + main theorem
 ├── StrangSplitting.lean   — symmetric Lie-Trotter with O(1/n²) rate
 ├── MultiOperator.lean     — multi-operator first-order (A₁+⋯+Aₘ)
-└── MultiStrang.lean       — multi-operator symmetric Strang with O(1/n²)
+├── MultiStrang.lean       — multi-operator symmetric Strang with O(1/n²)
+└── Suzuki4.lean           — fourth-order Suzuki integrator (S₄ from five S₂)
 ```
 
 ## Building
@@ -87,6 +89,12 @@ lake build
 8. **First-order** ($m$ operators): Induction on the list, peeling off one factor and applying the quadratic step error.
 
 9. **Second-order** ($m$ operators): Recursive palindromic product $S_n(A_1, \ldots, A_m) = e^{A_1/2n} \cdot S_n(A_2, \ldots, A_m) \cdot e^{A_1/2n}$. Induction reduces each step to the 2-operator cubic Strang bound.
+
+### Suzuki S₄ integrator (O(1/n²), with O(1/n⁴) pathway)
+
+10. **Composition:** $S_4(t) = S_2(pt)^2 \cdot S_2((1-4p)t) \cdot S_2(pt)^2$ for $0 < p < 1/4$. Five S₂ steps with time fractions summing to 1. The exact exponential targets commute (all scalar multiples of $A+B$), so the 5-step telescope gives $O(1/n^3)$ step error → $O(1/n^2)$ total.
+
+> \*The specific choice $p = 1/(4-4^{1/3})$ satisfies $4p^3 + (1-4p)^3 = 0$, which cancels the third-order error and upgrades to $O(1/n^5)$ step error → $O(1/n^4)$ total. This cancellation requires a parity argument (error is odd in $t$) that is noted as future work.
 
 ## References
 

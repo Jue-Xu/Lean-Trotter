@@ -17,6 +17,8 @@ We prove the Lie–Trotter product formula for elements in a complete normed alg
 - `LieTrotter.Assembly` — convergence rate and main theorem
 - `LieTrotter.StrangSplitting` — symmetric Lie-Trotter (Strang splitting)
 - `LieTrotter.MultiOperator` — multi-operator generalization (A₁+⋯+Aₘ)
+- `LieTrotter.MultiStrang` — multi-operator symmetric Strang with O(1/n²)
+- `LieTrotter.Suzuki4` — fourth-order Suzuki integrator (five S₂ steps)
 
 ## References
 
@@ -32,3 +34,4 @@ import LieTrotter.Assembly
 import LieTrotter.StrangSplitting
 import LieTrotter.MultiOperator
 import LieTrotter.MultiStrang
+import LieTrotter.Suzuki4
