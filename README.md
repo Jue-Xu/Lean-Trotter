@@ -1,8 +1,16 @@
 # Lean-Trotter
 
-A Lean 4 formalization of the **Lie–Trotter product formula** and **Strang splitting** for complete normed algebras:
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-lightblue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-$$e^{A+B} = \lim_{n \to \infty} \left(e^{A/n}\cdot e^{B/n}\right)^n = \lim_{n \to \infty} \left(e^{A/2n}\cdot e^{B/n}\cdot e^{A/2n}\right)^n$$
+A Lean 4 formalization of the **Lie-Trotter product formula** and **Strang splitting** for complete normed algebras.
+
+**First-order (Lie-Trotter):**
+
+$$e^{A+B} = \lim_{n \to \infty} \left(e^{A/n}\cdot e^{B/n}\right)^n, \qquad \left\lVert \left(e^{A/n}\cdot e^{B/n}\right)^n - e^{A+B} \right\rVert = O(1/n)$$
+
+**Second-order (Strang splitting):**
+
+$$e^{A+B} = \lim_{n \to \infty} \left(e^{A/2n}\cdot e^{B/n}\cdot e^{A/2n}\right)^n, \qquad \left\lVert \left(e^{A/2n}\cdot e^{B/n}\cdot e^{A/2n}\right)^n - e^{A+B} \right\rVert = O(1/n^2)$$
 
 ## Status
 
