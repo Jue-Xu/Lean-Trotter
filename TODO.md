@@ -42,6 +42,14 @@
 
   Both phases start with the 2-operator case (A+B), then generalize to multi-operator via the same recursive palindromic structure.
 
+- [ ] **Truncated BCH bounds (H1.5)** — Prerequisite for H1 Phase 2. We do NOT need the full infinite BCH series $\ln(e^A e^B) = A + B + [A,B]/2 + \cdots$ (that's a research-level formalization involving Bernoulli numbers and iterated commutators). What we need is the **truncated BCH to order 3**:
+  $$e^A e^B = e^{A+B+[A,B]/2+R_3}, \qquad \|R_3\| \le C(\|A\|^2\|B\| + \|A\|\|B\|^2) e^{\|A\|+\|B\|}$$
+  We already have most of this: `norm_exp_mul_exp_sub_exp_add_sub_comm_le` extracts $[A,B]/2$ from $e^A e^B - e^{A+B}$ with cubic remainder. What's still needed:
+  - The **symmetric BCH**: $e^{A/2} e^B e^{A/2} = e^{A+B+c_3[A,[A,B]]+\cdots}$ with explicit $c_3 = -1/24$ and fifth-order remainder
+  - Showing $S_4$'s composition with $4p^3+(1-4p)^3=0$ kills the $c_3$ term
+
+  This extends our existing commutator extraction machinery (B5, C1-refined) rather than requiring a new framework. Estimated: ~300 lines on top of existing infrastructure.
+
 - [ ] **General Suzuki hierarchy (H2)** — Prove convergence of the $2k$-th order Suzuki formula $S_{2k}$ defined recursively:
   $$S_{2k}(t) = S_{2k-2}(p_k t)^2\, S_{2k-2}((1-4p_k)t)\, S_{2k-2}(p_k t)^2, \quad p_k = \frac{1}{4-4^{1/(2k-1)}}$$
   This gives O(1/n^{2k}) convergence. Very ambitious — requires induction on the Suzuki order $k$ and tracking error cancellation at each level. Likely a separate project.
