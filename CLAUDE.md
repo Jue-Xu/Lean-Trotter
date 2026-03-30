@@ -54,10 +54,11 @@ theorem lie_trotter (A B : 𝔸) :
 Lean-Trotter/
 ├── LieTrotter/
 │   ├── Telescoping.lean       ← Task A: algebraic identity + norm bound
-│   ├── ExpBounds.lean         ← Task B: exp series remainder estimates
-│   ├── StepError.lean         ← Task C: quadratic error ‖exp(a)exp(b) − exp(a+b)‖
+│   ├── ExpBounds.lean         ← Task B: exp series remainder estimates (B1–B5)
+│   ├── StepError.lean         ← Task C: quadratic error + commutator extraction
 │   ├── ExpDivPow.lean         ← Task D: exp(a/n)^n = exp(a)
-│   └── Assembly.lean          ← Task E: combine into lie_trotter_error_rate + main thm
+│   ├── Assembly.lean          ← Task E: O(1/n) convergence rate + main thm
+│   └── StrangSplitting.lean   ← Task F: symmetric Lie-Trotter with O(1/n²) rate
 ├── LieTrotter.lean            ← root import file
 ├── lakefile.lean
 ├── lean-toolchain

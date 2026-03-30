@@ -4,6 +4,30 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-03-30: Strang splitting O(1/n²) — complete (`edbd594`)
+
+**What:** Proved symmetric Lie-Trotter (Strang splitting) converges at O(1/n²) rate.
+
+**Key results:**
+- `symmetric_lie_trotter`: `(exp(A/2n) exp(B/n) exp(A/2n))^n → exp(A+B)`
+- `strang_error_rate_sq`: explicit O(1/n²) error bound
+- `norm_exp_mul_exp_mul_exp_sub_exp_add_cubic`: cubic step error O(‖a‖²‖b‖ + ‖a‖‖b‖²)
+
+**New infrastructure:**
+- B5 (`norm_exp_remainder3_le`): third-order remainder `‖exp(a)-1-a-a²/2‖ ≤ ‖a‖³/6 · exp(‖a‖)`
+- `norm_exp_mul_exp_sub_exp_add_sub_comm_le`: extract commutator [a,b]/2 from the Lie-Trotter error, bounding the remainder at cubic order
+- `norm_exp_cross_tail_le`: bound `‖cross(x,y) - (xy+yx)/2‖` (degree ≥ 3 cross terms)
+
+**Key insight:** In `exp(a)exp(b)exp(a) - exp(2a+b)`, the leading commutator `[a,b]` from `exp(a)·[exp(b),exp(a)]` cancels with the leading term of `E(2a,b)`. This leaves only cubic-order remainders, giving step error O(1/n³) and overall O(1/n²).
+
+**Failed approaches:**
+- Direct triple-product expansion (27 terms, unmanageable bookkeeping)
+- `variable (𝕂) in` with doc comments (parser issues in Lean 4.29)
+- `nlinarith` on complex coefficient bounds (needed explicit `mul_le_mul_of_nonneg_left` steps)
+- `ring` for non-commutative identities (need `noncomm_ring`)
+
+---
+
 ## 2026-03-29: Port to Lean 4.29.0-rc8 (`2afec17`)
 
 **What:** Ported entire codebase from Lean 4.16.0 to 4.29.0-rc8 + latest Mathlib.
