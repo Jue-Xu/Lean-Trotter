@@ -29,32 +29,39 @@
   ```
   Telescopes into a sum of pairwise C1-type bounds. Estimate: ~150 lines. Reuses all existing infrastructure.
 
-- [ ] **Fourth-order Suzuki formula (H1)** — BCH-free approach via Suzuki's composition argument:
+- [ ] **Fourth-order Suzuki formula (H1)** — BCH-based approach via cubic coefficient extraction:
 
-  **Key insight (no BCH needed):** The Strang splitting $S_2(t)$ satisfies:
-  1. $S_2(t) = e^{Ht} + E(t)$ where $\|E(t)\| = O(t^3)$ — our existing cubic bound
-  2. $S_2(-t) = e^{-Ht} + E'(t)$ where $\|E'(t)\| = O(t^3)$ — time-reversal (follows from the palindromic structure)
-  3. The error $E(t)$ is an **odd function** of $t$ (only odd powers), so no $t^4$ term
+  **Core difficulty:** The triangle inequality cannot capture the cubic cancellation. The Suzuki parameter has $1-4p < 0$ (since $p \approx 0.414$), so $|1-4p|^3 \neq (1-4p)^3$ and the norm bound $4|p|^3 + |1-4p|^3 = 8p^3 \neq 0$. We must extract the cubic coefficient $E_3$ as an explicit algebra element and show the signed cancellation $4p^3 + (1-4p)^3 = 0$ kills it.
 
-  Suzuki's composition: $S_4(t) = S_2(pt)^2 \cdot S_2((1-4p)t) \cdot S_2(pt)^2$ with $p = 1/(4-4^{1/3})$.
-  The constraint $4p^3 + (1-4p)^3 = 0$ cancels the $t^3$ error, jumping to $O(t^5)$ step error → $O(1/n^4)$ total.
+  **Approach:** Import [Lean-BCH](https://github.com/Jue-Xu/Lean-BCH) as Lake dependency and extend it with:
+  - A quartic log series remainder (**done**: `norm_logOnePlus_sub_sub_sub_le`)
+  - A fourth-order BCH expansion extracting the degree-3 term `bch_cubic_term` (**scaffolded**, 3 sorry's)
+  - Quintic symmetric BCH bound: $\|Z(c\cdot a, c\cdot b) - c(a+b) - c^3 E_3\| \le K c^5 s^5$
 
-  **Implementation plan:**
-  1. Prove time-reversal: $\|S_2(-t) - e^{-Ht}\| = O(t^3)$ (~50 lines, follows from palindromic symmetry)
-  2. Prove error parity: $S_2(t) + S_2(-t) = 2e^{Ht} + O(t^4)$, i.e., even-order errors vanish (~100 lines)
-  3. Define $S_4$ as the five-fold composition with abstract time fractions (~30 lines)
-  4. Prove: if $\sum p_i = 1$ and $\sum p_i^3 = 0$ and error is odd, then composition is $O(t^5)$ (~150 lines)
-  5. Verify $p = 1/(4-4^{1/3})$ satisfies $4p^3 + (1-4p)^3 = 0$ (~20 lines, `Real.rpow` + `nlinarith`)
-  6. Assembly: $O(1/n^5)$ step error → $O(1/n^4)$ total (~50 lines)
-  7. Multi-operator case: compose five multi-operator Strang steps (~100 lines)
+  **Implementation plan (see plan file `bright-purring-torvalds.md`):**
 
-  **Estimated total: ~500 lines.** No BCH formalization needed.
+  Phase 1 — Extend Lean-BCH (~460 lines):
+  1. ✅ Quartic log remainder: $\|\log(1+x) - x + x^2/2 - x^3/3\| \le \|x\|^4/(1-\|x\|)$
+  2. Fourth-order BCH expansion: $\text{bch}(a,b) = a+b+\frac{1}{2}[a,b]+E_3(a,b)+O(s^4)$
+  3. Quintic symmetric BCH: $E_3(ca,cb) = c^3 E_3(a,b) + O(c^5 s^5)$
+  4. $E_3$ norm bound and homogeneity
 
-- [ ] **Truncated BCH bounds (separate project: [Lean-BCH](https://github.com/Jue-Xu/Lean-BCH))** — Independent formalization of:
-  $$e^A e^B = e^{A+B+[A,B]/2+R_3}, \qquad \|R_3\| \le C(\|A\|^2\|B\| + \|A\|\|B\|^2) e^{\|A\|+\|B\|}$$
-  Bridges Mathlib's algebraic Lie bracket `⁅·,·⁆` to the analytic exponential. Not a prerequisite for H1 (the BCH-free approach above avoids it), but valuable as a standalone library for Lie group integrators, Magnus expansion, etc.
+  Phase 2 — Infrastructure (~50 lines):
+  5. Sync Mathlib versions between Lean-BCH and Lean-Trotter
+  6. Add `require lean-bch from git` to lakefile
 
-  This extends our existing commutator extraction machinery (B5, C1-refined) rather than requiring a new framework. Estimated: ~300 lines on top of existing infrastructure.
+  Phase 3 — Suzuki assembly (~400 lines, new file `LieTrotter/Suzuki4Order4.lean`):
+  7. Connect Strang step to BCH log: $S_2(c/n) = \exp(Z_c)$
+  8. $S_4$ as palindromic triple product: $\exp(2Z_p) \cdot \exp(Z_q) \cdot \exp(2Z_p)$
+  9. Quintic step error: $(4p^3+(1-4p)^3) E_3 = 0$ kills cubic → $O(1/n^5)$
+  10. Assembly: $O(1/n^5)$ step → $O(1/n^4)$ total via telescoping
+  11. Suzuki parameter existence: $\exists p,\; 4p^3+(1-4p)^3=0$
+  12. Main theorem: `suzuki4_convergence_order4`
+
+  **Estimated total: ~900 lines.** Critical path: 1→2→3→5→6→7→8→9→10→12.
+
+- [x] **Truncated BCH bounds ([Lean-BCH](https://github.com/Jue-Xu/Lean-BCH))** — ✅ Complete (0 sorry's before Suzuki extension).
+  Proved: `exp_bch`, `norm_bch_sub_add_sub_bracket_le` (H1), `norm_symmetric_bch_sub_add_le` (H2), Lie bracket bridge (M1).
 
 - [ ] **General Suzuki hierarchy (H2)** — Prove convergence of the $2k$-th order Suzuki formula $S_{2k}$ defined recursively:
   $$S_{2k}(t) = S_{2k-2}(p_k t)^2\, S_{2k-2}((1-4p_k)t)\, S_{2k-2}(p_k t)^2, \quad p_k = \frac{1}{4-4^{1/(2k-1)}}$$
