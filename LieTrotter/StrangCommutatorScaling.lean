@@ -189,6 +189,16 @@ theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRin
     ‖exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A) - exp (t • (A + B))‖ ≤
       (‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 12 +
        ‖A * (A * B - B * A) - (A * B - B * A) * A‖ / 24) * t ^ 3 := by
+  -- Anti-Hermitian implies A+B is also anti-Hermitian
+  have hAB : star (A + B) = -(A + B) := by rw [star_add, hA, hB, neg_add]
+  -- All exponentials have norm 1 in C*-algebra with anti-Hermitian argument
+  -- Step 1: Bound ‖S₂(t) - exp(tH)‖ ≤ ∫₀ᵗ ‖𝒯₂(τ)‖ dτ via Duhamel + unitary norms
+  -- Step 2: Bound ‖𝒯₂(τ)‖ ≤ C·τ² using double FTC
+  -- Step 3: Evaluate ∫₀ᵗ C·τ² dτ = C·t³/3
+  -- This requires computing 𝒯₂' and 𝒯₂'' (derivatives of the Strang residual)
+  -- using hasDerivAt_exp_conj and the Leibniz rule for conjugation.
+  -- Deferred: the building blocks (exp_conj_sub_comm_eq_double_integral,
+  -- norm_exp_conj_sub_comm_le, norm_exp_smul_of_skewAdjoint) are all proved.
   sorry
 
 end
