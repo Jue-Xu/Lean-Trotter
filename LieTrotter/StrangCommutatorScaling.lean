@@ -90,6 +90,11 @@ theorem strang_integral_error (A B : 𝔸) (t : ℝ) :
          exp ((τ / 2) • A) * (exp (τ • B) * ((1/2 : ℝ) • A) * exp ((-τ) • B) -
            (1/2 : ℝ) • A) * exp ((-τ / 2) • A)) *
         (exp ((τ / 2) • A) * exp (τ • B) * exp ((τ / 2) • A)) := by
+  -- This is the Duhamel integral representation for the Strang product.
+  -- The proof follows the same FTC-2 conjugation pattern as lie_trotter_integral_error
+  -- but is more complex due to the 4-factor product.
+  -- Deferred to follow-up — the key building blocks (exp_conj_sub_comm_eq_double_integral,
+  -- norm_exp_conj_sub_comm_le) are already proved.
   sorry
 
 /-!
@@ -157,6 +162,13 @@ The bound scales with double commutators ‖[B,[B,A]]‖ and ‖[A,[A,B]]‖ at 
 
   In the anti-Hermitian case, the exponential factor is 1, matching the paper's
   tight bound (Proposition in §VII.A). -/
+-- Auxiliary: the "Strang residual" involves two conjugation differences whose
+-- leading [B,A] terms cancel (order condition for second-order accuracy).
+-- After cancellation, the remaining terms are bounded by double commutators.
+-- The proof of the full tight bound (with prefactors 1/12 and 1/24) requires
+-- either the 4-factor Duhamel representation (strang_integral_error) or
+-- a careful algebraic decomposition into two first-order errors.
+
 theorem norm_strang_comm_scaling (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t) :
     ‖exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A) - exp (t • (A + B))‖ ≤
       (‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 12 +
