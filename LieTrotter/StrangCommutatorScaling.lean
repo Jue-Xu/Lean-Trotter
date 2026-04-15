@@ -172,11 +172,18 @@ The bound scales with double commutators ‖[B,[B,A]]‖ and ‖[A,[A,B]]‖ at 
   - `exp_conj_sub_comm_eq_double_integral`: nested FTC extracting [B,[B,A]]
   - `norm_exp_conj_sub_comm_le`: bound ‖...‖ ≤ ‖[B,[B,A]]‖/2·τ²·exp(2τ‖B‖)
   - `strang_two_bracket_decomp`: S₂(t) - exp(tH) = exp(a)·Bracket₁ + Bracket₂ -/
-theorem norm_strang_comm_scaling (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t) :
+-- Key property: in a C*-algebra, anti-Hermitian exponentials are unitary with norm 1.
+lemma norm_exp_smul_of_skewAdjoint [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸]
+    [Nontrivial 𝔸] {a : 𝔸} (ha : star a = -a) (t : ℝ) :
+    ‖exp (t • a)‖ = 1 := by
+  sorry
+
+theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸]
+    [Nontrivial 𝔸] (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t)
+    (hA : star A = -A) (hB : star B = -B) :
     ‖exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A) - exp (t • (A + B))‖ ≤
       (‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 12 +
-       ‖A * (A * B - B * A) - (A * B - B * A) * A‖ / 24) *
-      t ^ 3 * Real.exp (t * (3 * ‖A‖ + 5 * ‖B‖)) := by
+       ‖A * (A * B - B * A) - (A * B - B * A) * A‖ / 24) * t ^ 3 := by
   sorry
 
 end
