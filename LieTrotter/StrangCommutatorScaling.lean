@@ -283,19 +283,27 @@ private lemma hasDerivAt_conj_strang (A B : 𝔸) (τ : ℝ) :
   simp only [Pi.mul_apply] at hFull ⊢
   exact hFull
 
+/-- **Commutator-scaling bound for the second-order Strang formula** (anti-Hermitian case):
+  The error scales with double commutators ‖[B,[B,A]]‖ and ‖[A,[A,B]]‖ at O(t³).
+
+  This matches the Proposition in Childs et al. (2021), §VII.A:
+    `‖S₂(t) - exp(tH)‖ ≤ t³/12·‖[B,[B,A]]‖ + t³/24·‖[A,[A,B]]‖`
+
+  **Proof strategy** (see `hasDerivAt_conj_strang` for the derivative computation):
+  1. FTC-2 on w(τ) = exp(-τH)·S₂(τ) gives integral representation:
+     `S₂(t) - exp(tH) = ∫₀ᵗ exp((t-τ)H)·𝒯₂(τ)·S₂(τ) dτ`
+  2. Anti-Hermitian: ‖exp(sX)‖ = 1, so ‖S₂(t)-exp(tH)‖ ≤ ∫₀ᵗ ‖𝒯₂(τ)‖ dτ
+  3. Decompose 𝒯₂(τ) = R_A(τ) + τ·(conj diff) + conj_{A'}(R_B(τ))
+     where R_A, R_B are double-integral remainders from `exp_conj_sub_comm_eq_double_integral`
+  4. Integration by parts: R_A + τ·(conj diff) = -∫₀ᵗ s·f(s) ds  (norm ≤ ‖[A',[A',B]]‖/2·τ²)
+  5. Total: ‖𝒯₂(τ)‖ ≤ (‖[A',[A',B]]‖ + ‖[B,[B,A']]‖)/2 · τ²
+  6. Convert A' = A/2: coefficients become 1/24 and 1/12 -/
 theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸]
     [Nontrivial 𝔸] [StarModule ℝ 𝔸] (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t)
     (hA : star A = -A) (hB : star B = -B) :
     ‖exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A) - exp (t • (A + B))‖ ≤
       (‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 12 +
        ‖A * (A * B - B * A) - (A * B - B * A) * A‖ / 24) * t ^ 3 := by
-  have hAB : star (A + B) = -(A + B) := by rw [star_add, hA, hB, neg_add]
-  -- Abbreviations for double commutator norms
-  set DC_B := ‖B * (B * A - A * B) - (B * A - A * B) * B‖
-  set DC_A := ‖A * (A * B - B * A) - (A * B - B * A) * A‖
-  -- Bound the Strang residual by double commutators
-  -- TODO: combine hasDerivAt_conj_strang + FTC + norm_exp_conj_sub_comm_le
-  -- to get ‖S₂(t) - exp(tH)‖ ≤ ∫₀ᵗ ‖𝒯₂(τ)‖ dτ ≤ (DC_B/12 + DC_A/24)·t³
   sorry
 
 end
