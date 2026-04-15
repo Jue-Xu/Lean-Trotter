@@ -67,6 +67,12 @@
   $$S_{2k}(t) = S_{2k-2}(p_k t)^2\, S_{2k-2}((1-4p_k)t)\, S_{2k-2}(p_k t)^2, \quad p_k = \frac{1}{4-4^{1/(2k-1)}}$$
   This gives O(1/n^{2k}) convergence. Very ambitious — requires induction on the Suzuki order $k$ and tracking error cancellation at each level. Likely a separate project.
 
+- [x] **Commutator-scaling Trotter error (H)** — Proved `norm_lie_trotter_comm_scaling`: the Trotter error `‖exp(tB)exp(tA) - exp(t(A+B))‖` is bounded by `‖[B,A]‖ · t² · exp(t(‖A‖+3‖B‖))`, replacing the product `‖A‖‖B‖` with the commutator `‖[B,A]‖`. Uses Duhamel formula via FTC-2. File: `LieTrotter/CommutatorScaling.lean` (370 lines, 0 sorry's).
+
+- [ ] **Tighten commutator-scaling constant to t²/2** — The current bound has `t²` where the paper's tight bound (Proposition in `prefactor.tex`) has `t²/2`. Requires evaluating `∫₀ᵗ τ dτ = t²/2` in Lean using `norm_integral_le_of_norm_le` (non-constant version) plus `integral_pow` or `integral_id`, instead of the constant bound `norm_integral_le_of_norm_le_const`.
+
+- [ ] **n-step commutator-scaling convergence rate** — Apply `norm_lie_trotter_comm_scaling` with `t = 1/n` to get `‖exp(B/n)exp(A/n) - exp((A+B)/n)‖ ≤ ‖[B,A]‖/n² · exp(...)`, then assemble via telescoping for O(1/n) rate with commutator constant. Parallels Assembly.lean pattern.
+
 - [ ] **Matrix specialization (F1)** — Prove `matrix_lie_trotter` for `Matrix (Fin d) (Fin d) ℂ`. Should be a one-liner applying `lie_trotter` once the `NormOneClass` instance is verified for the matrix norm. Connects to quantum computing applications.
 
 ## Low priority

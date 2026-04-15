@@ -58,7 +58,11 @@ Lean-Trotter/
 │   ├── StepError.lean         ← Task C: quadratic error + commutator extraction
 │   ├── ExpDivPow.lean         ← Task D: exp(a/n)^n = exp(a)
 │   ├── Assembly.lean          ← Task E: O(1/n) convergence rate + main thm
-│   └── StrangSplitting.lean   ← Task F: symmetric Lie-Trotter with O(1/n²) rate
+│   ├── StrangSplitting.lean   ← Task F: symmetric Lie-Trotter with O(1/n²) rate
+│   ├── MultiOperator.lean     ← Task G: multi-operator generalization (A₁+⋯+Aₘ)
+│   ├── MultiStrang.lean       ← multi-operator symmetric Strang with O(1/n²)
+│   ├── Suzuki4.lean           ← fourth-order Suzuki integrator (five S₂ steps)
+│   └── CommutatorScaling.lean ← Task H: commutator-scaling error via Duhamel
 ├── LieTrotter.lean            ← root import file
 ├── lakefile.lean
 ├── lean-toolchain
@@ -195,6 +199,47 @@ These are nice-to-haves once the main theorem compiles without `sorry`.
 
 ---
 
+### Track 6 — Commutator Scaling (Duhamel / variation-of-parameters)
+
+#### Task H: Commutator-Scaling Trotter Error (✅ Done)
+
+| Sub-task | Statement | Difficulty | Status |
+|----------|-----------|------------|--------|
+| H1. `exp_conj_sub_eq_integral` | $e^{\tau B} A e^{-\tau B} - A = \int_0^\tau e^{sB}[B,A]e^{-sB}ds$ | Medium | ✅ Proved |
+| H2. `lie_trotter_integral_error` | $e^{tB}e^{tA} - e^{t(A+B)} = \int_0^t e^{(t-\tau)(A+B)}[e^{\tau B},A]e^{\tau A}d\tau$ | Hard | ✅ Proved |
+| H3. `norm_exp_conj_sub_le` | $\|e^{\tau B}Ae^{-\tau B} - A\| \le \|[B,A]\|\|\tau\|e^{2\|\tau\|\|B\|}$ | Medium | ✅ Proved |
+| H4. `norm_comm_exp_le` | $\|[e^{\tau B}, A]\| \le \|[B,A]\|\|\tau\|e^{3\|\tau\|\|B\|}$ | Easy | ✅ Proved |
+| H5. `norm_lie_trotter_comm_scaling` | $\|e^{tB}e^{tA} - e^{t(A+B)}\| \le \|[B,A]\|t^2 e^{t(\|A\|+3\|B\|)}$ | Medium | ✅ Proved |
+
+**File:** `LieTrotter/CommutatorScaling.lean`
+
+**Proof strategy (Duhamel via FTC-2, no ODE uniqueness):**
+1. Define $w(\tau) = e^{-\tau(A+B)} e^{\tau B} e^{\tau A}$
+2. Compute $w'(\tau) = e^{-\tau(A+B)} [e^{\tau B}, A] e^{\tau A}$ via product rule + `Commute.exp_right`
+3. FTC-2: $w(t) - w(0) = \int_0^t w'(\tau) d\tau$ → integral error representation (H2)
+4. Extract commutator $[B,A]$ from $[e^{\tau B}, A]$ via second FTC on $s \mapsto e^{sB} A e^{-sB}$ (H1)
+5. Bound norms using H3, H4, and `norm_integral_le_of_norm_le_const` (H5)
+
+**Key Mathlib API used (new for this track):**
+- `hasDerivAt_exp_smul_const'` — derivative $d/dt[e^{tA}] = A \cdot e^{tA}$
+- `HasDerivAt.mul` — product rule in `NormedAlgebra`
+- `integral_eq_sub_of_hasDerivAt` — FTC-2 for interval integrals
+- `ContinuousLinearMap.intervalIntegral_comp_comm` — pull left-multiplication out of integrals
+- `norm_integral_le_of_norm_le_const` — constant norm bound for interval integrals
+- `Commute.exp_right` — $a$ commutes with $e^b$ when $a$ commutes with $b$
+
+**Design note:** Works over `NormedAlgebra ℝ 𝔸` directly (not general `𝕂`), avoiding the `SMul ℝ 𝔸` instance synthesis issues. For `𝕂 = ℂ` applications, use `NormedAlgebra.restrictScalars ℝ 𝕂 𝔸`.
+
+**Current bound vs optimal:** The proved bound has $t^2$ where the paper's tight bound (Proposition in `prefactor.tex`) has $t^2/2$. Tightening requires evaluating $\int_0^t \tau\,d\tau = t^2/2$ instead of the constant bound $\int_0^t t\,d\tau = t^2$.
+
+**Actual lines:** ~370
+
+---
+
+These are nice-to-haves once the main theorem compiles without `sorry`.
+
+---
+
 ## Dependency DAG (build order)
 
 ```
@@ -247,11 +292,22 @@ Phase 6:                           E2 (✅)
 | `nsmul_eq_smul_cast` | $n \bullet x = (n : \mathbb{K}) \cdot x$ | D1 |
 | `RCLike.norm_natCast` | $\|(n : \mathbb{K})\| = n$ | C2 |
 
+| `hasDerivAt_exp_smul_const'` | $d/dt[e^{tA}] = A \cdot e^{tA}$ | H1, H2 |
+| `HasDerivAt.mul` | product rule for `NormedAlgebra` | H1, H2 |
+| `Commute.exp_right` | $[a,b]=0 \Rightarrow [a, e^b]=0$ | H1, H2 |
+| `integral_eq_sub_of_hasDerivAt` | FTC-2 for interval integrals | H1, H2 |
+| `ContinuousLinearMap.intervalIntegral_comp_comm` | $L(\int f) = \int L \circ f$ | H2 |
+| `norm_integral_le_of_norm_le_const` | $\|\int f\| \le C\|b-a\|$ | H3, H5 |
+| `Real.exp_le_exp_of_le` | $a \le b \Rightarrow e^a \le e^b$ | H3, H4, H5 |
+
 ### Not in Mathlib (proved ourselves)
 
 - `norm_exp_le` — $\|e^a\| \le e^{\|a\|}$ for general Banach algebras (only `Complex.norm_exp_le_exp_norm` exists for ℂ)
 - `exp_sub_one_sub_bound_real` — $e^x - 1 - x \le x^2/2 \cdot e^x$
 - `norm_exp_sub_one_le` — $\|e^a - 1\| \le e^{\|a\|} - 1$
+- `exp_conj_sub_eq_integral` — $e^{\tau B}Ae^{-\tau B} - A = \int_0^\tau e^{sB}[B,A]e^{-sB}ds$ (conjugation FTC)
+- `lie_trotter_integral_error` — integral representation of Trotter error via Duhamel formula
+- `norm_lie_trotter_comm_scaling` — commutator-scaling bound $\|e^{tB}e^{tA} - e^{t(A+B)}\| \le \|[B,A]\|t^2 e^{t(\|A\|+3\|B\|)}$
 
 ---
 
@@ -278,6 +334,11 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/StepError.lean` | 0 |
 | `LieTrotter/ExpDivPow.lean` | 0 |
 | `LieTrotter/Assembly.lean` | 0 |
+| `LieTrotter/StrangSplitting.lean` | 0 |
+| `LieTrotter/MultiOperator.lean` | 0 |
+| `LieTrotter/MultiStrang.lean` | 0 |
+| `LieTrotter/Suzuki4.lean` | 0 |
+| `LieTrotter/CommutatorScaling.lean` | 0 |
 | **Total** | **0** |
 
 ## Design Decisions
@@ -293,6 +354,12 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 4. **`NormOneClass 𝔸`**: Required in newer Mathlib for `norm_pow_le` to work. Added to all section variable declarations.
 
 5. **Error constant**: `C = 2‖A‖‖B‖ exp(‖A‖+‖B‖) + 1` — the `+1` ensures `C > 0` even when `A = 0` or `B = 0`. The bound `2‖A‖‖B‖ exp(‖A‖+‖B‖) / n` is tight (matches the calc chain exactly); only the `+1/n` is slack.
+
+6. **FTC-2 conjugation trick for Duhamel** (instead of ODE uniqueness/Gronwall): Define $w(\tau) = e^{-\tau H} S(\tau)$, compute $w'(\tau)$ via product rule, apply FTC-2 to get $w(t) - w(0) = \int_0^t w'$. This avoids needing ODE existence/uniqueness theory entirely. The Gronwall approach would have required ~40 additional lines.
+
+7. **`NormedAlgebra ℝ 𝔸` for CommutatorScaling** (instead of general `𝕂`): The `HasDerivAt`/`intervalIntegral` machinery requires `SMul ℝ 𝔸`, which is NOT automatically synthesized from `[RCLike 𝕂] [NormedAlgebra 𝕂 𝔸]`. Working over `ℝ` directly avoids the instance synthesis issue. Users with `𝕂 = ℂ` apply `NormedAlgebra.restrictScalars`.
+
+8. **`ContinuousLinearMap.intervalIntegral_comp_comm` for pulling constants through integrals**: In a `NormedRing`, left multiplication by a fixed element is NOT `SMul` — it's ring multiplication. To pull `c * ∫ f` into `∫ c * f`, use `ContinuousLinearMap.mul ℝ 𝔸 c` as the continuous linear map, then `intervalIntegral_comp_comm`.
 
 ---
 
@@ -329,6 +396,16 @@ Patterns and anti-patterns from this formalization, useful for future Lean proje
 - **Agents struggle with "figure out the right approach."** The Strang O(1/n²) agent tried three approaches and hit rate limits. Do the mathematical thinking yourself, delegate the Lean typing.
 
 - **Record failed approaches in CHANGELOG.** The `variable (𝕂) in` saga, `omega` on non-linear goals, the triple-product expansion — recording WHY something failed prevented re-attempting dead ends across sessions.
+
+### Calculus in Lean (from CommutatorScaling)
+
+- **`(-u) • B` vs `u • (-B)` vs `-(u • B)`.** These are all equal but syntactically different: `neg_smul`, `smul_neg`, and `sub_eq_add_neg` convert between them. When `hasDerivAt_exp_smul_const'` gives `exp(u•(-B))` but you want `exp((-u)•B)`, use `simp_rw [show ∀ u, (-u) • B = u • (-B) from fun u => by rw [neg_smul, smul_neg]]` to normalize before applying the product rule.
+
+- **`noncomm_ring` can't see through `exp` terms.** For algebraic simplification involving `exp`, `set E := exp(...)` to make it opaque, rewrite commutativity hypotheses (e.g., `B * exp(sB) = exp(sB) * B` via `Commute.exp_right`), then `noncomm_ring` handles the rest. Don't forget `Pi.mul_apply` for pointwise function multiplication.
+
+- **`linarith` only works for ordered types.** For `𝔸`-valued equations from FTC-2, use `exact hftc.symm` or `rw; exact`, not `linarith`.
+
+- **`norm_integral_le_of_norm_le_const` is the workhorse for interval integral bounds.** It requires `∀ x ∈ Ι a b, ‖f x‖ ≤ C` and gives `‖∫ f‖ ≤ C * |b - a|`. The key helper fact: `|s| ≤ |τ|` for `s ∈ Set.uIoc 0 τ` (case split on sign of τ).
 
 ---
 

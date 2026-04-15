@@ -4,6 +4,33 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-04-14: Commutator-scaling Trotter error via Duhamel formula
+
+**What:** Proved the commutator-scaling bound from Childs et al. (2021), replacing the product `‖A‖‖B‖` with the commutator norm `‖[B,A]‖` in the Trotter error estimate.
+
+**New file:** `LieTrotter/CommutatorScaling.lean` (370 lines, 0 sorry's)
+
+**Key results:**
+- `lie_trotter_integral_error`: integral representation of Trotter error via Duhamel/variation-of-parameters formula: $e^{tB}e^{tA} - e^{t(A+B)} = \int_0^t e^{(t-\tau)(A+B)}[e^{\tau B},A]e^{\tau A}d\tau$
+- `exp_conj_sub_eq_integral`: commutator extraction via FTC on conjugation: $e^{\tau B}Ae^{-\tau B} - A = \int_0^\tau e^{sB}[B,A]e^{-sB}ds$
+- `norm_lie_trotter_comm_scaling`: $\|e^{tB}e^{tA} - e^{t(A+B)}\| \le \|[B,A]\|t^2 e^{t(\|A\|+3\|B\|)}$
+
+**Proof strategy:** FTC-2 via conjugation — define $w(\tau) = e^{-\tau(A+B)} e^{\tau B} e^{\tau A}$, compute $w'(\tau)$ via product rule, apply FTC-2. Avoids ODE uniqueness (Gronwall) entirely. Pull constant factor out of interval integral via `ContinuousLinearMap.intervalIntegral_comp_comm`.
+
+**Infrastructure introduced:**
+- `hasDerivAt_exp_conj`: derivative of $s \mapsto e^{sB}Ae^{-sB}$
+- `hasDerivAt_conj_trotter`: derivative of $\tau \mapsto e^{-\tau(A+B)} e^{\tau B} e^{\tau A}$
+- `norm_exp_conj_sub_le`, `norm_comm_exp_le`: commutator norm bounds via exponential conjugation
+
+**Key design decisions:**
+- Work over `NormedAlgebra ℝ 𝔸` directly (not general `𝕂`) to avoid `SMul ℝ 𝔸` instance synthesis failures
+- Use `simp_rw` to normalize `(-u) • B` ↔ `u • (-B)` before applying `hasDerivAt_exp_smul_const'`
+- Use `set E := exp(...)` + `Commute.exp_right` + `noncomm_ring` for algebraic simplification through opaque `exp` terms
+
+**Known slack:** Bound has $t^2$ where paper has $t^2/2$ (tight). Tightening requires evaluating $\int_0^t \tau\,d\tau = t^2/2$ instead of constant bound $\int_0^t t\,d\tau = t^2$.
+
+---
+
 ## 2026-03-30: Strang splitting O(1/n²) — complete (`edbd594`)
 
 **What:** Proved symmetric Lie-Trotter (Strang splitting) converges at O(1/n²) rate.

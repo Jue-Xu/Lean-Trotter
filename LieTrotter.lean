@@ -19,6 +19,7 @@ We prove the Lie–Trotter product formula for elements in a complete normed alg
 - `LieTrotter.MultiOperator` — multi-operator generalization (A₁+⋯+Aₘ)
 - `LieTrotter.MultiStrang` — multi-operator symmetric Strang with O(1/n²)
 - `LieTrotter.Suzuki4` — fourth-order Suzuki integrator (five S₂ steps)
+- `LieTrotter.CommutatorScaling` — commutator-scaling error via Duhamel formula
 
 ## References
 
@@ -35,3 +36,4 @@ import LieTrotter.StrangSplitting
 import LieTrotter.MultiOperator
 import LieTrotter.MultiStrang
 import LieTrotter.Suzuki4
+import LieTrotter.CommutatorScaling
