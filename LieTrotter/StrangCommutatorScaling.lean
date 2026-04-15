@@ -154,20 +154,22 @@ The bound scales with double commutators ‖[B,[B,A]]‖ and ‖[A,[A,B]]‖ at 
 -/
 
 /-- **Commutator-scaling bound for the second-order Strang formula:**
-  The error scales with double commutators at O(t³).
+  The error scales with double commutators ‖[B,[B,A]]‖ and ‖[A,[A,B]]‖ at O(t³).
 
   This improves the cubic bound `7‖A‖²‖B‖ + 3‖A‖‖B‖² + 3‖A‖³` from
-  `norm_exp_mul_exp_mul_exp_sub_exp_add_cubic` to double commutator norms.
+  `norm_exp_mul_exp_mul_exp_sub_exp_add_cubic` to double commutator norms,
+  matching the Proposition in Childs et al. (2021), §VII.A.
 
-  In the anti-Hermitian case, the exponential factor is 1, matching the paper's
-  tight bound (Proposition in §VII.A). -/
--- Auxiliary: the "Strang residual" involves two conjugation differences whose
--- leading [B,A] terms cancel (order condition for second-order accuracy).
--- After cancellation, the remaining terms are bounded by double commutators.
--- The proof of the full tight bound (with prefactors 1/12 and 1/24) requires
--- either the 4-factor Duhamel representation (strang_integral_error) or
--- a careful algebraic decomposition into two first-order errors.
+  **Proof status:** The key building blocks are proved:
+  - `exp_conj_sub_comm_eq_double_integral`: nested FTC extracting [B,[B,A]]
+  - `norm_exp_conj_sub_comm_le`: bound on the double conjugation remainder
+  - `strang_two_bracket_decomp`: algebraic decomposition into two first-order errors
 
+  The remaining step is showing the two first-order commutator terms cancel
+  algebraically INSIDE the integral (before taking norms), leaving only the
+  double commutator remainder. This integral-level cancellation analysis
+  requires combining two `lie_trotter_integral_error` instances and using
+  `exp_conj_sub_comm_eq_double_integral` on the combined integrand. -/
 theorem norm_strang_comm_scaling (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t) :
     ‖exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A) - exp (t • (A + B))‖ ≤
       (‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 12 +
