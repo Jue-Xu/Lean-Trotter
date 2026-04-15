@@ -4,6 +4,34 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-04-15: Second-order Strang commutator-scaling — complete
+
+**What:** Proved the commutator-scaling bound for the second-order Suzuki (Strang) formula, matching the Proposition in Childs et al. (2021), §VII.A:
+$$\|S_2(t) - e^{tH}\| \le \frac{\|[B,[B,A]]\|}{12}t^3 + \frac{\|[A,[A,B]]\|}{24}t^3$$
+for anti-Hermitian operators in C*-algebras, plus the multi-operator generalization.
+
+**New files:**
+- `LieTrotter/StrangCommutatorScaling.lean` (~480 lines, 0 sorry's)
+- `LieTrotter/MultiStrangCommutatorScaling.lean` (~170 lines, 0 sorry's)
+
+**Key results:**
+- `hasDerivAt_conj_strang`: 4-factor product rule for $w(\tau) = e^{-\tau H} S_2(\tau)$
+- `norm_strang_comm_scaling`: two-operator Strang commutator-scaling bound
+- `norm_palindromicProd_sub_exp_sum_comm`: multi-operator generalization with `listDoubleCommNorm`
+
+**Proof strategy:**
+1. **4-factor product rule:** Factor the algebraic identity as $-(E \cdot (n_H + A' + A' + B) \cdot e_A \cdot e_B \cdot e_A) = 0$ via `noncomm_ring` + `abel`. Key fix: avoid duplicate `set A'` (causes `A'✝` shadowing) and normalize `(-τ)•(A+B) = τ•n_H` via `neg_smul`/`smul_neg`.
+2. **"Subtract-constant-at-τ" trick:** Bounds the combined remainder $R_1 + \tau \cdot (\text{conj diff})$ without Fubini or integration-by-parts, using $\|H(s)-H(\tau)\| \le (\tau-s) C_A$.
+3. **Anti-Hermitian isometry:** $\|e^{sX}\| = 1$ eliminates all exponential factors from the bound.
+4. **Multi-operator induction:** Same pattern as `MultiCommutatorScaling.lean` — split into IH (bounded by isometry) + two-operator term (bounded by `norm_strang_comm_scaling`).
+
+**Failed approaches:**
+- Two-bracket decomposition (`strang_two_bracket_decomp` + separate `lie_trotter_integral_error` for each bracket): loses the O(τ) cancellation because the two integrals have different exponential weights. Must use the Duhamel integral (single integral of 𝒯₂) to get O(t³).
+- `noncomm_ring` for the full 4-factor algebraic identity: fails because `noncomm_ring` can't handle commutativity relations `A'·e^{τA'} = e^{τA'}·A'` or integer smul coefficients `-2•x`. The fix: normalize associativity, then factor the free-ring difference as `(nH+A'+A'+B)·eA·eB·eA` which `noncomm_ring` CAN prove.
+- `simp only [hcA]` (rewriting `A'·eA → eA·A'`): changes the direction needed for the free-ring factoring. Must NOT normalize commutativity before the `noncomm_ring` step.
+
+---
+
 ## 2026-04-14: Commutator-scaling Trotter error via Duhamel formula
 
 **What:** Proved the commutator-scaling bound from Childs et al. (2021), replacing the product `‖A‖‖B‖` with the commutator norm `‖[B,A]‖` in the Trotter error estimate.

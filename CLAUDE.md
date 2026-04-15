@@ -62,7 +62,10 @@ Lean-Trotter/
 │   ├── MultiOperator.lean     ← Task G: multi-operator generalization (A₁+⋯+Aₘ)
 │   ├── MultiStrang.lean       ← multi-operator symmetric Strang with O(1/n²)
 │   ├── Suzuki4.lean           ← fourth-order Suzuki integrator (five S₂ steps)
-│   └── CommutatorScaling.lean ← Task H: commutator-scaling error via Duhamel
+│   ├── CommutatorScaling.lean ← Task H: commutator-scaling error via Duhamel
+│   ├── MultiCommutatorScaling.lean  ← multi-operator first-order commutator scaling
+│   ├── StrangCommutatorScaling.lean ← second-order Strang commutator scaling (anti-Hermitian)
+│   └── MultiStrangCommutatorScaling.lean ← multi-operator Strang commutator scaling
 ├── LieTrotter.lean            ← root import file
 ├── lakefile.lean
 ├── lean-toolchain
@@ -230,13 +233,36 @@ These are nice-to-haves once the main theorem compiles without `sorry`.
 
 **Design note:** Works over `NormedAlgebra ℝ 𝔸` directly (not general `𝕂`), avoiding the `SMul ℝ 𝔸` instance synthesis issues. For `𝕂 = ℂ` applications, use `NormedAlgebra.restrictScalars ℝ 𝕂 𝔸`.
 
-**Current bound vs optimal:** The proved bound has $t^2$ where the paper's tight bound (Proposition in `prefactor.tex`) has $t^2/2$. Tightening requires evaluating $\int_0^t \tau\,d\tau = t^2/2$ instead of the constant bound $\int_0^t t\,d\tau = t^2$.
+**Bound:** Tight $t^2/2$ coefficient achieved via `norm_integral_le_of_norm_le` (non-constant bound) + FTC on $x^2/2$.
 
-**Actual lines:** ~370
+**Actual lines:** ~380
 
 ---
 
-These are nice-to-haves once the main theorem compiles without `sorry`.
+#### Task I: Second-Order Strang Commutator Scaling (✅ Done)
+
+| Sub-task | Statement | Difficulty | Status |
+|----------|-----------|------------|--------|
+| I1. `exp_conj_sub_comm_eq_double_integral` | Double FTC extracting $[B,[B,A]]$ | Medium | ✅ Proved |
+| I2. `norm_exp_conj_sub_comm_le` | $\|e^{\tau B}Ae^{-\tau B} - A - \tau[B,A]\| \le \frac{\|[B,[B,A]]\|}{2}\tau^2 e^{2\tau\|B\|}$ | Medium | ✅ Proved |
+| I3. `hasDerivAt_conj_strang` | 4-factor product rule for $w(\tau)=e^{-\tau H}S_2(\tau)$ | Hard | ✅ Proved |
+| I4. `norm_strang_comm_scaling` | $\|S_2(t)-e^{tH}\| \le \frac{\|[B,[B,A]]\|}{12}t^3 + \frac{\|[A,[A,B]]\|}{24}t^3$ | Hard | ✅ Proved |
+| I5. `norm_palindromicProd_sub_exp_sum_comm` | Multi-operator Strang commutator scaling | Medium | ✅ Proved |
+
+**Files:** `LieTrotter/StrangCommutatorScaling.lean` (~480 lines), `LieTrotter/MultiStrangCommutatorScaling.lean` (~170 lines)
+
+**Proof strategy (Strang, anti-Hermitian):**
+1. FTC-2 on $w(\tau) = e^{-\tau H} S_2(\tau)$ using 4-factor product rule `hasDerivAt_conj_strang`
+2. Anti-Hermitian isometry: $\|e^{sX}\| = 1$ in C*-algebras (via `norm_exp_smul_of_skewAdjoint`)
+3. First-order cancellation: $[A/2,B] + [B,A/2] = 0$ (exact in the integrand, before taking norms)
+4. "Subtract-constant-at-$\tau$" trick: $R_1 + \tau\cdot(\text{conj diff}) = \int_0^\tau (H(s)-H(\tau))ds$ bounded by $C_A\tau^2/2$ using $\|H(s)-H(\tau)\| \le (\tau-s) C_A$ — avoids Fubini/integration-by-parts
+5. Coefficient conversion: $A' = A/2$ gives $C_A = \|[A,[A,B]]\|/4$, $C_B = \|[B,[B,A]]\|/2$
+
+**Key Lean technique for I3:** Factor the algebraic identity as $-(E \cdot (n_H + A' + A' + B) \cdot e_A \cdot e_B \cdot e_A) = 0$ using `noncomm_ring` for the free-ring factoring, then $n_H + A' + A' + B = 0$ (since $n_H = -(A+B)$ and $A'+A'=A$) via `abel`.
+
+**Multi-operator (I5):** Induction on operator list, same pattern as `MultiCommutatorScaling.lean`. The `listDoubleCommNorm` sums $\|[S_i,[S_i,a_i]]\|/12 + \|[a_i,[a_i,S_i]]\|/24$ with suffix sums.
+
+---
 
 ---
 
@@ -307,7 +333,9 @@ Phase 6:                           E2 (✅)
 - `norm_exp_sub_one_le` — $\|e^a - 1\| \le e^{\|a\|} - 1$
 - `exp_conj_sub_eq_integral` — $e^{\tau B}Ae^{-\tau B} - A = \int_0^\tau e^{sB}[B,A]e^{-sB}ds$ (conjugation FTC)
 - `lie_trotter_integral_error` — integral representation of Trotter error via Duhamel formula
-- `norm_lie_trotter_comm_scaling` — commutator-scaling bound $\|e^{tB}e^{tA} - e^{t(A+B)}\| \le \|[B,A]\|t^2 e^{t(\|A\|+3\|B\|)}$
+- `norm_lie_trotter_comm_scaling` — commutator-scaling bound $\|e^{tB}e^{tA} - e^{t(A+B)}\| \le \frac{\|[B,A]\|}{2}t^2 e^{t(\|A\|+3\|B\|)}$
+- `norm_strang_comm_scaling` — second-order Strang commutator-scaling (anti-Hermitian): $\|S_2(t)-e^{tH}\| \le \frac{\|[B,[B,A]]\|}{12}t^3 + \frac{\|[A,[A,B]]\|}{24}t^3$
+- `norm_palindromicProd_sub_exp_sum_comm` — multi-operator Strang commutator-scaling (anti-Hermitian)
 
 ---
 
@@ -339,6 +367,9 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/MultiStrang.lean` | 0 |
 | `LieTrotter/Suzuki4.lean` | 0 |
 | `LieTrotter/CommutatorScaling.lean` | 0 |
+| `LieTrotter/MultiCommutatorScaling.lean` | 0 |
+| `LieTrotter/StrangCommutatorScaling.lean` | 0 |
+| `LieTrotter/MultiStrangCommutatorScaling.lean` | 0 |
 | **Total** | **0** |
 
 ## Design Decisions
@@ -360,6 +391,14 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 7. **`NormedAlgebra ℝ 𝔸` for CommutatorScaling** (instead of general `𝕂`): The `HasDerivAt`/`intervalIntegral` machinery requires `SMul ℝ 𝔸`, which is NOT automatically synthesized from `[RCLike 𝕂] [NormedAlgebra 𝕂 𝔸]`. Working over `ℝ` directly avoids the instance synthesis issue. Users with `𝕂 = ℂ` apply `NormedAlgebra.restrictScalars`.
 
 8. **`ContinuousLinearMap.intervalIntegral_comp_comm` for pulling constants through integrals**: In a `NormedRing`, left multiplication by a fixed element is NOT `SMul` — it's ring multiplication. To pull `c * ∫ f` into `∫ c * f`, use `ContinuousLinearMap.mul ℝ 𝔸 c` as the continuous linear map, then `intervalIntegral_comp_comm`.
+
+9. **`noncomm_ring` for free-ring factoring in `hasDerivAt_conj_strang`**: The 4-factor product rule derivative differs from the claimed 𝒯₂·S₂ form by `-(E·(nH+A'+A'+B)·eA·eB·eA)`. The factoring `∑(X_i·eA·eB·eA) = (∑X_i)·eA·eB·eA` is a free noncommutative ring identity that `noncomm_ring` handles. No commutativity rewrites needed for the final step — only `nH + A' + A' + B = 0` via `abel`.
+
+10. **"Subtract-constant-at-τ" trick for integration-by-parts**: To bound `∫₀^τ F(s)ds - τ·F(τ)` (which arises from combining the double-integral remainder with the first-order cancellation), rewrite as `∫₀^τ (F(s)-F(τ))ds` and bound `‖F(s)-F(τ)‖ ≤ (τ-s)·C` via `norm_integral_le_of_norm_le_const` on `F(s)-F(τ) = -∫_s^τ h`. This avoids Fubini entirely.
+
+11. **Anti-Hermitian typeclasses for Strang**: `[StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]` for `norm_exp_smul_of_skewAdjoint` ($\|e^{ta}\|=1$ when $a^*=-a$). The `star_trivial` lemma gives $(\text{star}\, r) = r$ for $r \in \mathbb{R}$, needed in `StarModule.star_smul`.
+
+12. **Coefficient conversion via `Algebra.smul_mul_assoc` / `Algebra.mul_smul_comm`**: To show $[A/2,[A/2,B]] = \frac{1}{4}[A,[A,B]]$, use `Algebra.smul_mul_assoc : r•a*b = r•(a*b)` and `Algebra.mul_smul_comm : a*(r•b) = r•(a*b)` to factor $(1/2)$ scalars through products, then `smul_smul` and `norm_smul`.
 
 ---
 

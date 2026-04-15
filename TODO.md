@@ -73,14 +73,9 @@
 
 - [x] **Multi-operator commutator-scaling** — ✅ Done. File: `LieTrotter/MultiCommutatorScaling.lean` (128 lines). Defines `listCommNorm` (sum of commutator norms with suffix sums) and proves `norm_list_prod_exp_sub_exp_sum_comm`. Matches the Proposition in Childs et al. §VII.A for first-order.
 
-- [ ] **Second-order (Strang) commutator-scaling** — Scaffolded in `LieTrotter/StrangCommutatorScaling.lean` (4 sorry's). Target: recover the Proposition "Tight error bound for the second-order Suzuki formula" from Childs et al. (`prefactor.tex:105`):
+- [x] **Second-order (Strang) commutator-scaling** — ✅ Done. Files: `LieTrotter/StrangCommutatorScaling.lean` (~480 lines, 0 sorry's) and `LieTrotter/MultiStrangCommutatorScaling.lean` (~170 lines, 0 sorry's). Proved the Proposition from Childs et al. (`prefactor.tex:105`):
   $$\|S_2(t) - e^{tH}\| \le \frac{t^3}{12}\|[B,[B,A]]\| + \frac{t^3}{24}\|[A,[A,B]]\|$$
-  **Approach:** Double FTC — apply `exp_conj_sub_eq_integral` twice to extract double commutators `[B,[B,A]]` and `[A,[A,B]]` from the Strang residual. The first-order commutator `[B,A]` cancels by the symmetry of the Strang product (order condition).
-  **Key sorry's:**
-  1. `exp_conj_sub_comm_eq_double_integral` — double integral of `[B,[B,A]]`
-  2. `strang_integral_error` — Duhamel for Strang (4-factor product rule)
-  3. `norm_exp_conj_sub_comm_le` — norm bound on double integral remainder
-  4. `norm_strang_comm_scaling` — assembly with `t³/12 + t³/24`
+  for anti-Hermitian operators in C*-algebras. Multi-operator version via `palindromicProd` and `listDoubleCommNorm` (induction on operator list).
 
 - [ ] **Matrix specialization (F1)** — Prove `matrix_lie_trotter` for `Matrix (Fin d) (Fin d) ℂ`. Should be a one-liner applying `lie_trotter` once the `NormOneClass` instance is verified for the matrix norm. Connects to quantum computing applications.
 
