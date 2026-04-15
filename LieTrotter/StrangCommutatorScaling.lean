@@ -153,23 +153,25 @@ theorem norm_exp_conj_sub_comm_le (A B : 𝔸) {τ : ℝ} (hτ : 0 ≤ τ) :
 The bound scales with double commutators ‖[B,[B,A]]‖ and ‖[A,[A,B]]‖ at O(t³).
 -/
 
-/-- **Commutator-scaling bound for the second-order Strang formula:**
+/-- **Commutator-scaling bound for the second-order Strang formula** (anti-Hermitian case):
   The error scales with double commutators ‖[B,[B,A]]‖ and ‖[A,[A,B]]‖ at O(t³).
 
-  This improves the cubic bound `7‖A‖²‖B‖ + 3‖A‖‖B‖² + 3‖A‖³` from
-  `norm_exp_mul_exp_mul_exp_sub_exp_add_cubic` to double commutator norms,
-  matching the Proposition in Childs et al. (2021), §VII.A.
+  This matches the Proposition in Childs et al. (2021), §VII.A:
+    `‖S₂(t) - exp(tH)‖ ≤ t³/12·‖[B,[B,A]]‖ + t³/24·‖[A,[A,B]]‖`
 
-  **Proof status:** The key building blocks are proved:
+  **Note:** The paper's tight bound (without exponential factors beyond the overall
+  `exp(...)`) holds for anti-Hermitian operators where ‖exp(tX)‖ = 1, ensuring
+  the two first-order commutator terms cancel perfectly at the integral level.
+
+  For general Banach algebras, the exponential weights in the two brackets of
+  `strang_two_bracket_decomp` differ, leaving an O(t²·‖[B,A]‖) residual from
+  the imperfect cancellation. The O(t³) scaling with NORMS (not commutators)
+  is already proved in `norm_exp_mul_exp_mul_exp_sub_exp_add_cubic`.
+
+  **Building blocks proved:**
   - `exp_conj_sub_comm_eq_double_integral`: nested FTC extracting [B,[B,A]]
-  - `norm_exp_conj_sub_comm_le`: bound on the double conjugation remainder
-  - `strang_two_bracket_decomp`: algebraic decomposition into two first-order errors
-
-  The remaining step is showing the two first-order commutator terms cancel
-  algebraically INSIDE the integral (before taking norms), leaving only the
-  double commutator remainder. This integral-level cancellation analysis
-  requires combining two `lie_trotter_integral_error` instances and using
-  `exp_conj_sub_comm_eq_double_integral` on the combined integrand. -/
+  - `norm_exp_conj_sub_comm_le`: bound ‖...‖ ≤ ‖[B,[B,A]]‖/2·τ²·exp(2τ‖B‖)
+  - `strang_two_bracket_decomp`: S₂(t) - exp(tH) = exp(a)·Bracket₁ + Bracket₂ -/
 theorem norm_strang_comm_scaling (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t) :
     ‖exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A) - exp (t • (A + B))‖ ≤
       (‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 12 +
