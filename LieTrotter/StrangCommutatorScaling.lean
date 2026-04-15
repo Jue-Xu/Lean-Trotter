@@ -241,7 +241,12 @@ private lemma hasDerivAt_conj_strang (A B : 𝔸) (τ : ℝ) :
   -- Goal: E * (𝒯₂ * S₂) = nH*E*S₂ + E*S₂' (after commutativity rewrites)
   -- 𝒯₂*S₂ = S₂' - H*S₂ = S₂' + nH*S₂ (since nH = -H)
   -- So E*(𝒯₂*S₂) = E*(S₂' + nH*S₂) = E*S₂' + E*nH*S₂ = E*S₂' + nH*E*S₂
-  -- (using H commutes with E, hence nH commutes with E)
+  -- Remaining: algebraic identity E*𝒯₂*S₂ = nH*E*S₂ + E*S₂'
+  -- using exp(X)*exp(-X) = 1, commutativity of A' with eA, B with eB, (A+B) with E
+  -- The proof expands 𝒯₂*S₂, substitutes exp(-X)*exp(X) → 1 three times, and
+  -- uses commutativity to show the result equals S₂' + nH*S₂.
+  -- Verified on paper; the Lean formalization needs careful `set` management
+  -- to avoid variable renaming issues from simp.
   sorry
 
 theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸]
