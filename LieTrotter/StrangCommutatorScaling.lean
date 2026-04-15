@@ -231,11 +231,17 @@ private lemma hasDerivAt_conj_strang (A B : 𝔸) (τ : ℝ) :
     ((Commute.refl A').smul_right τ).exp_right.eq
   have hcB : B * exp (τ • B) = exp (τ • B) * B :=
     ((Commute.refl B).smul_right τ).exp_right.eq
-  rw [h_neg, hcA, hcB]
-  simp only [Pi.mul_apply]
-  -- The remaining goal is a noncommutative ring identity, but exp((-τ)•A')
-  -- and exp(τ•(-A')) are syntactically different (equal by neg_smul/smul_neg).
-  -- TODO: normalize negation in smul before noncomm_ring
+  -- The remaining step: show the product-rule derivative equals 𝒯₂·S₂.
+  -- This is: S₂' - H·S₂ = 𝒯₂·S₂ where S₂' = A'·S₂ + eA·B·eB·eA + eA·eB·A'·eA
+  -- and 𝒯₂ = [eA·B·enA - B] + eA·[eB·A'·enB - A']·enA
+  -- The identity uses exp(X)·exp(-X) = 1 (from exp_smul_mul_exp_neg_smul).
+  -- noncomm_ring alone can't handle this since it requires the inverse relation.
+  convert hFull using 1
+  simp only [Pi.mul_apply, nH]
+  -- Goal: E * (𝒯₂ * S₂) = nH*E*S₂ + E*S₂' (after commutativity rewrites)
+  -- 𝒯₂*S₂ = S₂' - H*S₂ = S₂' + nH*S₂ (since nH = -H)
+  -- So E*(𝒯₂*S₂) = E*(S₂' + nH*S₂) = E*S₂' + E*nH*S₂ = E*S₂' + nH*E*S₂
+  -- (using H commutes with E, hence nH commutes with E)
   sorry
 
 theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸]
