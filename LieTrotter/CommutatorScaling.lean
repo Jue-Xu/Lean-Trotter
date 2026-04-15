@@ -298,36 +298,32 @@ theorem norm_comm_exp_le (A B : 𝔸) (τ : ℝ) :
           ‖B * A - A * B‖ * |τ| * (Real.exp (2 * |τ| * ‖B‖) * Real.exp (|τ| * ‖B‖)) from
             by ring, ← Real.exp_add]; ring_nf
 
-/-- **Commutator-scaling Trotter error bound:**
-  `‖exp(tB) * exp(tA) - exp(t(A+B))‖ ≤ ‖[B,A]‖ * t² * exp(t(‖A‖+3‖B‖))`.
+/-- **Tight commutator-scaling Trotter error bound:**
+  `‖exp(tB) * exp(tA) - exp(t(A+B))‖ ≤ ‖[B,A]‖/2 * t² * exp(t(‖A‖+3‖B‖))`.
 
   This improves the quadratic bound `2‖a‖‖b‖` from `norm_exp_mul_exp_sub_exp_add'`
   to the commutator norm `‖B*A - A*B‖`, which can be much smaller when A and B
   nearly commute.
 
-  Proof: from `lie_trotter_integral_error`, bound the integrand norm using
-  `norm_comm_exp_le` and `norm_exp_le`, then bound the integral by a constant. -/
+  Matches the tight bound from Childs et al. (2021), Proposition in §VII.A. -/
 theorem norm_lie_trotter_comm_scaling (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t) :
     ‖exp (t • B) * exp (t • A) - exp (t • (A + B))‖ ≤
-      ‖B * A - A * B‖ * t ^ 2 * Real.exp (t * (‖A‖ + 3 * ‖B‖)) := by
+      ‖B * A - A * B‖ / 2 * t ^ 2 * Real.exp (t * (‖A‖ + 3 * ‖B‖)) := by
   rw [lie_trotter_integral_error]
-  -- Bound ‖integrand‖ by a constant, then apply norm_integral_le_of_norm_le_const
-  have hconst : ∀ τ ∈ Set.uIoc 0 t,
+  -- Bound ‖integrand(τ)‖ ≤ C * τ (keeping τ-dependence for the tight 1/2 factor)
+  set C := ‖B * A - A * B‖ * Real.exp (t * (‖A‖ + 3 * ‖B‖)) with hC_def
+  have hτbound : ∀ τ ∈ Set.Ioc 0 t,
       ‖exp ((t - τ) • (A + B)) * ((exp (τ • B) * A - A * exp (τ • B)) * exp (τ • A))‖ ≤
-        ‖B * A - A * B‖ * t * Real.exp (t * (‖A‖ + 3 * ‖B‖)) := by
+        C * τ := by
     intro τ hτ
-    -- τ ∈ (0, t] since t ≥ 0
-    have hτ_bounds : 0 < τ ∧ τ ≤ t := by
-      rw [Set.mem_uIoc] at hτ
-      rcases hτ with ⟨h1, h2⟩ | ⟨h1, h2⟩
-      · exact ⟨h1, h2⟩
-      · linarith
+    have hτ_pos : 0 < τ := hτ.1
+    have hτ_le : τ ≤ t := hτ.2
     -- Individual norm bounds
     have h1 : ‖exp ((t - τ) • (A + B))‖ ≤ Real.exp ((t - τ) * (‖A‖ + ‖B‖)) := by
       refine (norm_exp_le (𝕂 := ℝ) _).trans (Real.exp_le_exp_of_le ?_)
       have := norm_smul_le (t - τ) (A + B)
-      rw [Real.norm_eq_abs, abs_of_nonneg (by linarith [hτ_bounds.2])] at this
-      exact this.trans (mul_le_mul_of_nonneg_left (norm_add_le A B) (by linarith [hτ_bounds.2]))
+      rw [Real.norm_eq_abs, abs_of_nonneg (by linarith)] at this
+      exact this.trans (mul_le_mul_of_nonneg_left (norm_add_le A B) (by linarith))
     have h2 : ‖(exp (τ • B) * A - A * exp (τ • B)) * exp (τ • A)‖ ≤
         (‖B * A - A * B‖ * τ * Real.exp (3 * τ * ‖B‖)) * Real.exp (τ * ‖A‖) := by
       calc ‖(exp (τ • B) * A - A * exp (τ • B)) * exp (τ • A)‖
@@ -339,32 +335,45 @@ theorem norm_lie_trotter_comm_scaling (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t) :
             · exact (norm_exp_le (𝕂 := ℝ) _).trans (Real.exp_le_exp_of_le (by
                 calc ‖τ • A‖ ≤ ‖τ‖ * ‖A‖ := norm_smul_le τ A
                   _ = |τ| * ‖A‖ := by rw [Real.norm_eq_abs]))
-        _ = (‖B * A - A * B‖ * τ * Real.exp (3 * τ * ‖B‖)) * Real.exp (τ * ‖A‖) := by
-            rw [abs_of_pos hτ_bounds.1]
+        _ = _ := by rw [abs_of_pos hτ_pos]
+    -- Combine: ‖integrand‖ ≤ exp((t-τ)(‖A‖+‖B‖)) * ‖BA-AB‖ * τ * exp(3τ‖B‖) * exp(τ‖A‖)
+    --                       ≤ ‖BA-AB‖ * τ * exp(t(‖A‖+3‖B‖))   [combine exponents, τ ≤ t]
+    --                       = C * τ
     calc ‖exp ((t - τ) • (A + B)) * ((exp (τ • B) * A - A * exp (τ • B)) * exp (τ • A))‖
         ≤ ‖exp ((t - τ) • (A + B))‖ *
             ‖(exp (τ • B) * A - A * exp (τ • B)) * exp (τ • A)‖ := norm_mul_le _ _
       _ ≤ Real.exp ((t - τ) * (‖A‖ + ‖B‖)) *
             ((‖B * A - A * B‖ * τ * Real.exp (3 * τ * ‖B‖)) * Real.exp (τ * ‖A‖)) :=
           mul_le_mul h1 h2 (norm_nonneg _) (Real.exp_nonneg _)
-      _ ≤ ‖B * A - A * B‖ * t * Real.exp (t * (‖A‖ + 3 * ‖B‖)) := by
-          -- Combine exponentials and use τ ≤ t
-          rw [show Real.exp ((t - τ) * (‖A‖ + ‖B‖)) *
-            (‖B * A - A * B‖ * τ * Real.exp (3 * τ * ‖B‖) * Real.exp (τ * ‖A‖)) =
-            ‖B * A - A * B‖ * τ *
-            (Real.exp ((t - τ) * (‖A‖ + ‖B‖)) * Real.exp (3 * τ * ‖B‖) * Real.exp (τ * ‖A‖))
-            from by ring]
+      _ = ‖B * A - A * B‖ * τ *
+            (Real.exp ((t - τ) * (‖A‖ + ‖B‖)) * Real.exp (3 * τ * ‖B‖) * Real.exp (τ * ‖A‖)) :=
+          by ring
+      _ ≤ ‖B * A - A * B‖ * τ * Real.exp (t * (‖A‖ + 3 * ‖B‖)) := by
           gcongr
-          · exact hτ_bounds.2
-          · -- exp((t-τ)(‖A‖+‖B‖) + 3τ‖B‖ + τ‖A‖) ≤ exp(t(‖A‖+3‖B‖))
-            rw [← Real.exp_add, ← Real.exp_add]
-            exact Real.exp_le_exp_of_le (by nlinarith [hτ_bounds.2, norm_nonneg B])
-  -- Apply the constant bound
+          rw [← Real.exp_add, ← Real.exp_add]
+          exact Real.exp_le_exp_of_le (by nlinarith [norm_nonneg B])
+      _ = C * τ := by rw [hC_def]; ring
+  -- Apply non-constant norm bound: ‖∫ f‖ ≤ ∫ g when ‖f‖ ≤ g pointwise
+  have hg_int : IntervalIntegrable (fun τ => C * τ) volume 0 t :=
+    (continuous_const.mul continuous_id).intervalIntegrable 0 t
   calc ‖∫ τ in (0 : ℝ)..t, exp ((t - τ) • (A + B)) *
         ((exp (τ • B) * A - A * exp (τ • B)) * exp (τ • A))‖
-      ≤ (‖B * A - A * B‖ * t * Real.exp (t * (‖A‖ + 3 * ‖B‖))) * |t - 0| :=
-        norm_integral_le_of_norm_le_const hconst
-    _ = ‖B * A - A * B‖ * t ^ 2 * Real.exp (t * (‖A‖ + 3 * ‖B‖)) := by
-        simp [sub_zero, abs_of_nonneg ht]; ring
+      ≤ ∫ τ in (0 : ℝ)..t, C * τ :=
+        norm_integral_le_of_norm_le ht
+          (Filter.Eventually.of_forall (fun _ h => hτbound _ h)) hg_int
+    _ = C * (t ^ 2 / 2) := by
+        rw [intervalIntegral.integral_const_mul]
+        congr 1
+        -- ∫₀ᵗ τ dτ = t²/2 via FTC-2 on f(x) = x²/2
+        have hderiv : ∀ x ∈ Set.uIcc 0 t,
+            HasDerivAt (fun x => x ^ 2 / 2) x x := by
+          intro x _
+          have h := (hasDerivAt_pow 2 x).div_const 2
+          simp only [Nat.cast_ofNat] at h
+          convert h using 1; ring
+        rw [integral_eq_sub_of_hasDerivAt hderiv (continuous_id.intervalIntegrable 0 t)]
+        simp
+    _ = ‖B * A - A * B‖ / 2 * t ^ 2 * Real.exp (t * (‖A‖ + 3 * ‖B‖)) := by
+        rw [hC_def]; ring
 
 end
