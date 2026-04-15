@@ -81,21 +81,20 @@ The Strang product exp(τA/2)·exp(τB)·exp(τA/2) has residual 𝒯₂(τ) con
 of two conjugation terms whose O(τ) parts cancel.
 -/
 
-/-- The Strang integral error representation via Duhamel/FTC-2.
-  `exp(t/2·A)·exp(t·B)·exp(t/2·A) - exp(t·(A+B)) = ∫₀ᵗ ...` -/
-theorem strang_integral_error (A B : 𝔸) (t : ℝ) :
+/-- The Strang error decomposes into two first-order Trotter errors.
+  Each bracket uses `lie_trotter_integral_error` with appropriate operator pairs. -/
+theorem strang_two_bracket_decomp (A B : 𝔸) (t : ℝ) :
     exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A) - exp (t • (A + B)) =
-      ∫ τ in (0:ℝ)..t, exp ((t - τ) • (A + B)) *
-        ((exp ((τ / 2) • A) * B * exp ((- τ / 2) • A) - B) +
-         exp ((τ / 2) • A) * (exp (τ • B) * ((1/2 : ℝ) • A) * exp ((-τ) • B) -
-           (1/2 : ℝ) • A) * exp ((-τ / 2) • A)) *
-        (exp ((τ / 2) • A) * exp (τ • B) * exp ((τ / 2) • A)) := by
-  -- This is the Duhamel integral representation for the Strang product.
-  -- The proof follows the same FTC-2 conjugation pattern as lie_trotter_integral_error
-  -- but is more complex due to the 4-factor product.
-  -- Deferred to follow-up — the key building blocks (exp_conj_sub_comm_eq_double_integral,
-  -- norm_exp_conj_sub_comm_le) are already proved.
-  sorry
+      exp ((t / 2) • A) * (exp (t • B) * exp (t • ((1/2 : ℝ) • A)) -
+        exp (t • (B + (1/2 : ℝ) • A))) +
+      (exp (t • ((1/2 : ℝ) • A)) * exp (t • (B + (1/2 : ℝ) • A)) -
+        exp (t • (A + B))) := by
+  have h1 : t • ((1/2 : ℝ) • A) = (t / 2) • A := by rw [smul_smul]; ring_nf
+  have h2 : (1/2 : ℝ) • A + (B + (1/2 : ℝ) • A) = A + B := by
+    rw [show (1/2 : ℝ) • A + (B + (1/2 : ℝ) • A) = B + ((1/2 : ℝ) • A + (1/2 : ℝ) • A)
+      from by abel]
+    rw [← add_smul]; norm_num; abel
+  rw [h1]; noncomm_ring
 
 /-!
 ## Phase 3: Double commutator norm bounds
