@@ -304,6 +304,430 @@ theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRin
     ‖exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A) - exp (t • (A + B))‖ ≤
       (‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 12 +
        ‖A * (A * B - B * A) - (A * B - B * A) * A‖ / 24) * t ^ 3 := by
-  sorry
+  -- === Setup ===
+  set A' := (1/2 : ℝ) • A with hA'_def
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  have hAB : star (A + B) = -(A + B) := by rw [star_add, hA, hB, neg_add]
+  have hA' : star A' = -A' := by
+    rw [hA'_def, StarModule.star_smul, hA, smul_neg, star_trivial]
+  have hn : ∀ (X : 𝔸), star X = -X → ∀ s : ℝ, ‖exp (s • X)‖ = 1 :=
+    fun X hX s => norm_exp_smul_of_skewAdjoint hX s
+  -- Double commutator norms with A'
+  set C_A := ‖A' * (A' * B - B * A') - (A' * B - B * A') * A'‖
+  set C_B := ‖B * (B * A' - A' * B) - (B * A' - A' * B) * B‖
+  -- === Step 1: FTC-2 ===
+  -- Continuity of the Strang derivative
+  have hcont : Continuous (fun τ : ℝ =>
+      exp ((-τ) • (A + B)) *
+        ((exp ((τ / 2) • A) * B * exp ((-τ / 2) • A) - B) +
+         exp ((τ / 2) • A) * (exp (τ • B) * A' * exp ((-τ) • B) - A') *
+           exp ((-τ / 2) • A)) *
+        (exp ((τ / 2) • A) * exp (τ • B) * exp ((τ / 2) • A))) := by
+    apply Continuous.mul (Continuous.mul ?_ ?_) ?_
+    · exact exp_continuous.comp (continuous_neg.smul continuous_const)
+    · apply Continuous.add
+      · exact ((exp_continuous.comp ((continuous_id.div_const 2).smul continuous_const)).mul
+            continuous_const).mul
+          (exp_continuous.comp ((continuous_neg.div_const 2).smul continuous_const)) |>.sub
+          continuous_const
+      · exact ((exp_continuous.comp ((continuous_id.div_const 2).smul continuous_const)).mul
+            (((exp_continuous.comp (continuous_id.smul continuous_const)).mul
+              continuous_const).mul
+            (exp_continuous.comp (continuous_neg.smul continuous_const)) |>.sub
+            continuous_const)).mul
+          (exp_continuous.comp ((continuous_neg.div_const 2).smul continuous_const))
+    · exact ((exp_continuous.comp ((continuous_id.div_const 2).smul continuous_const)).mul
+          (exp_continuous.comp (continuous_id.smul continuous_const))).mul
+        (exp_continuous.comp ((continuous_id.div_const 2).smul continuous_const))
+  have hftc := integral_eq_sub_of_hasDerivAt
+    (fun u _ => hasDerivAt_conj_strang A B u) (hcont.intervalIntegrable 0 t)
+  simp only [zero_smul, exp_zero, neg_zero, mul_one, zero_div] at hftc
+  -- hftc : ∫₀ᵗ w' dτ = exp(-tH)·S₂(t) - 1
+  -- === Step 2: Bound ‖S₂(t) - exp(tH)‖ ≤ ‖∫₀ᵗ w' dτ‖ ===
+  have hS₂_eq : exp ((t/2)•A)*exp (t•B)*exp ((t/2)•A) - exp (t•(A+B)) =
+      exp (t•(A+B)) * (exp ((-t)•(A+B))*(exp ((t/2)•A)*exp (t•B)*exp ((t/2)•A)) - 1) := by
+    rw [mul_sub, mul_one, ← mul_assoc, exp_smul_mul_exp_neg_smul, one_mul]
+  -- === Step 3: Pointwise bound on 𝒯₂ via anti-Hermitian isometry ===
+  -- For anti-Hermitian X, ‖exp(s•X)‖ = 1, so conjugation is isometric.
+  -- This gives sharp double-commutator bounds without exponential factors.
+
+  -- Anti-Hermitian double-commutator remainder bound (no exp factor):
+  -- ‖exp(τX)·Y·exp(-τX) - Y - τ·[X,Y]‖ ≤ ‖[X,[X,Y]]‖/2 · τ²
+  have hdc_bound : ∀ (X Y : 𝔸), star X = -X → ∀ τ : ℝ, 0 ≤ τ →
+      ‖exp (τ • X) * Y * exp ((-τ) • X) - Y - τ • (X * Y - Y * X)‖ ≤
+        ‖X * (X * Y - Y * X) - (X * Y - Y * X) * X‖ / 2 * τ ^ 2 := by
+    intro X Y hX τ hτ0
+    rw [exp_conj_sub_comm_eq_double_integral Y X τ]
+    set C_XY := X * (X * Y - Y * X) - (X * Y - Y * X) * X
+    -- Inner integral bound using anti-Hermitian isometry: ‖exp(u•X)·C·exp(-u•X)‖ ≤ ‖C‖
+    have hiso : ∀ u : ℝ,
+        ‖exp (u • X) * C_XY * exp ((-u) • X)‖ ≤ ‖C_XY‖ := by
+      intro u
+      calc ‖exp (u • X) * C_XY * exp ((-u) • X)‖
+          ≤ ‖exp (u • X)‖ * ‖C_XY‖ * ‖exp ((-u) • X)‖ :=
+            (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right (norm_mul_le _ _) (norm_nonneg _))
+        _ = ‖C_XY‖ := by rw [hn X hX u, hn X hX (-u)]; ring
+    -- Inner integral: ‖∫₀ˢ g du‖ ≤ ‖C_XY‖ * |s| by norm_integral_le_of_norm_le_const
+    have hinner_bound : ∀ s ∈ Set.Ioc 0 τ,
+        ‖∫ u in (0:ℝ)..s, exp (u • X) * C_XY * exp ((-u) • X)‖ ≤ ‖C_XY‖ * s := by
+      intro s hs
+      calc ‖∫ u in (0:ℝ)..s, exp (u • X) * C_XY * exp ((-u) • X)‖
+          ≤ ‖C_XY‖ * |s - 0| :=
+            intervalIntegral.norm_integral_le_of_norm_le_const
+              (fun u _ => hiso u)
+        _ = ‖C_XY‖ * s := by rw [sub_zero, abs_of_pos hs.1]
+    -- Outer integral: ‖∫₀ᵗ (inner) ds‖ ≤ ∫₀ᵗ ‖C_XY‖*s ds = ‖C_XY‖*τ²/2
+    have hg_int : IntervalIntegrable (fun s => ‖C_XY‖ * s) volume 0 τ :=
+      (continuous_const.mul continuous_id).intervalIntegrable 0 τ
+    calc ‖∫ s in (0:ℝ)..τ, ∫ u in (0:ℝ)..s,
+            exp (u • X) * C_XY * exp ((-u) • X)‖
+        ≤ ∫ s in (0:ℝ)..τ, ‖C_XY‖ * s := by
+          apply norm_integral_le_of_norm_le hτ0 _ hg_int
+          exact Filter.Eventually.of_forall (fun s hs => hinner_bound s hs)
+      _ = ‖C_XY‖ * (τ ^ 2 / 2) := by
+          rw [intervalIntegral.integral_const_mul]; congr 1
+          have : ∀ x ∈ Set.uIcc 0 τ, HasDerivAt (fun x => x ^ 2 / 2) x x := by
+            intro x _; have h := (hasDerivAt_pow 2 x).div_const 2
+            simp only [Nat.cast_ofNat] at h; convert h using 1; ring
+          rw [integral_eq_sub_of_hasDerivAt this (continuous_id.intervalIntegrable 0 τ)]; simp
+      _ = ‖C_XY‖ / 2 * τ ^ 2 := by ring
+  -- === Step 4: Decompose 𝒯₂ and bound the full integrand ===
+  -- Key algebraic identity: 𝒯₂(τ) = (f₁(τ) - τ·conj_{τA'}([A',B])) + conj_{τA'}(R₂(τ))
+  -- where f₁(τ) = exp(τA')·B·exp(-τA') - B
+  -- and R₂(τ) = exp(τB)·A'·exp(-τB) - A' - τ·[B,A']
+
+  -- Helper: (τ/2)•A = τ•A'
+  have hsmul_eq : ∀ τ : ℝ, (τ / 2) • A = τ • A' := by
+    intro τ; rw [hA'_def, smul_smul]; ring_nf
+  -- Helper: (-τ/2)•A = (-τ)•A'
+  have hneg_smul_eq : ∀ τ : ℝ, (-τ / 2) • A = (-τ) • A' := by
+    intro τ; rw [hA'_def, smul_smul]; ring_nf
+
+  -- Pointwise bound on the integrand
+  -- ‖w'(τ)‖ = ‖exp(-τH) · 𝒯₂(τ) · S₂(τ)‖ ≤ ‖𝒯₂(τ)‖ ≤ (C_A + C_B)/2 · τ²
+  have hpointwise : ∀ τ0 ∈ Set.Ioc (0:ℝ) t,
+      ‖exp ((-τ0) • (A + B)) *
+        ((exp ((τ0 / 2) • A) * B * exp ((-τ0 / 2) • A) - B) +
+         exp ((τ0 / 2) • A) * (exp (τ0 • B) * A' * exp ((-τ0) • B) - A') *
+           exp ((-τ0 / 2) • A)) *
+        (exp ((τ0 / 2) • A) * exp (τ0 • B) * exp ((τ0 / 2) • A))‖ ≤
+      (C_A + C_B) / 2 * τ0 ^ 2 := by
+    intro τ0 hτ0
+    have hτ0_pos : 0 < τ0 := hτ0.1
+    have hτ0_nn : 0 ≤ τ0 := le_of_lt hτ0_pos
+    -- Bound ‖exp(-τ0·H)‖ = 1
+    have hn_H : ‖exp ((-τ0) • (A + B))‖ = 1 := hn (A + B) hAB (-τ0)
+    -- Bound ‖S₂(τ0)‖ ≤ 1 (in A' form)
+    have hn_S : ‖exp (τ0 • A') * exp (τ0 • B) * exp (τ0 • A')‖ ≤ 1 := by
+      calc ‖exp (τ0 • A') * exp (τ0 • B) * exp (τ0 • A')‖
+          ≤ ‖exp (τ0 • A')‖ * ‖exp (τ0 • B)‖ * ‖exp (τ0 • A')‖ :=
+            (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right (norm_mul_le _ _) (norm_nonneg _))
+        _ = 1 := by
+            rw [hn A' hA' τ0, hn B hB τ0]; ring
+    -- Now bound ‖𝒯₂(τ0)‖ ≤ (C_A + C_B)/2 · τ0²
+    -- 𝒯₂ = Term1 + Term2 where
+    --   Term1 = exp(τ0·A')·B·exp(-τ0·A') - B
+    --   Term2 = exp(τ0·A')·(exp(τ0·B)·A'·exp(-τ0·B) - A')·exp(-τ0·A')
+    -- Rewrite in A' form
+    rw [hsmul_eq τ0, hneg_smul_eq τ0]
+    set 𝒯₂ := (exp (τ0 • A') * B * exp ((-τ0) • A') - B) +
+      exp (τ0 • A') * (exp (τ0 • B) * A' * exp ((-τ0) • B) - A') * exp ((-τ0) • A')
+    -- Step: ‖exp(-H)·𝒯₂·S₂‖ ≤ ‖𝒯₂‖
+    have hbound1 : ‖exp ((-τ0) • (A + B)) * 𝒯₂ *
+        (exp (τ0 • A') * exp (τ0 • B) * exp (τ0 • A'))‖ ≤ ‖𝒯₂‖ := by
+      calc ‖exp ((-τ0) • (A + B)) * 𝒯₂ *
+            (exp (τ0 • A') * exp (τ0 • B) * exp (τ0 • A'))‖
+          ≤ ‖exp ((-τ0) • (A + B))‖ * ‖𝒯₂‖ *
+            ‖exp (τ0 • A') * exp (τ0 • B) * exp (τ0 • A')‖ :=
+            (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right (norm_mul_le _ _) (norm_nonneg _))
+        _ ≤ 1 * ‖𝒯₂‖ * 1 := by gcongr; · exact le_of_eq hn_H
+        _ = ‖𝒯₂‖ := by ring
+    -- Step: Bound ‖𝒯₂‖ using decomposition
+    -- 𝒯₂ = (f₁ - τ0·conj([A',B])) + conj(R₂)
+    -- Part A: ‖f₁ - τ0·conj([A',B])‖ ≤ C_A/2·τ0²
+    -- Part B: ‖conj(R₂)‖ ≤ C_B/2·τ0²
+
+    -- First, establish algebraic decomposition of 𝒯₂
+    set c := A' * B - B * A'  -- commutator [A',B]
+    -- f₁ = exp(τ0A')·B·exp(-τ0A') - B = ∫₀ᵗ exp(sA')·c·exp(-sA') ds
+    have hf₁_int := exp_conj_sub_eq_integral B A' τ0
+    -- f₂ = exp(τ0B)·A'·exp(-τ0B) - A' = ∫₀ᵗ exp(sB)·[B,A']·exp(-sB) ds
+    -- [B,A'] = -c
+    have hBA' : B * A' - A' * B = -c := (neg_sub (A' * B) (B * A')).symm
+    -- R₂ = f₂ - τ0·[B,A'] from hdc_bound B A' hB
+    have hR₂ := hdc_bound B A' hB τ0 hτ0_nn
+    -- conj(R₂): ‖conj_{τ0A'}(R₂)‖ = ‖R₂‖ ≤ C_B/2·τ0²
+    -- (since exp(τ0A') is isometric for anti-Hermitian A')
+
+    -- Key algebraic identity: 𝒯₂ = (f₁ - τ0·g₁(τ0)) + conj_{τ0A'}(R₂)
+    -- where g₁(τ0) = conj_{τ0A'}(c) = exp(τ0A')·c·exp(-τ0A')
+    -- and [A',B] + [B,A'] = 0 gives the cancellation
+    have hc_cancel : c + (-(c : 𝔸)) = 0 := add_neg_cancel c
+
+    -- Decompose: 𝒯₂ = (f₁ - τ0·g₁(τ0)) + conj(R₂)
+    have h𝒯₂_decomp : 𝒯₂ =
+        (exp (τ0 • A') * B * exp ((-τ0) • A') - B -
+          τ0 • (exp (τ0 • A') * c * exp ((-τ0) • A'))) +
+        (exp (τ0 • A') *
+          (exp (τ0 • B) * A' * exp ((-τ0) • B) - A' - τ0 • (B * A' - A' * B)) *
+          exp ((-τ0) • A')) := by
+      -- Strategy: show 𝒯₂ = RHS by computing 𝒯₂ - RHS = 0
+      set eA := exp (τ0 • A')
+      set enA := exp ((-τ0) • A')
+      -- The difference 𝒯₂ - RHS simplifies to
+      -- τ0 • (eA * c * enA) + eA * (τ0 • (BA'-A'B)) * enA = 0
+      -- because [A',B] + [B,A'] = 0
+      rw [eq_comm, ← sub_eq_zero]
+      -- Expand the subtraction in the second mul term
+      set f₂ := exp (τ0 • B) * A' * exp ((-τ0) • B) - A'
+      -- 𝒯₂ = (eA*B*enA - B) + eA*f₂*enA
+      -- RHS = (eA*B*enA - B - τ0•(eA*c*enA)) + eA*(f₂ - τ0•(BA'-A'B))*enA
+      -- 𝒯₂ - RHS = τ0•(eA*c*enA) + eA*(τ0•(BA'-A'B))*enA
+
+      -- Step 1: expand eA*(f₂ - Y)*enA using mul_sub
+      have hmul_sub : eA * (f₂ - τ0 • (B * A' - A' * B)) * enA =
+          eA * f₂ * enA - eA * (τ0 • (B * A' - A' * B)) * enA := by
+        calc eA * (f₂ - τ0 • (B * A' - A' * B)) * enA
+            = (eA * f₂ - eA * (τ0 • (B * A' - A' * B))) * enA := by rw [mul_sub]
+          _ = eA * f₂ * enA - eA * (τ0 • (B * A' - A' * B)) * enA := by rw [sub_mul]
+      -- Step 2: show sub_sub form matches
+      have hgoal_rw : (eA * B * enA - B - τ0 • (eA * c * enA)) +
+          eA * (f₂ - τ0 • (B * A' - A' * B)) * enA =
+        ((eA * B * enA - B) + eA * f₂ * enA) -
+          (τ0 • (eA * c * enA) + eA * (τ0 • (B * A' - A' * B)) * enA) := by
+        rw [hmul_sub]; abel
+      rw [hgoal_rw]
+      -- Step 3: cancel
+      have hcancel : τ0 • (eA * c * enA) +
+          eA * (τ0 • (B * A' - A' * B)) * enA = 0 := by
+        have h1 : τ0 • (eA * c * enA) = eA * (τ0 • c) * enA := by
+          rw [Algebra.mul_smul_comm, Algebra.smul_mul_assoc]
+        have h2 : τ0 • (B * A' - A' * B) = -(τ0 • c) := by rw [hBA', smul_neg]
+        rw [h1, h2]
+        have : eA * (-(τ0 • c)) * enA = -(eA * (τ0 • c) * enA) := by
+          simp only [mul_neg, neg_mul]
+        rw [this, add_neg_cancel]
+      rw [hcancel, sub_zero, sub_self]
+    -- Now bound each part
+    -- Part A: ‖f₁ - τ0·g₁(τ0)‖ = ‖f₁ - τ0·conj_{τ0A'}(c)‖
+    -- Using "subtract constant at τ" trick on the integral representation
+    -- f₁ = ∫₀^{τ0} g₁(s) ds where g₁(s) = exp(sA')·c·exp(-sA')
+    -- f₁ - τ0·g₁(τ0) = ∫₀^{τ0} (g₁(s) - g₁(τ0)) ds
+    -- ‖g₁(s) - g₁(τ0)‖ ≤ C_A · (τ0 - s) for 0 ≤ s ≤ τ0
+    -- So ‖f₁ - τ0·g₁(τ0)‖ ≤ ∫₀^{τ0} C_A·(τ0-s) ds = C_A·τ0²/2
+
+    have hPartA : ‖exp (τ0 • A') * B * exp ((-τ0) • A') - B -
+        τ0 • (exp (τ0 • A') * c * exp ((-τ0) • A'))‖ ≤ C_A / 2 * τ0 ^ 2 := by
+      -- Abbreviations
+      set g₁ : ℝ → 𝔸 := fun s => exp (s • A') * c * exp ((-s) • A')
+      set dblcomm := A' * (A' * B - B * A') - (A' * B - B * A') * A'  -- [A',[A',B]]
+      -- Key fact: g₁(τ0) - g₁(s) = ∫ₛ^{τ0} g₁'(u) du
+      -- where g₁'(u) = exp(uA')·dblcomm·exp(-uA')
+      -- Step 1: f₁ = ∫₀^{τ0} g₁(s) ds (from exp_conj_sub_eq_integral)
+      have hf₁_eq : exp (τ0 • A') * B * exp ((-τ0) • A') - B =
+          ∫ s in (0:ℝ)..τ0, g₁ s := hf₁_int
+      -- Step 2: τ0 • g₁(τ0) = ∫₀^{τ0} g₁(τ0) ds (constant integral)
+      have hconst_int : ∫ _ in (0:ℝ)..τ0, g₁ τ0 = τ0 • g₁ τ0 := by
+        rw [intervalIntegral.integral_const]; simp
+      -- Step 3: LHS = ‖∫₀^{τ0} (g₁(s) - g₁(τ0)) ds‖
+      have hg₁_int : IntervalIntegrable g₁ volume 0 τ0 :=
+        ((exp_continuous.comp (continuous_id.smul continuous_const)).mul continuous_const).mul
+          (exp_continuous.comp (continuous_neg.smul continuous_const))
+          |>.intervalIntegrable 0 τ0
+      have hg₁τ_int : IntervalIntegrable (fun _ => g₁ τ0) volume 0 τ0 :=
+        continuous_const.intervalIntegrable 0 τ0
+      have hLHS_eq : exp (τ0 • A') * B * exp ((-τ0) • A') - B -
+          τ0 • (exp (τ0 • A') * c * exp ((-τ0) • A')) =
+          ∫ s in (0:ℝ)..τ0, (g₁ s - g₁ τ0) := by
+        rw [hf₁_eq, show exp (τ0 • A') * c * exp ((-τ0) • A') = g₁ τ0 from rfl,
+            ← hconst_int, ← integral_sub hg₁_int hg₁τ_int]
+      rw [hLHS_eq]
+      -- Step 4: Pointwise bound ‖g₁(s) - g₁(τ0)‖ ≤ C_A · (τ0 - s) for s ∈ [0, τ0]
+      -- Using: g₁(τ0) - g₁(s) = ∫ₛ^{τ0} g₁' du, and ‖g₁'(u)‖ ≤ C_A by isometry
+      -- So ‖g₁(s) - g₁(τ0)‖ = ‖∫ₛ^{τ0} g₁'‖ ≤ C_A·(τ0-s)
+
+      -- g₁(τ0) - g₁(s) = (exp(τ0A')cexp(-τ0A') - c) - (exp(sA')cexp(-sA') - c)
+      --                  = ∫₀^{τ0} h du - ∫₀^s h du = ∫ₛ^{τ0} h du
+      -- where h(u) = exp(uA')·[A',c]·exp(-uA') = exp(uA')·dblcomm·exp(-uA')
+      -- and [A',c] = A'·c - c·A' = A'·(A'B-BA') - (A'B-BA')·A' = dblcomm
+
+      have hg₁_diff : ∀ s : ℝ, g₁ τ0 - g₁ s =
+          ∫ u in s..τ0, exp (u • A') * (A' * c - c * A') * exp ((-u) • A') := by
+        intro s
+        have h1 := exp_conj_sub_eq_integral c A' τ0
+        have h2 := exp_conj_sub_eq_integral c A' s
+        -- g₁(τ0) - c = ∫₀^{τ0} h, g₁(s) - c = ∫₀^s h
+        -- g₁(τ0) - g₁(s) = ∫₀^{τ0} h - ∫₀^s h = ∫ₛ^{τ0} h
+        have : g₁ τ0 - g₁ s = (g₁ τ0 - c) - (g₁ s - c) := by abel
+        rw [this, h1, h2]
+        rw [← integral_add_adjacent_intervals
+            ((continuous_exp_conj_deriv c A').intervalIntegrable 0 s)
+            ((continuous_exp_conj_deriv c A').intervalIntegrable s τ0)]
+        abel
+
+      -- [A',c] = dblcomm
+      have hAc_eq : A' * c - c * A' = dblcomm := rfl
+
+      -- Anti-Hermitian bound: ‖exp(u•A')·dblcomm·exp(-u•A')‖ ≤ C_A
+      have hiso_dbl : ∀ u : ℝ,
+          ‖exp (u • A') * dblcomm * exp ((-u) • A')‖ ≤ C_A := by
+        intro u
+        show ‖exp (u • A') * dblcomm * exp ((-u) • A')‖ ≤
+          ‖A' * (A' * B - B * A') - (A' * B - B * A') * A'‖
+        calc ‖exp (u • A') * dblcomm * exp ((-u) • A')‖
+            ≤ ‖exp (u • A')‖ * ‖dblcomm‖ * ‖exp ((-u) • A')‖ :=
+              (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right (norm_mul_le _ _) (norm_nonneg _))
+          _ = ‖dblcomm‖ := by rw [hn A' hA' u, hn A' hA' (-u)]; ring
+
+      -- ‖g₁(s) - g₁(τ0)‖ ≤ C_A · (τ0 - s) for s ∈ [0, τ0]
+      have hpw : ∀ s ∈ Set.Ioc 0 τ0,
+          ‖g₁ s - g₁ τ0‖ ≤ C_A * (τ0 - s) := by
+        intro s hs
+        rw [show g₁ s - g₁ τ0 = -(g₁ τ0 - g₁ s) from by abel, norm_neg,
+            hg₁_diff s, hAc_eq]
+        calc ‖∫ u in s..τ0, exp (u • A') * dblcomm * exp ((-u) • A')‖
+            ≤ C_A * |τ0 - s| :=
+              intervalIntegral.norm_integral_le_of_norm_le_const
+                (fun u _ => hiso_dbl u)
+          _ = C_A * (τ0 - s) := by rw [abs_of_nonneg (by linarith [hs.2])]
+
+      -- Integrate: ‖∫₀^{τ0} (g₁(s) - g₁(τ0)) ds‖ ≤ ∫₀^{τ0} C_A·(τ0-s) ds = C_A·τ0²/2
+      have hbound_int : IntervalIntegrable (fun s => C_A * (τ0 - s)) volume 0 τ0 :=
+        ((continuous_const.mul (continuous_const.sub continuous_id))).intervalIntegrable 0 τ0
+      calc ‖∫ s in (0:ℝ)..τ0, (g₁ s - g₁ τ0)‖
+          ≤ ∫ s in (0:ℝ)..τ0, C_A * (τ0 - s) := by
+            apply norm_integral_le_of_norm_le hτ0_nn _ hbound_int
+            exact Filter.Eventually.of_forall (fun s hs => hpw s hs)
+        _ = C_A * (τ0 ^ 2 / 2) := by
+            rw [intervalIntegral.integral_const_mul]; congr 1
+            -- ∫₀^{τ0} (τ0 - s) ds = τ0²/2
+            have hderiv : ∀ x ∈ Set.uIcc 0 τ0,
+                HasDerivAt (fun x => τ0 * x - x ^ 2 / 2) (τ0 - x) x := by
+              intro x _
+              have h1 := hasDerivAt_const x τ0 |>.mul (hasDerivAt_id x)
+              have h2 := (hasDerivAt_pow 2 x).div_const 2
+              simp only [Nat.cast_ofNat] at h2
+              have h := h1.sub h2
+              convert h using 1; ring
+            rw [integral_eq_sub_of_hasDerivAt hderiv
+              ((continuous_const.sub continuous_id).intervalIntegrable 0 τ0)]
+            simp; ring
+        _ = C_A / 2 * τ0 ^ 2 := by ring
+
+    -- Part B: ‖conj(R₂)‖ ≤ C_B/2·τ0²
+    have hPartB : ‖exp (τ0 • A') *
+        (exp (τ0 • B) * A' * exp ((-τ0) • B) - A' - τ0 • (B * A' - A' * B)) *
+        exp ((-τ0) • A')‖ ≤ C_B / 2 * τ0 ^ 2 := by
+      calc ‖exp (τ0 • A') *
+            (exp (τ0 • B) * A' * exp ((-τ0) • B) - A' - τ0 • (B * A' - A' * B)) *
+            exp ((-τ0) • A')‖
+          ≤ ‖exp (τ0 • A')‖ *
+            ‖exp (τ0 • B) * A' * exp ((-τ0) • B) - A' - τ0 • (B * A' - A' * B)‖ *
+            ‖exp ((-τ0) • A')‖ :=
+            (norm_mul_le _ _).trans
+              (mul_le_mul_of_nonneg_right (norm_mul_le _ _) (norm_nonneg _))
+        _ = ‖exp (τ0 • B) * A' * exp ((-τ0) • B) - A' - τ0 • (B * A' - A' * B)‖ := by
+            rw [hn A' hA' τ0, hn A' hA' (-τ0)]; ring
+        _ ≤ C_B / 2 * τ0 ^ 2 := hR₂
+
+    -- Combine hbound1 with Part A and Part B
+    calc ‖exp ((-τ0) • (A + B)) * 𝒯₂ *
+          (exp (τ0 • A') * exp (τ0 • B) * exp (τ0 • A'))‖
+        ≤ ‖𝒯₂‖ := hbound1
+      _ = ‖(exp (τ0 • A') * B * exp ((-τ0) • A') - B -
+            τ0 • (exp (τ0 • A') * c * exp ((-τ0) • A'))) +
+          (exp (τ0 • A') *
+            (exp (τ0 • B) * A' * exp ((-τ0) • B) - A' - τ0 • (B * A' - A' * B)) *
+            exp ((-τ0) • A'))‖ := by rw [h𝒯₂_decomp]
+      _ ≤ ‖exp (τ0 • A') * B * exp ((-τ0) • A') - B -
+            τ0 • (exp (τ0 • A') * c * exp ((-τ0) • A'))‖ +
+          ‖exp (τ0 • A') *
+            (exp (τ0 • B) * A' * exp ((-τ0) • B) - A' - τ0 • (B * A' - A' * B)) *
+            exp ((-τ0) • A')‖ := norm_add_le _ _
+      _ ≤ C_A / 2 * τ0 ^ 2 + C_B / 2 * τ0 ^ 2 := add_le_add hPartA hPartB
+      _ = (C_A + C_B) / 2 * τ0 ^ 2 := by ring
+  -- === Step 5: Integrate the pointwise bound to get the final result ===
+  -- ‖S₂(t) - exp(tH)‖ ≤ ‖exp(tH)‖ · ‖∫₀ᵗ w'(τ) dτ‖ ≤ ∫₀ᵗ (C_A+C_B)/2·τ² dτ = (C_A+C_B)/6·t³
+  -- Then convert: (C_A+C_B)/6 = DC_B/12 + DC_A/24
+
+  -- Integrability of the bound function
+  have hg_int : IntervalIntegrable (fun τ0 => (C_A + C_B) / 2 * τ0 ^ 2) volume 0 t :=
+    (continuous_const.mul (continuous_id.pow 2)).intervalIntegrable 0 t
+
+  -- Main calculation
+  rw [hS₂_eq]
+  -- Step A: ‖exp(tH)·(...)‖ ≤ ‖...‖ (exp(tH) is isometric)
+  have hstep1 : ‖exp (t • (A + B)) *
+      (exp ((-t) • (A + B)) * (exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A)) - 1)‖ ≤
+      ‖exp ((-t) • (A + B)) * (exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A)) - 1‖ := by
+    calc ‖exp (t • (A + B)) *
+          (exp ((-t) • (A + B)) * (exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A)) - 1)‖
+        ≤ ‖exp (t • (A + B))‖ *
+          ‖exp ((-t) • (A + B)) * (exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A)) - 1‖ :=
+          norm_mul_le _ _
+      _ = ‖exp ((-t) • (A + B)) * (exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A)) - 1‖ := by
+          rw [hn (A + B) hAB t, one_mul]
+  -- Step B: the RHS = ‖∫₀ᵗ w'(τ) dτ‖ by FTC
+  have hstep2 : exp ((-t) • (A + B)) *
+      (exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A)) - 1 =
+      ∫ τ0 in (0:ℝ)..t, exp ((-τ0) • (A + B)) *
+        ((exp ((τ0 / 2) • A) * B * exp ((-τ0 / 2) • A) - B) +
+         exp ((τ0 / 2) • A) * (exp (τ0 • B) * A' * exp ((-τ0) • B) - A') *
+           exp ((-τ0 / 2) • A)) *
+        (exp ((τ0 / 2) • A) * exp (τ0 • B) * exp ((τ0 / 2) • A)) := hftc.symm
+  -- Step C: bound the integral
+  calc ‖exp (t • (A + B)) *
+        (exp ((-t) • (A + B)) * (exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A)) - 1)‖
+      ≤ ‖exp ((-t) • (A + B)) *
+          (exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A)) - 1‖ := hstep1
+    _ = ‖∫ τ0 in (0:ℝ)..t, exp ((-τ0) • (A + B)) *
+          ((exp ((τ0 / 2) • A) * B * exp ((-τ0 / 2) • A) - B) +
+           exp ((τ0 / 2) • A) * (exp (τ0 • B) * A' * exp ((-τ0) • B) - A') *
+             exp ((-τ0 / 2) • A)) *
+          (exp ((τ0 / 2) • A) * exp (τ0 • B) * exp ((τ0 / 2) • A))‖ := by
+        rw [hstep2]
+    _ ≤ ∫ τ0 in (0:ℝ)..t, (C_A + C_B) / 2 * τ0 ^ 2 := by
+        apply norm_integral_le_of_norm_le ht _ hg_int
+        exact Filter.Eventually.of_forall (fun τ0 hτ0 => hpointwise τ0 hτ0)
+    _ = (C_A + C_B) / 2 * (t ^ 3 / 3) := by
+        rw [intervalIntegral.integral_const_mul]; congr 1
+        -- ∫₀ᵗ τ² dτ = t³/3 via FTC-2 on f(x) = x³/3
+        have hderiv : ∀ x ∈ Set.uIcc 0 t,
+            HasDerivAt (fun x => x ^ 3 / 3) (x ^ 2) x := by
+          intro x _
+          have h := (hasDerivAt_pow 3 x).div_const 3
+          simp only [Nat.cast_ofNat] at h
+          convert h using 1; ring
+        rw [integral_eq_sub_of_hasDerivAt hderiv
+          ((continuous_id.pow 2).intervalIntegrable 0 t)]
+        simp
+    _ = (C_A + C_B) / 6 * t ^ 3 := by ring
+    _ = (‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 12 +
+         ‖A * (A * B - B * A) - (A * B - B * A) * A‖ / 24) * t ^ 3 := by
+        -- Convert C_A = (1/4)·DC_A and C_B = (1/2)·DC_B
+        -- C_A = ‖A'*(A'*B-B*A') - (A'*B-B*A')*A'‖
+        -- A'*(A'*B-B*A') = (1/2)•A * ((1/2)•(AB-BA)) = (1/4)•(A*(AB-BA))
+        -- and similarly for the other term
+        -- So C_A = ‖(1/4)•(A*(AB-BA)-(AB-BA)*A)‖ = (1/4)*DC_A
+        have hC_A_eq : C_A = ‖A * (A * B - B * A) - (A * B - B * A) * A‖ / 4 := by
+          show ‖A' * (A' * B - B * A') - (A' * B - B * A') * A'‖ =
+            ‖A * (A * B - B * A) - (A * B - B * A) * A‖ / 4
+          have h_expr : A' * (A' * B - B * A') - (A' * B - B * A') * A' =
+              (1/4 : ℝ) • (A * (A * B - B * A) - (A * B - B * A) * A) := by
+            simp only [hA'_def, Algebra.smul_mul_assoc, Algebra.mul_smul_comm,
+              smul_sub, mul_sub, sub_mul, smul_smul]
+            norm_num
+          rw [h_expr, norm_smul, Real.norm_of_nonneg (by norm_num : (0:ℝ) ≤ 1/4)]
+          ring
+        have hC_B_eq : C_B = ‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 2 := by
+          show ‖B * (B * A' - A' * B) - (B * A' - A' * B) * B‖ =
+            ‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 2
+          have h_expr : B * (B * A' - A' * B) - (B * A' - A' * B) * B =
+              (1/2 : ℝ) • (B * (B * A - A * B) - (B * A - A * B) * B) := by
+            simp only [hA'_def, Algebra.smul_mul_assoc, Algebra.mul_smul_comm,
+              smul_sub, mul_sub, sub_mul]
+          rw [h_expr, norm_smul, Real.norm_of_nonneg (by norm_num : (0:ℝ) ≤ 1/2)]
+          ring
+        rw [hC_A_eq, hC_B_eq]; ring
 
 end
