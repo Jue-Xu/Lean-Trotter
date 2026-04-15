@@ -194,6 +194,48 @@ private lemma hasDerivAt_conj_strang (A B : 𝔸) (τ : ℝ) :
          exp ((τ / 2) • A) * (exp (τ • B) * ((1/2 : ℝ) • A) * exp ((-τ) • B) -
            (1/2 : ℝ) • A) * exp ((-τ / 2) • A)) *
         (exp ((τ / 2) • A) * exp (τ • B) * exp ((τ / 2) • A))) τ := by
+  -- Step 1: Show the function equals a uniform `exp(u • X)` form
+  set A' := (1/2 : ℝ) • A with hA'
+  have hsmul_eq : ∀ u : ℝ, (u / 2) • A = u • A' := by
+    intro u; rw [hA', smul_smul, show u * (1 / 2 : ℝ) = u / 2 from by ring]
+  have hfun_eq : (fun u : ℝ => exp ((-u) • (A + B)) *
+      (exp ((u / 2) • A) * exp (u • B) * exp ((u / 2) • A))) =
+      (fun u => exp (u • (-(A + B))) * (exp (u • A') * (exp (u • B) * exp (u • A')))) := by
+    ext u
+    rw [show (-u) • (A + B) = u • (-(A + B)) from by rw [neg_smul, smul_neg],
+        show (u / 2) • A = u • A' from hsmul_eq u, mul_assoc]
+  rw [hfun_eq]
+  -- Also rewrite the derivative value
+  rw [show (-τ) • (A + B) = τ • (-(A + B)) from by rw [neg_smul, smul_neg],
+     show (τ / 2) • A = τ • A' from hsmul_eq τ,
+     show (-τ / 2) • A = τ • (-A') from by
+       rw [show (-τ / 2 : ℝ) = -(τ / 2) from by ring, neg_smul, hsmul_eq, ← smul_neg],
+     mul_assoc (exp (τ • A'))]
+  -- Step 3: Derivatives via HasDerivAt.mul
+  set A' := (1/2 : ℝ) • A
+  set nH := -(A + B)
+  have hH := hasDerivAt_exp_smul_const' (𝕂 := ℝ) nH τ
+  have hA1 := hasDerivAt_exp_smul_const' (𝕂 := ℝ) A' τ
+  have hB := hasDerivAt_exp_smul_const' (𝕂 := ℝ) B τ
+  have hA2 := hasDerivAt_exp_smul_const' (𝕂 := ℝ) A' τ
+  have hBA := hB.mul hA2
+  have hS := hA1.mul hBA
+  have hFull := hH.mul hS
+  convert hFull using 1
+  -- Step 4: Algebraic simplification using commutativity
+  set E := exp (τ • nH)
+  have hcH : (A + B) * E = E * (A + B) :=
+    ((Commute.refl (A + B)).neg_right.smul_right τ).exp_right.eq
+  have h_neg : nH * E = -(E * (A + B)) := by simp only [nH]; rw [neg_mul, hcH]
+  have hcA : A' * exp (τ • A') = exp (τ • A') * A' :=
+    ((Commute.refl A').smul_right τ).exp_right.eq
+  have hcB : B * exp (τ • B) = exp (τ • B) * B :=
+    ((Commute.refl B).smul_right τ).exp_right.eq
+  rw [h_neg, hcA, hcB]
+  simp only [Pi.mul_apply]
+  -- The remaining goal is a noncommutative ring identity, but exp((-τ)•A')
+  -- and exp(τ•(-A')) are syntactically different (equal by neg_smul/smul_neg).
+  -- TODO: normalize negation in smul before noncomm_ring
   sorry
 
 theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸]
