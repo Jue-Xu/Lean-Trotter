@@ -69,9 +69,18 @@
 
 - [x] **Commutator-scaling Trotter error (H)** — Proved `norm_lie_trotter_comm_scaling`: the Trotter error `‖exp(tB)exp(tA) - exp(t(A+B))‖` is bounded by `‖[B,A]‖ · t² · exp(t(‖A‖+3‖B‖))`, replacing the product `‖A‖‖B‖` with the commutator `‖[B,A]‖`. Uses Duhamel formula via FTC-2. File: `LieTrotter/CommutatorScaling.lean` (370 lines, 0 sorry's).
 
-- [ ] **Tighten commutator-scaling constant to t²/2** — The current bound has `t²` where the paper's tight bound (Proposition in `prefactor.tex`) has `t²/2`. Requires evaluating `∫₀ᵗ τ dτ = t²/2` in Lean using `norm_integral_le_of_norm_le` (non-constant version) plus `integral_pow` or `integral_id`, instead of the constant bound `norm_integral_le_of_norm_le_const`.
+- [x] **Tighten commutator-scaling constant to t²/2** — ✅ Done. Used `norm_integral_le_of_norm_le` (non-constant) + FTC-2 on `x²/2` to evaluate `∫₀ᵗ τ dτ = t²/2`.
 
-- [ ] **n-step commutator-scaling convergence rate** — Apply `norm_lie_trotter_comm_scaling` with `t = 1/n` to get `‖exp(B/n)exp(A/n) - exp((A+B)/n)‖ ≤ ‖[B,A]‖/n² · exp(...)`, then assemble via telescoping for O(1/n) rate with commutator constant. Parallels Assembly.lean pattern.
+- [x] **Multi-operator commutator-scaling** — ✅ Done. File: `LieTrotter/MultiCommutatorScaling.lean` (128 lines). Defines `listCommNorm` (sum of commutator norms with suffix sums) and proves `norm_list_prod_exp_sub_exp_sum_comm`. Matches the Proposition in Childs et al. §VII.A for first-order.
+
+- [ ] **Second-order (Strang) commutator-scaling** — Scaffolded in `LieTrotter/StrangCommutatorScaling.lean` (4 sorry's). Target: recover the Proposition "Tight error bound for the second-order Suzuki formula" from Childs et al. (`prefactor.tex:105`):
+  $$\|S_2(t) - e^{tH}\| \le \frac{t^3}{12}\|[B,[B,A]]\| + \frac{t^3}{24}\|[A,[A,B]]\|$$
+  **Approach:** Double FTC — apply `exp_conj_sub_eq_integral` twice to extract double commutators `[B,[B,A]]` and `[A,[A,B]]` from the Strang residual. The first-order commutator `[B,A]` cancels by the symmetry of the Strang product (order condition).
+  **Key sorry's:**
+  1. `exp_conj_sub_comm_eq_double_integral` — double integral of `[B,[B,A]]`
+  2. `strang_integral_error` — Duhamel for Strang (4-factor product rule)
+  3. `norm_exp_conj_sub_comm_le` — norm bound on double integral remainder
+  4. `norm_strang_comm_scaling` — assembly with `t³/12 + t³/24`
 
 - [ ] **Matrix specialization (F1)** — Prove `matrix_lie_trotter` for `Matrix (Fin d) (Fin d) ℂ`. Should be a one-liner applying `lie_trotter` once the `NormOneClass` instance is verified for the matrix norm. Connects to quantum computing applications.
 

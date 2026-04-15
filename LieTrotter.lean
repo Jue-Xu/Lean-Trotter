@@ -38,3 +38,4 @@ import LieTrotter.MultiStrang
 import LieTrotter.Suzuki4
 import LieTrotter.CommutatorScaling
 import LieTrotter.MultiCommutatorScaling
+import LieTrotter.StrangCommutatorScaling
