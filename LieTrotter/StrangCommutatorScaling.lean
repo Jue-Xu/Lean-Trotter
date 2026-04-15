@@ -49,15 +49,30 @@ theorem exp_conj_sub_comm_eq_double_integral (A B : 𝔸) (τ : ℝ) :
     ∫ s in (0:ℝ)..τ, ∫ u in (0:ℝ)..s,
       exp (u • B) * (B * (B * A - A * B) - (B * A - A * B) * B) *
         exp ((-u) • B) := by
-  -- From exp_conj_sub_eq_integral: exp(τB)·A·exp(-τB) - A = ∫₀ᵗ exp(sB)·[B,A]·exp(-sB) ds
+  -- Step 1: rewrite LHS using exp_conj_sub_eq_integral
+  -- exp(τB)·A·exp(-τB) - A = ∫₀ᵗ f(s) ds where f(s) = exp(sB)·[B,A]·exp(-sB)
   rw [exp_conj_sub_eq_integral A B τ]
-  -- ∫₀ᵗ f(s) ds - τ·f(0) = ∫₀ᵗ (f(s) - f(0)) ds  (since ∫₀ᵗ f(0) ds = τ·f(0))
-  -- where f(s) = exp(sB)·[B,A]·exp(-sB) and f(0) = [B,A]
-  have hf0 : exp ((0:ℝ) • B) * (B * A - A * B) * exp ((-(0:ℝ)) • B) = B * A - A * B := by
-    simp [zero_smul, exp_zero]
-  -- f(s) - f(0) = exp(sB)·[B,A]·exp(-sB) - [B,A] = ∫₀ˢ exp(uB)·[B,[B,A]]·exp(-uB) du
-  -- by applying exp_conj_sub_eq_integral to [B,A] conjugated by B
-  sorry
+  -- Now goal: ∫₀ᵗ f(s) ds - τ • c = ∫₀ᵗ (∫₀ˢ g(u) du) ds
+  -- where c = f(0) = [B,A]
+  set f : ℝ → 𝔸 := fun s => exp (s • B) * (B * A - A * B) * exp ((-s) • B)
+  set c : 𝔸 := B * A - A * B
+  -- Step 2: ∫₀ᵗ c ds = τ • c
+  have hint_c : ∫ _ in (0:ℝ)..τ, c = τ • c := by
+    rw [intervalIntegral.integral_const]; simp
+  -- Step 3: ∫ f - τ•c = ∫ f - ∫ c = ∫ (f - c)
+  have hint_f : IntervalIntegrable f volume 0 τ := by
+    apply Continuous.intervalIntegrable
+    letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+    exact (exp_continuous.comp (continuous_id.smul continuous_const) |>.mul
+      continuous_const).mul
+      (exp_continuous.comp (continuous_neg.smul continuous_const))
+  have hint_const : IntervalIntegrable (fun _ => c) volume 0 τ :=
+    continuous_const.intervalIntegrable 0 τ
+  rw [← hint_c, ← integral_sub hint_f hint_const]
+  -- Step 4: f(s) - c = exp(sB)·[B,A]·exp(-sB) - [B,A] = ∫₀ˢ g(u) du
+  -- by exp_conj_sub_eq_integral applied to [B,A] conjugated by B
+  congr 1; ext s
+  exact exp_conj_sub_eq_integral (B * A - A * B) B s
 
 /-!
 ## Phase 2: Strang residual and first-order cancellation
@@ -86,11 +101,47 @@ using the double integral representation and `norm_integral_le_of_norm_le_const`
 
 /-- The double conjugation remainder is bounded by the double commutator norm.
   `‖exp(τB)·A·exp(-τB) - A - [B,A]·τ‖ ≤ ‖[B,[B,A]]‖·τ²/2·exp(2|τ|‖B‖)` -/
-theorem norm_exp_conj_sub_comm_le (A B : 𝔸) (τ : ℝ) :
+theorem norm_exp_conj_sub_comm_le (A B : 𝔸) {τ : ℝ} (hτ : 0 ≤ τ) :
     ‖exp (τ • B) * A * exp ((-τ) • B) - A - τ • (B * A - A * B)‖ ≤
       ‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 2 *
-        τ ^ 2 * Real.exp (2 * |τ| * ‖B‖) := by
-  sorry
+        τ ^ 2 * Real.exp (2 * τ * ‖B‖) := by
+  rw [exp_conj_sub_comm_eq_double_integral]
+  set C := B * (B * A - A * B) - (B * A - A * B) * B
+  set K := ‖C‖ * Real.exp (2 * τ * ‖B‖)
+  -- Inner integral bound: ‖∫₀ˢ g(u) du‖ ≤ K·s for 0 ≤ s ≤ τ
+  -- (from norm_exp_conj_sub_le applied to [B,A] conjugated by B, + exp monotonicity)
+  have hinner_bound : ∀ s ∈ Set.Ioc 0 τ,
+      ‖∫ u in (0:ℝ)..s, exp (u • B) * C * exp ((-u) • B)‖ ≤ K * s := by
+    intro s hs
+    -- ‖∫₀ˢ g du‖ = ‖exp(sB)·(BA-AB)·exp(-sB) - (BA-AB)‖ ≤ ‖C‖·|s|·exp(2|s|‖B‖)
+    have h := norm_exp_conj_sub_le (B * A - A * B) B s
+    calc ‖∫ u in (0:ℝ)..s, exp (u • B) * C * exp ((-u) • B)‖
+        = ‖exp (s • B) * (B * A - A * B) * exp ((-s) • B) - (B * A - A * B)‖ := by
+          congr 1; exact (exp_conj_sub_eq_integral (B * A - A * B) B s).symm
+      _ ≤ ‖C‖ * |s| * Real.exp (2 * |s| * ‖B‖) := h
+      _ = ‖C‖ * s * Real.exp (2 * s * ‖B‖) := by rw [abs_of_pos hs.1]
+      _ ≤ ‖C‖ * s * Real.exp (2 * τ * ‖B‖) := by
+          apply mul_le_mul_of_nonneg_left _ (mul_nonneg (norm_nonneg _) (le_of_lt hs.1))
+          exact Real.exp_le_exp_of_le (by nlinarith [hs.2, norm_nonneg B])
+      _ = K * s := by ring
+  -- Outer integral: ‖∫₀ᵗ (∫₀ˢ g du) ds‖ ≤ ∫₀ᵗ K·s ds = K·τ²/2
+  have hg_int : IntervalIntegrable (fun s => K * s) volume 0 τ :=
+    (continuous_const.mul continuous_id).intervalIntegrable 0 τ
+  calc ‖∫ s in (0:ℝ)..τ, ∫ u in (0:ℝ)..s,
+          exp (u • B) * C * exp ((-u) • B)‖
+      ≤ ∫ s in (0:ℝ)..τ, K * s := by
+        apply norm_integral_le_of_norm_le hτ _ hg_int
+        exact Filter.Eventually.of_forall (fun s hs => hinner_bound s hs)
+    _ = K * (τ ^ 2 / 2) := by
+        rw [intervalIntegral.integral_const_mul]
+        congr 1
+        have : ∀ x ∈ Set.uIcc 0 τ, HasDerivAt (fun x => x ^ 2 / 2) x x := by
+          intro x _; have h := (hasDerivAt_pow 2 x).div_const 2
+          simp only [Nat.cast_ofNat] at h; convert h using 1; ring
+        rw [integral_eq_sub_of_hasDerivAt this (continuous_id.intervalIntegrable 0 τ)]
+        simp
+    _ = ‖C‖ / 2 * τ ^ 2 * Real.exp (2 * τ * ‖B‖) := by
+        simp only [K]; ring
 
 /-!
 ## Phase 4: Main commutator-scaling theorem for Strang
