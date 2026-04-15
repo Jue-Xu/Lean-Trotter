@@ -18,6 +18,7 @@ give the prefactors t³/12 and t³/24 in the paper's tight bound.
 -/
 
 import LieTrotter.CommutatorScaling
+import Mathlib.Analysis.CStarAlgebra.Basic
 
 noncomputable section
 
@@ -174,12 +175,16 @@ The bound scales with double commutators ‖[B,[B,A]]‖ and ‖[A,[A,B]]‖ at 
   - `strang_two_bracket_decomp`: S₂(t) - exp(tH) = exp(a)·Bracket₁ + Bracket₂ -/
 -- Key property: in a C*-algebra, anti-Hermitian exponentials are unitary with norm 1.
 lemma norm_exp_smul_of_skewAdjoint [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸]
-    [Nontrivial 𝔸] {a : 𝔸} (ha : star a = -a) (t : ℝ) :
+    [Nontrivial 𝔸] [StarModule ℝ 𝔸] {a : 𝔸} (ha : star a = -a) (t : ℝ) :
     ‖exp (t • a)‖ = 1 := by
-  sorry
+  have hta : star (t • a) = -(t • a) := by
+    rw [StarModule.star_smul, ha, smul_neg, star_trivial]
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  exact CStarRing.norm_of_mem_unitary
+    (exp_mem_unitary_of_mem_skewAdjoint (skewAdjoint.mem_iff.mpr hta))
 
 theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸]
-    [Nontrivial 𝔸] (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t)
+    [Nontrivial 𝔸] [StarModule ℝ 𝔸] (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t)
     (hA : star A = -A) (hB : star B = -B) :
     ‖exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A) - exp (t • (A + B))‖ ≤
       (‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 12 +
