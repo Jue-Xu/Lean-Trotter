@@ -236,17 +236,59 @@ private lemma hasDerivAt_conj_strang (A B : 𝔸) (τ : ℝ) :
   -- and 𝒯₂ = [eA·B·enA - B] + eA·[eB·A'·enB - A']·enA
   -- The identity uses exp(X)·exp(-X) = 1 (from exp_smul_mul_exp_neg_smul).
   -- noncomm_ring alone can't handle this since it requires the inverse relation.
+  -- Prove the algebraic identity separately, then plug in
+  -- This avoids variable renaming issues from convert + simp
+  have halg : E * ((exp (τ • A') * B * exp ((-τ) • A') - B +
+      exp (τ • A') * (exp (τ • B) * A' * exp ((-τ) • B) - A') * exp ((-τ) • A')) *
+      (exp (τ • A') * exp (τ • B) * exp (τ • A'))) =
+    nH * E * (exp (τ • A') * (exp (τ • B) * exp (τ • A'))) +
+    E * (A' * exp (τ • A') * (exp (τ • B) * exp (τ • A')) +
+      exp (τ • A') * (B * exp (τ • B) * exp (τ • A') +
+        exp (τ • B) * (A' * exp (τ • A')))) := by
+    -- Set opaque variables inside this subproof (no renaming leaks)
+    set eA := exp (τ • A')
+    set enA := exp ((-τ) • A')
+    set eB := exp (τ • B)
+    set enB := exp ((-τ) • B)
+    have h1 : enA * eA = 1 := exp_neg_smul_mul_exp_smul A' τ
+    have h4 : enB * eB = 1 := exp_neg_smul_mul_exp_smul B τ
+    have henA_S : enA * (eA * eB * eA) = eB * eA := by
+      rw [← mul_assoc, ← mul_assoc, h1, one_mul]
+    have ht1 : eA * B * enA * (eA * eB * eA) = eA * B * eB * eA := by
+      rw [show eA * B * enA * (eA * eB * eA) =
+        eA * B * (enA * (eA * eB * eA)) from by noncomm_ring, henA_S]; noncomm_ring
+    have ht2 : eA * (eB * A' * enB) * enA * (eA * eB * eA) = eA * eB * A' * eA := by
+      rw [show eA * (eB * A' * enB) * enA * (eA * eB * eA) =
+        eA * (eB * A' * enB) * (enA * (eA * eB * eA)) from by noncomm_ring, henA_S,
+        show eA * (eB * A' * enB) * (eB * eA) =
+          eA * eB * A' * (enB * eB) * eA from by noncomm_ring, h4, mul_one]
+    have ht3 : eA * A' * enA * (eA * eB * eA) = A' * (eA * eB * eA) := by
+      rw [show eA * A' * enA * (eA * eB * eA) =
+        eA * A' * (enA * (eA * eB * eA)) from by noncomm_ring, henA_S,
+        ← mul_assoc, hcA.symm, mul_assoc, mul_assoc,
+        show eA * (eB * eA) = eA * eB * eA from (mul_assoc _ _ _).symm]
+    calc E * ((eA * B * enA - B + eA * (eB * A' * enB - A') * enA) * (eA * eB * eA))
+        = E * (eA * B * enA * (eA * eB * eA) - B * (eA * eB * eA) +
+            (eA * (eB * A' * enB) * enA * (eA * eB * eA) -
+             eA * A' * enA * (eA * eB * eA))) := by noncomm_ring
+      _ = E * (eA * B * eB * eA - B * (eA * eB * eA) +
+            (eA * eB * A' * eA - A' * (eA * eB * eA))) := by rw [ht1, ht2, ht3]
+      _ = _ := by
+          -- Redefine commutativity with set variables (set made exp opaque)
+          have : A' * eA = eA * A' := hcA
+          have : B * eB = eB * B := hcB
+          have : nH * E = -(E * (A + B)) := h_neg
+          have hA_eq : A = A' + A' := by
+            rw [show A' = (1/2 : ℝ) • A from rfl, ← add_smul]; norm_num
+          rw [‹A' * eA = eA * A'›, ‹B * eB = eB * B›, ‹nH * E = -(E * (A + B))›, hA_eq]
+          -- Remaining: noncomm_ring identity with integer smul coefficients
+          -- (-2•x blocks noncomm_ring; need to normalize smul before closing)
+          sorry
+  -- Now use halg to close the HasDerivAt goal
+  simp only [neg_smul, smul_neg, mul_assoc, nH] at halg
   convert hFull using 1
-  simp only [Pi.mul_apply, nH]
-  -- Goal: E * (𝒯₂ * S₂) = nH*E*S₂ + E*S₂' (after commutativity rewrites)
-  -- 𝒯₂*S₂ = S₂' - H*S₂ = S₂' + nH*S₂ (since nH = -H)
-  -- So E*(𝒯₂*S₂) = E*(S₂' + nH*S₂) = E*S₂' + E*nH*S₂ = E*S₂' + nH*E*S₂
-  -- Remaining: algebraic identity E*𝒯₂*S₂ = nH*E*S₂ + E*S₂'
-  -- using exp(X)*exp(-X) = 1, commutativity of A' with eA, B with eB, (A+B) with E
-  -- The proof expands 𝒯₂*S₂, substitutes exp(-X)*exp(X) → 1 three times, and
-  -- uses commutativity to show the result equals S₂' + nH*S₂.
-  -- Verified on paper; the Lean formalization needs careful `set` management
-  -- to avoid variable renaming issues from simp.
+  simp only [Pi.mul_apply, nH, hA', neg_smul, smul_neg, mul_assoc]
+  -- halg has the right identity; matching needs E/A'/nH unification
   sorry
 
 theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸]
