@@ -194,79 +194,69 @@ private lemma hasDerivAt_conj_strang (A B : 𝔸) (τ : ℝ) :
          exp ((τ / 2) • A) * (exp (τ • B) * ((1/2 : ℝ) • A) * exp ((-τ) • B) -
            (1/2 : ℝ) • A) * exp ((-τ / 2) • A)) *
         (exp ((τ / 2) • A) * exp (τ • B) * exp ((τ / 2) • A))) τ := by
-  -- Step 1: Show the function equals a uniform `exp(u • X)` form
-  set A' := (1/2 : ℝ) • A with hA'
-  have hsmul_eq : ∀ u : ℝ, (u / 2) • A = u • A' := by
-    intro u; rw [hA', smul_smul, show u * (1 / 2 : ℝ) = u / 2 from by ring]
-  have hfun_eq : (fun u : ℝ => exp ((-u) • (A + B)) *
+  -- Abbreviations (set once, no shadowing)
+  set A' := (1/2 : ℝ) • A with hA'_def
+  set nH := -(A + B) with hnH_def
+  -- Step 1: Normalize function and derivative to uniform exp(u • X) form
+  have hsmul : ∀ u : ℝ, (u / 2) • A = u • A' := by
+    intro u; rw [hA'_def, smul_smul]; ring_nf
+  -- Helper: (-u) • (A+B) = u • nH
+  have hneg_smul : ∀ u : ℝ, (-u) • (A + B) = u • nH := by
+    intro u; rw [neg_smul, ← smul_neg, ← hnH_def]
+  have hfun : (fun u : ℝ => exp ((-u) • (A + B)) *
       (exp ((u / 2) • A) * exp (u • B) * exp ((u / 2) • A))) =
-      (fun u => exp (u • (-(A + B))) * (exp (u • A') * (exp (u • B) * exp (u • A')))) := by
-    ext u
-    rw [show (-u) • (A + B) = u • (-(A + B)) from by rw [neg_smul, smul_neg],
-        show (u / 2) • A = u • A' from hsmul_eq u, mul_assoc]
-  rw [hfun_eq]
-  -- Also rewrite the derivative value
-  rw [show (-τ) • (A + B) = τ • (-(A + B)) from by rw [neg_smul, smul_neg],
-     show (τ / 2) • A = τ • A' from hsmul_eq τ,
-     show (-τ / 2) • A = τ • (-A') from by
-       rw [show (-τ / 2 : ℝ) = -(τ / 2) from by ring, neg_smul, hsmul_eq, ← smul_neg],
-     mul_assoc (exp (τ • A'))]
-  -- Step 3: Derivatives via HasDerivAt.mul
-  set A' := (1/2 : ℝ) • A
-  set nH := -(A + B)
+      (fun u => exp (u • nH) * (exp (u • A') * (exp (u • B) * exp (u • A')))) := by
+    ext u; rw [hneg_smul, hsmul u, mul_assoc]
+  rw [hfun]
+  -- Step 2: Normalize the derivative value so `set` can fold exp terms
+  rw [hneg_smul τ, hsmul τ,
+      show (-τ / 2) • A = (-τ) • A' from by rw [hA'_def, smul_smul]; congr 1; ring]
+  -- Step 3: Compute raw derivative via product rule
   have hH := hasDerivAt_exp_smul_const' (𝕂 := ℝ) nH τ
   have hA1 := hasDerivAt_exp_smul_const' (𝕂 := ℝ) A' τ
-  have hB := hasDerivAt_exp_smul_const' (𝕂 := ℝ) B τ
+  have hBd := hasDerivAt_exp_smul_const' (𝕂 := ℝ) B τ
   have hA2 := hasDerivAt_exp_smul_const' (𝕂 := ℝ) A' τ
-  have hBA := hB.mul hA2
-  have hS := hA1.mul hBA
-  have hFull := hH.mul hS
-  convert hFull using 1
-  -- Step 4: Algebraic simplification using commutativity
+  have hFull := hH.mul (hA1.mul (hBd.mul hA2))
+  -- Step 4: Set opaque exp variables for the algebra
   set E := exp (τ • nH)
-  have hcH : (A + B) * E = E * (A + B) :=
-    ((Commute.refl (A + B)).neg_right.smul_right τ).exp_right.eq
-  have h_neg : nH * E = -(E * (A + B)) := by simp only [nH]; rw [neg_mul, hcH]
-  have hcA : A' * exp (τ • A') = exp (τ • A') * A' :=
-    ((Commute.refl A').smul_right τ).exp_right.eq
-  have hcB : B * exp (τ • B) = exp (τ • B) * B :=
-    ((Commute.refl B).smul_right τ).exp_right.eq
-  -- The remaining step: show the product-rule derivative equals 𝒯₂·S₂.
-  -- This is: S₂' - H·S₂ = 𝒯₂·S₂ where S₂' = A'·S₂ + eA·B·eB·eA + eA·eB·A'·eA
-  -- and 𝒯₂ = [eA·B·enA - B] + eA·[eB·A'·enB - A']·enA
-  -- The identity uses exp(X)·exp(-X) = 1 (from exp_smul_mul_exp_neg_smul).
-  -- noncomm_ring alone can't handle this since it requires the inverse relation.
-  -- Prove the algebraic identity separately, then plug in
-  -- This avoids variable renaming issues from convert + simp
-  have halg : E * ((exp (τ • A') * B * exp ((-τ) • A') - B +
-      exp (τ • A') * (exp (τ • B) * A' * exp ((-τ) • B) - A') * exp ((-τ) • A')) *
-      (exp (τ • A') * exp (τ • B) * exp (τ • A'))) =
-    nH * E * (exp (τ • A') * (exp (τ • B) * exp (τ • A'))) +
-    E * (A' * exp (τ • A') * (exp (τ • B) * exp (τ • A')) +
-      exp (τ • A') * (B * exp (τ • B) * exp (τ • A') +
-        exp (τ • B) * (A' * exp (τ • A')))) := by
-    -- Set opaque variables inside this subproof (no renaming leaks)
-    set eA := exp (τ • A')
-    set enA := exp ((-τ) • A')
-    set eB := exp (τ • B)
-    set enB := exp ((-τ) • B)
-    have h1 : enA * eA = 1 := exp_neg_smul_mul_exp_smul A' τ
-    have h4 : enB * eB = 1 := exp_neg_smul_mul_exp_smul B τ
-    have henA_S : enA * (eA * eB * eA) = eB * eA := by
-      rw [← mul_assoc, ← mul_assoc, h1, one_mul]
-    have ht1 : eA * B * enA * (eA * eB * eA) = eA * B * eB * eA := by
-      rw [show eA * B * enA * (eA * eB * eA) =
-        eA * B * (enA * (eA * eB * eA)) from by noncomm_ring, henA_S]; noncomm_ring
-    have ht2 : eA * (eB * A' * enB) * enA * (eA * eB * eA) = eA * eB * A' * eA := by
-      rw [show eA * (eB * A' * enB) * enA * (eA * eB * eA) =
-        eA * (eB * A' * enB) * (enA * (eA * eB * eA)) from by noncomm_ring, henA_S,
-        show eA * (eB * A' * enB) * (eB * eA) =
-          eA * eB * A' * (enB * eB) * eA from by noncomm_ring, h4, mul_one]
-    have ht3 : eA * A' * enA * (eA * eB * eA) = A' * (eA * eB * eA) := by
-      rw [show eA * A' * enA * (eA * eB * eA) =
-        eA * A' * (enA * (eA * eB * eA)) from by noncomm_ring, henA_S,
-        ← mul_assoc, hcA.symm, mul_assoc, mul_assoc,
-        show eA * (eB * eA) = eA * eB * eA from (mul_assoc _ _ _).symm]
+  set eA := exp (τ • A')
+  set enA := exp ((-τ) • A')
+  set eB := exp (τ • B)
+  set enB := exp ((-τ) • B)
+  -- Commutativity of elements with their own exponentials
+  have hcA : A' * eA = eA * A' := ((Commute.refl A').smul_right τ).exp_right.eq
+  have hcB : B * eB = eB * B := ((Commute.refl B).smul_right τ).exp_right.eq
+  -- Exp inverse relations
+  have henA_eA : enA * eA = 1 := exp_neg_smul_mul_exp_smul A' τ
+  have henB_eB : enB * eB = 1 := exp_neg_smul_mul_exp_smul B τ
+  -- Helper: cancel enA from the left of eA*eB*eA
+  have henA_S : enA * (eA * eB * eA) = eB * eA := by
+    rw [← mul_assoc, ← mul_assoc, henA_eA, one_mul]
+  -- Simplify each 𝒯₂*S₂ term using exp inverses
+  have ht1 : eA * B * enA * (eA * eB * eA) = eA * B * eB * eA := by
+    rw [show eA * B * enA * (eA * eB * eA) =
+      eA * B * (enA * (eA * eB * eA)) from by noncomm_ring, henA_S]; noncomm_ring
+  have ht2 : eA * (eB * A' * enB) * enA * (eA * eB * eA) = eA * eB * A' * eA := by
+    rw [show eA * (eB * A' * enB) * enA * (eA * eB * eA) =
+      eA * (eB * A' * enB) * (enA * (eA * eB * eA)) from by noncomm_ring, henA_S,
+      show eA * (eB * A' * enB) * (eB * eA) =
+        eA * eB * A' * (enB * eB) * eA from by noncomm_ring, henB_eB, mul_one]
+  have ht3 : eA * A' * enA * (eA * eB * eA) = A' * (eA * eB * eA) := by
+    rw [show eA * A' * enA * (eA * eB * eA) =
+      eA * A' * (enA * (eA * eB * eA)) from by noncomm_ring, henA_S,
+      ← mul_assoc, hcA.symm, mul_assoc, mul_assoc,
+      show eA * (eB * eA) = eA * eB * eA from (mul_assoc _ _ _).symm]
+  -- Key algebraic identity
+  have hA_sum : A' + A' = A := by rw [hA'_def, ← add_smul]; norm_num
+  have hzero : nH + A' + A' + B = 0 := by
+    rw [show nH + A' + A' + B = nH + (A' + A') + B from by abel, hA_sum, hnH_def]; abel
+  -- Now prove the HasDerivAt by showing claimed = raw via algebra
+  -- First show E * (𝒯₂ * S₂) = raw_derivative (product-rule form)
+  have halg : E * ((eA * B * enA - B + eA * (eB * A' * enB - A') * enA) *
+      (eA * eB * eA)) =
+    nH * E * (eA * (eB * eA)) +
+    E * (A' * eA * (eB * eA) + eA * (B * eB * eA + eB * (A' * eA))) := by
+    -- Step 1: Expand 𝒯₂*S₂ and substitute exp inverses
     calc E * ((eA * B * enA - B + eA * (eB * A' * enB - A') * enA) * (eA * eB * eA))
         = E * (eA * B * enA * (eA * eB * eA) - B * (eA * eB * eA) +
             (eA * (eB * A' * enB) * enA * (eA * eB * eA) -
@@ -274,22 +264,24 @@ private lemma hasDerivAt_conj_strang (A B : 𝔸) (τ : ℝ) :
       _ = E * (eA * B * eB * eA - B * (eA * eB * eA) +
             (eA * eB * A' * eA - A' * (eA * eB * eA))) := by rw [ht1, ht2, ht3]
       _ = _ := by
-          -- Redefine commutativity with set variables (set made exp opaque)
-          have : A' * eA = eA * A' := hcA
-          have : B * eB = eB * B := hcB
-          have : nH * E = -(E * (A + B)) := h_neg
-          have hA_eq : A = A' + A' := by
-            rw [show A' = (1/2 : ℝ) • A from rfl, ← add_smul]; norm_num
-          rw [‹A' * eA = eA * A'›, ‹B * eB = eB * B›, ‹nH * E = -(E * (A + B))›, hA_eq]
-          -- Remaining: noncomm_ring identity with integer smul coefficients
-          -- (-2•x blocks noncomm_ring; need to normalize smul before closing)
-          sorry
-  -- Now use halg to close the HasDerivAt goal
-  simp only [neg_smul, smul_neg, mul_assoc, nH] at halg
-  convert hFull using 1
-  simp only [Pi.mul_apply, nH, hA', neg_smul, smul_neg, mul_assoc]
-  -- halg has the right identity; matching needs E/A'/nH unification
-  sorry
+          -- Step 2: Normalize associativity so A'*eA and B*eB appear as subterms
+          rw [show A' * (eA * eB * eA) = (A' * eA) * eB * eA from by noncomm_ring,
+              mul_assoc (eA * eB) A' eA,
+              show eA * B * eB * eA = eA * (B * eB) * eA from by rw [mul_assoc eA B eB]]
+          -- Step 3: nH * E → E * nH on RHS
+          rw [show nH * E = E * nH from
+            ((Commute.refl nH).smul_right τ).exp_right.eq]
+          -- Step 4: Factor the difference as -(E*(nH+A'+A'+B)*eA*(eB*eA)) = 0
+          rw [← sub_eq_zero]
+          calc _ = -(E * ((nH + A' + A' + B) * eA * (eB * eA))) := by noncomm_ring
+            _ = -(E * (0 * eA * (eB * eA))) := by rw [hzero]
+            _ = 0 := by noncomm_ring
+  -- Step 5: Use halg to transform the goal derivative to match hFull
+  -- Fix associativity: goal has (E * stuff) * S₂, halg has E * (stuff * S₂)
+  rw [mul_assoc E, halg]
+  -- Goal derivative is now halg.RHS; simplify Pi.mul_apply in hFull to match
+  simp only [Pi.mul_apply] at hFull ⊢
+  exact hFull
 
 theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸]
     [Nontrivial 𝔸] [StarModule ℝ 𝔸] (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t)
