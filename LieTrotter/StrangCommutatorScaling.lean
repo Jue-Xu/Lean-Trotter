@@ -183,15 +183,18 @@ lemma norm_exp_smul_of_skewAdjoint [StarRing 𝔸] [ContinuousStar 𝔸] [CStarR
   exact CStarRing.norm_of_mem_unitary
     (exp_mem_unitary_of_mem_skewAdjoint (skewAdjoint.mem_iff.mpr hta))
 
-/-- Bound on the Strang residual ‖𝒯₂(τ)‖ in the anti-Hermitian case.
-  All exponential norms = 1, so the bound involves only double commutators. -/
--- The Strang residual:
--- 𝒯₂(τ) = [exp(τA/2)·B·exp(-τA/2) - B] + exp(τA/2)·[exp(τB)·(A/2)·exp(-τB) - A/2]·exp(-τA/2)
---
--- Bound in anti-Hermitian case:
--- ‖𝒯₂(τ)‖ ≤ ((1/2)·DC_B + (1/4)·DC_A) · τ²/2
--- where DC_B = ‖[B,[B,A]]‖ and DC_A = ‖[A,[A,B]]‖
--- (Note: uses ‖exp(...)‖ = 1 throughout)
+/-- Derivative of the conjugated Strang product
+  `w(τ) = exp(-τH) · exp(τA/2) · exp(τB) · exp(τA/2)`.
+  The derivative equals `exp(-τH) · 𝒯₂(τ) · S₂(τ)` where 𝒯₂ is the Strang residual. -/
+private lemma hasDerivAt_conj_strang (A B : 𝔸) (τ : ℝ) :
+    HasDerivAt
+      (fun u => exp ((-u) • (A + B)) * (exp ((u / 2) • A) * exp (u • B) * exp ((u / 2) • A)))
+      (exp ((-τ) • (A + B)) *
+        ((exp ((τ / 2) • A) * B * exp ((-τ / 2) • A) - B) +
+         exp ((τ / 2) • A) * (exp (τ • B) * ((1/2 : ℝ) • A) * exp ((-τ) • B) -
+           (1/2 : ℝ) • A) * exp ((-τ / 2) • A)) *
+        (exp ((τ / 2) • A) * exp (τ • B) * exp ((τ / 2) • A))) τ := by
+  sorry
 
 theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸]
     [Nontrivial 𝔸] [StarModule ℝ 𝔸] (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t)
@@ -199,10 +202,13 @@ theorem norm_strang_comm_scaling [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRin
     ‖exp ((t / 2) • A) * exp (t • B) * exp ((t / 2) • A) - exp (t • (A + B))‖ ≤
       (‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 12 +
        ‖A * (A * B - B * A) - (A * B - B * A) * A‖ / 24) * t ^ 3 := by
-  -- Uses norm_strangResidual_le + Duhamel inequality
-  -- ‖S₂(t) - exp(tH)‖ ≤ ∫₀ᵗ ‖𝒯₂(τ)‖ dτ (anti-Hermitian: ‖exp‖=1)
-  -- ≤ ∫₀ᵗ C·τ²/2 dτ = C·t³/6
-  -- = (DC₁/2 + DC₂/4)·t³/6 = DC₁/12 + DC₂/24
+  have hAB : star (A + B) = -(A + B) := by rw [star_add, hA, hB, neg_add]
+  -- Abbreviations for double commutator norms
+  set DC_B := ‖B * (B * A - A * B) - (B * A - A * B) * B‖
+  set DC_A := ‖A * (A * B - B * A) - (A * B - B * A) * A‖
+  -- Bound the Strang residual by double commutators
+  -- TODO: combine hasDerivAt_conj_strang + FTC + norm_exp_conj_sub_comm_le
+  -- to get ‖S₂(t) - exp(tH)‖ ≤ ∫₀ᵗ ‖𝒯₂(τ)‖ dτ ≤ (DC_B/12 + DC_A/24)·t³
   sorry
 
 end
