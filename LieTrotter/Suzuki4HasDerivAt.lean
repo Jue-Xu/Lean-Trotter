@@ -32,7 +32,7 @@ open scoped BigOperators
 variable {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra ℝ 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
 
 /-- The 11-factor S₄ product as a function of τ. -/
-private def s4Func (A B : 𝔸) (p : ℝ) (τ : ℝ) : 𝔸 :=
+def s4Func (A B : 𝔸) (p : ℝ) (τ : ℝ) : 𝔸 :=
   letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
   exp ((p/2 * τ) • A) * exp ((p * τ) • B) *
   exp ((p * τ) • A) * exp ((p * τ) • B) *
@@ -42,7 +42,7 @@ private def s4Func (A B : 𝔸) (p : ℝ) (τ : ℝ) : 𝔸 :=
   exp ((p/2 * τ) • A)
 
 /-- The conjugated S₄ product `w₄(τ) = exp(-τH) · S₄(τ)`. -/
-private def w4Func (A B : 𝔸) (p : ℝ) (τ : ℝ) : 𝔸 :=
+def w4Func (A B : 𝔸) (p : ℝ) (τ : ℝ) : 𝔸 :=
   letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
   exp ((-τ) • (A + B)) * s4Func A B p τ
 
@@ -55,7 +55,7 @@ the explicit form by simplifying the raw 12-term sum from `HasDerivAt.mul`.
 
 /-- HasDerivAt for the 11-factor S₄ product `s4Func`.
     The derivative is the raw output of 11 `HasDerivAt.mul` applications. -/
-private lemma hasDerivAt_s4Func (A B : 𝔸) (p τ : ℝ) :
+lemma hasDerivAt_s4Func (A B : 𝔸) (p τ : ℝ) :
     ∃ D : 𝔸, HasDerivAt (s4Func A B p) D τ := by
   letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
   -- 11 individual derivatives via hasDerivAt_exp_smul_mul
