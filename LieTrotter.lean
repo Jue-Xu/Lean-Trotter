@@ -45,3 +45,4 @@ import LieTrotter.StrangCommutatorScalingTight
 import LieTrotter.Suzuki4OrderFive
 import LieTrotter.Suzuki4HasDerivAt
 import LieTrotter.Suzuki4Module2
+import LieTrotter.Suzuki4Module3
