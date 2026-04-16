@@ -1,0 +1,285 @@
+\section{Tighter Strang Bound via Norm-of-Difference}
+\label{apd:tighter}
+
+We show that the Strang commutator-scaling bound can be tightened by
+delaying the triangle inequality.
+The standard bound
+(\cref{sec:strang}, following Childs et al.~\cite{childsTheoryTrotterError2021})
+uses a \emph{sum of norms}:
+\begin{equation}\label{eq:strang-sum}
+  \norm{S_2(t) - e^{tH}}
+    \le \frac{\norm{\comm{B}{\comm{B}{A}}}}{12}\,t^3
+      + \frac{\norm{\comm{A}{\comm{A}{B}}}}{24}\,t^3.
+\end{equation}
+We prove a bound using the \emph{norm of a difference}, which is always
+$\le$ the sum and strictly tighter when the two double commutators
+partially cancel.
+
+\subsection{Setup}
+
+Write $A' = A/2$, $H = A + B$, and recall the Strang splitting
+$S_2(t) = e^{tA'}\,e^{tB}\,e^{tA'}$.
+The Duhamel approach (\cref{sec:commutator}) gives
+\begin{equation}\label{eq:strang-duhamel}
+  S_2(t) - e^{tH} = e^{tH} \int_0^t \mathcal{T}_2(\tau)\,d\tau
+  \qquad \text{(anti-Hermitian case: $\norm{e^{sX}} = 1$)},
+\end{equation}
+where $\mathcal{T}_2(\tau) = \text{Part}_A(\tau) + \text{Part}_B(\tau)$
+is the Strang residual from the 4-factor product rule
+(\cref{sec:strang}).
+
+\subsection{Extracting the leading order}
+
+The two parts have the following structure
+(from the double FTC, \cref{sec:commutator}):
+
+\paragraph{Part~A (from $A'$-conjugation).}
+Define $g_1(s) = e^{sA'}\,\comm{A'}{B}\,e^{-sA'}$.
+Then $\text{Part}_A(\tau) = \int_0^\tau (g_1(s) - g_1(\tau))\,ds$
+(the ``subtract-constant-at-$\tau$'' trick).
+
+Expanding $g_1(s) - g_1(\tau) = -\int_s^\tau g_1'(u)\,du$
+where $g_1'(u) = e^{uA'}\,\comm{A'}{\comm{A'}{B}}\,e^{-uA'}$:
+\begin{align}
+  g_1(s) - g_1(\tau)
+    &= -(\tau - s)\,\comm{A'}{\comm{A'}{B}} - \int_s^\tau
+        \bigl(g_1'(u) - \comm{A'}{\comm{A'}{B}}\bigr)\,du
+        \notag \\
+    &= -(\tau - s)\,\comm{A'}{\comm{A'}{B}} + O(\tau^2).
+        \label{eq:g1-expand}
+\end{align}
+The second term is bounded via the single FTC applied to $g_1'$:
+\[
+  g_1'(u) - \comm{A'}{\comm{A'}{B}}
+    = \int_0^u e^{vA'}\,\comm{A'}{\comm{A'}{\comm{A'}{B}}}\,e^{-vA'}\,dv,
+\]
+so $\norm{g_1'(u) - \comm{A'}{\comm{A'}{B}}} \le
+  \norm{\comm{A'}{\comm{A'}{\comm{A'}{B}}}}\,|u|$
+(anti-Hermitian isometry).
+
+Integrating \eqref{eq:g1-expand}:
+\begin{equation}\label{eq:partA-expand}
+  \text{Part}_A(\tau) = -\frac{\tau^2}{2}\,\comm{A'}{\comm{A'}{B}}
+    + R_A(\tau),
+\end{equation}
+where $R_A(\tau)$ is a triple integral satisfying
+\begin{equation}\label{eq:RA-bound}
+  \norm{R_A(\tau)} \le
+    \frac{\norm{\comm{A'}{\comm{A'}{\comm{A'}{B}}}}}{3}\,\tau^3.
+\end{equation}
+The bound \eqref{eq:RA-bound} follows from
+$\norm{R_A(\tau)} \le \int_0^\tau \int_s^\tau |u|\,du\,ds
+  \cdot \norm{\comm{A'}{\comm{A'}{\comm{A'}{B}}}}
+  = \frac{\tau^3}{3}\,\norm{\comm{A'}{\comm{A'}{\comm{A'}{B}}}}$.
+
+\paragraph{Part~B (from $B$-conjugation).}
+The double-FTC remainder
+$R_2(\tau) = e^{\tau B}\,A'\,e^{-\tau B} - A' - \tau\,\comm{B}{A'}$
+satisfies (by the double-integral representation):
+\begin{equation}\label{eq:R2-expand}
+  R_2(\tau) = \frac{\tau^2}{2}\,\comm{B}{\comm{B}{A'}} + R_B(\tau),
+  \qquad
+  \norm{R_B(\tau)} \le
+    \frac{\norm{\comm{B}{\comm{B}{\comm{B}{A'}}}}}{6}\,\tau^3.
+\end{equation}
+The bound on $R_B$ is exactly our triple-FTC result
+(\texttt{norm\_exp\_conj\_sub\_comm2\_le\_of\_skewAdjoint}
+in \leansrc{HigherCommutator.lean}).
+
+Since $\text{Part}_B(\tau) = e^{\tau A'}\,R_2(\tau)\,e^{-\tau A'}$,
+conjugation by $e^{\tau A'}$ introduces an additional correction:
+\begin{equation}\label{eq:partB-expand}
+  \text{Part}_B(\tau) = \frac{\tau^2}{2}\,\comm{B}{\comm{B}{A'}}
+    + \underbrace{\frac{\tau^2}{2}\bigl(
+      e^{\tau A'}\comm{B}{\comm{B}{A'}}e^{-\tau A'}
+      - \comm{B}{\comm{B}{A'}}\bigr)}_{R_C(\tau)}
+    + e^{\tau A'}\,R_B(\tau)\,e^{-\tau A'},
+\end{equation}
+where $R_C(\tau)$ is bounded by the single FTC on $\comm{B}{\comm{B}{A'}}$:
+\begin{equation}\label{eq:RC-bound}
+  \norm{R_C(\tau)} \le
+    \frac{\norm{\comm{A'}{\comm{B}{\comm{B}{A'}}}}}{2}\,\tau^3.
+\end{equation}
+
+\subsection{The tighter bound}
+
+Combining \eqref{eq:partA-expand} and \eqref{eq:partB-expand}:
+\begin{equation}\label{eq:T2-refined}
+  \mathcal{T}_2(\tau) = \frac{\tau^2}{2}\,D + R(\tau),
+\end{equation}
+where the \emph{effective double commutator} is
+\begin{equation}\label{eq:D-def}
+  \boxed{D \;=\; \comm{B}{\comm{B}{A'}} - \comm{A'}{\comm{A'}{B}}}
+\end{equation}
+and $R(\tau) = R_A(\tau) + R_C(\tau) + e^{\tau A'}\,R_B(\tau)\,e^{-\tau A'}$
+satisfies
+\begin{equation}\label{eq:R-bound}
+  \norm{R(\tau)} \le T \cdot \tau^3,
+  \qquad
+  T = \frac{\norm{\comm{A'}{\comm{A'}{\comm{A'}{B}}}}}{3}
+    + \frac{\norm{\comm{A'}{\comm{B}{\comm{B}{A'}}}}}{2}
+    + \frac{\norm{\comm{B}{\comm{B}{\comm{B}{A'}}}}}{6}.
+\end{equation}
+
+Integrating:
+\begin{align}
+  \norm{S_2(t) - e^{tH}}
+    &\le \int_0^t \norm{\mathcal{T}_2(\tau)}\,d\tau
+    \le \int_0^t \Bigl(\frac{\norm{D}}{2}\,\tau^2 + T\,\tau^3\Bigr)\,d\tau
+    \notag \\
+    &= \frac{\norm{D}}{6}\,t^3 + \frac{T}{4}\,t^4.
+    \label{eq:strang-tighter}
+\end{align}
+
+Substituting $A' = A/2$ (using $\comm{cX}{Y} = c\,\comm{X}{Y}$ for
+central scalars, so $\comm{A'}{\comm{A'}{B}} = \tfrac{1}{4}\comm{A}{\comm{A}{B}}$
+and $\comm{B}{\comm{B}{A'}} = \tfrac{1}{2}\comm{B}{\comm{B}{A}}$):
+
+\begin{equation}\label{eq:strang-tighter-final}
+  \boxed{
+  \norm{S_2(t) - e^{tH}}
+    \le \frac{1}{6}\left\|\frac{\comm{B}{\comm{B}{A}}}{2}
+      - \frac{\comm{A}{\comm{A}{B}}}{4}\right\| t^3
+    + T'\,t^4
+  }
+\end{equation}
+where $T'$ involves triple commutators of $A$ and $B$ (see \eqref{eq:R-bound}
+with $A' = A/2$).
+
+\subsection{Comparison with the standard bound}
+
+\paragraph{Relation.}
+The standard bound \eqref{eq:strang-sum} can be written as
+\[
+  \frac{\norm{\comm{B}{\comm{B}{A}}}}{12}
+  + \frac{\norm{\comm{A}{\comm{A}{B}}}}{24}
+  = \frac{1}{6}\left(
+    \frac{\norm{\comm{B}{\comm{B}{A}}}}{2}
+    + \frac{\norm{\comm{A}{\comm{A}{B}}}}{4}
+    \right).
+\]
+By the triangle inequality:
+\[
+  \left\|\frac{\comm{B}{\comm{B}{A}}}{2}
+    - \frac{\comm{A}{\comm{A}{B}}}{4}\right\|
+  \le
+  \frac{\norm{\comm{B}{\comm{B}{A}}}}{2}
+    + \frac{\norm{\comm{A}{\comm{A}{B}}}}{4},
+\]
+so the leading term of \eqref{eq:strang-tighter-final} is always
+$\le$ the standard bound \eqref{eq:strang-sum}.
+The improvement is strict whenever the two double commutators are
+``aligned'' (i.e., partially cancel in the difference).
+
+\paragraph{When is the tightening significant?}
+The $O(t^4)$ correction in \eqref{eq:strang-tighter-final} is controlled
+by triple commutator norms. For $t$ below the threshold
+\[
+  t^* = \frac{2}{3}\,
+  \frac{\norm{\comm{B}{\comm{B}{A}}}/2 + \norm{\comm{A}{\comm{A}{B}}}/4
+    - \norm{D}}{T'},
+\]
+the new bound \eqref{eq:strang-tighter-final} is tighter than
+\eqref{eq:strang-sum}. In the Trotter regime ($t = O(1/n)$ with
+$n \to \infty$), the $O(t^4)$ correction is negligible and the tightening
+from the leading term dominates.
+
+\paragraph{Example: symmetric Hamiltonians.}
+When $A$ and $B$ enter symmetrically (e.g., even/odd sublattice
+decomposition of a nearest-neighbor Hamiltonian), we may have
+$\comm{B}{\comm{B}{A}} \approx -2\,\comm{A}{\comm{A}{B}}$
+(up to boundary terms). In this case:
+\[
+  \frac{\comm{B}{\comm{B}{A}}}{2} - \frac{\comm{A}{\comm{A}{B}}}{4}
+  \approx \frac{\comm{B}{\comm{B}{A}}}{2}
+    + \frac{\comm{B}{\comm{B}{A}}}{8}
+  = \frac{5}{8}\,\comm{B}{\comm{B}{A}},
+\]
+while the standard bound gives
+$\norm{\comm{B}{\comm{B}{A}}}/2 + \norm{\comm{A}{\comm{A}{B}}}/4
+  \approx \norm{\comm{B}{\comm{B}{A}}}$.
+The tightening ratio is $5/8$, i.e., a $37.5\%$ reduction in the
+leading coefficient.
+
+\subsection{Why this tightening is absent from Childs et al.}
+\label{sec:why-absent}
+
+The standard bound \eqref{eq:strang-sum} appears in
+Childs et al.~\cite{childsTheoryTrotterError2021} (Proposition~6) and
+throughout the product formula literature. Several reasons explain why
+the norm-of-difference formulation \eqref{eq:strang-tighter-final} has
+not appeared previously.
+
+\paragraph{Proof architecture.}
+Childs et al.\ use a ``conjugation expansion'' (their Theorem~5) that
+expands the error at each exponential interface independently, producing
+separate terms for the $A$-$B$ and $B$-$A$ boundaries. The triangle
+inequality on the resulting sum is the most direct bound within this
+framework. The norm-of-difference requires an additional step:
+recombining the interface terms, factoring out the common $\tau^2/2$
+prefactor, and bounding the remainder with a \emph{triple}-commutator
+estimate (\cref{eq:R-bound}). This extra step does not arise naturally
+from the interface-by-interface analysis.
+
+\paragraph{Framework compatibility.}
+Childs et al.\ build a systematic framework around the
+\emph{nested-commutator sum}
+$\tilde\alpha_{\mathrm{comm}} =
+  \sum \norm{\comm{H_{\gamma_{p+1}}}{\ldots\comm{H_{\gamma_2}}{H_{\gamma_1}}}}$,
+which extends uniformly to any order~$p$ and any number of operators.
+The effective commutator $D = \comm{B}{\comm{B}{A'}} - \comm{A'}{\comm{A'}{B}}$
+is a \emph{difference} of two nested commutators---it does not fit into
+the $\tilde\alpha_{\mathrm{comm}}$ framework as a single nested commutator.
+
+\paragraph{Simplicity.}
+The standard bound \eqref{eq:strang-sum} is a clean $t^3$ expression
+with no correction term, yielding a simple Trotter-number formula
+$r \sim (C\,t^3/\varepsilon)^{1/2}$ for resource estimation.
+The tighter bound \eqref{eq:strang-tighter-final} introduces an $O(t^4)$
+correction involving triple commutators, making the resource formula
+more complex. For asymptotic scaling analysis, the simpler expression
+is often preferred.
+
+\paragraph{When the tightening matters.}
+Despite these considerations, the norm-of-difference bound is
+\emph{strictly more informative} for concrete resource estimation.
+Given a specific Hamiltonian $H = A + B$, the effective commutator
+$D$ is computable at negligible cost compared to the quantum simulation
+itself. In the Trotter regime ($t = O(1/n)$), the $O(t^4)$ correction is
+subdominant and the leading-term tightening dominates.
+The formalization-driven insight here is that the Duhamel approach---by
+producing the residual $\mathcal{T}_2(\tau)$ as a \emph{single}
+algebraic expression---makes the norm-of-difference formulation natural,
+whereas the interface-by-interface expansion does not.
+
+\subsection{Extension to higher-order formulas}
+
+The same principle extends to the fourth-order Suzuki formula $S_4$.
+Childs et al.~\cite{childsTheoryTrotterError2021} (Proposition~7) bound
+the $S_4$ error as a sum of 8 separate 4-fold commutator norms:
+\[
+  \norm{S_4(t) - e^{tH}}
+    \le \sum_{k=1}^{8} \alpha_k\,\norm{C_k}\,t^5,
+\]
+with numerical coefficients $\alpha_k \in [0.0047, 0.0284]$.
+The norm-of-difference formulation replaces this with
+\[
+  \norm{S_4(t) - e^{tH}} \le \norm{E_5}\,t^5 + O(t^6),
+  \qquad
+  E_5 = \sum_{k=1}^{8} \alpha_k\,C_k,
+\]
+where $E_5$ is the single algebraic error expression.
+Since $\norm{E_5} \le \sum_k |\alpha_k|\,\norm{C_k}$ by the triangle
+inequality, this bound is always $\le$ the standard one and strictly
+tighter whenever the 4-fold nested commutators $C_k$ partially cancel.
+For lattice Hamiltonians with spatial locality, many such cancellations
+occur due to the geometric structure of the interaction graph, making
+the tightening practically significant.
+
+\subsection{Formalization status}
+
+The triple-FTC building block (\cref{eq:R2-expand},
+\leansrc{HigherCommutator.lean}) is fully formalized with 0
+\texttt{sorry} axioms. The tighter Strang bound
+\eqref{eq:strang-tighter-final} and its $S_4$ extension are work in
+progress.
