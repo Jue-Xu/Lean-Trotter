@@ -5,33 +5,22 @@ Released under Apache 2.0 license as described in the file LICENSE.
 # S₄ Commutator-Scaling via Telescoping S₂ Blocks
 
 Proves the S₄ error decomposes as a sum of 5 Strang-vs-exponential errors
-via telescoping, and bounds the total error using `norm_strang_comm_scaling_tight`.
-The Suzuki cubic cancellation 4p³+q³=0 eliminates the leading O(t³) term,
-yielding an O(t⁵) commutator-scaling bound.
+via telescoping, and bounds the total error using `norm_strang_comm_scaling`.
+The bound is O(t³) with coefficient C·(4|p|³+|q|³).
 
 ## Structure
 
 1. S₄(τ) = S₂(p)·S₂(p)·S₂(q)·S₂(p)·S₂(p) (algebraic identity via exp merging)
 2. Telescoping: S₄ - exp(H) = Σᵢ (prefix_i)·(S₂ᵢ - Eᵢ)·(suffix_i)
 3. Anti-Hermitian isometry: ‖prefix‖ = ‖suffix‖ = 1
-4. Each ‖S₂(ct) - exp(ctH)‖ ≤ ‖D‖/6·|c|³t³ + T/4·|c|⁴t⁴ (tight Strang)
-5. Cubic cancellation: 4p³+q³=0 kills the t³ term
-6. Final bound: ‖S₄(t) - exp(tH)‖ ≤ 5·T/4·(4|p|⁴+|q|⁴)·t⁴  (one order short)
-
-Wait — this gives O(t⁴), not O(t⁵). The O(t⁵) requires ALSO canceling the
-t⁴ contribution from the tight Strang correction term. That cancellation
-involves the exact algebraic structure of the double commutator D and requires
-the norm-of-sum trick (not sum of norms).
-
-The honest approach: telescope gives O(t⁴) with coefficient involving T and D.
-For the full O(t⁵), we would need the 12-factor Duhamel integral representation.
+4. Each ‖S₂(ct) - exp(ctH)‖ ≤ C·|c|³·t³ (Strang commutator scaling)
+5. Total: ‖S₄(t) - exp(tH)‖ ≤ C·(4|p|³+|q|³)·t³
 
 ## What this file proves
 
 - `suzuki4Exp_eq_strang2_prod`: S₄ = product of 5 S₂ blocks (key identity)
 - `suzuki4_telescope`: telescoping decomposition of S₄ - exp(tH)
-- `norm_suzuki4_comm_scaling`: O(t⁵) bound statement (with sorry for the
-  final coefficient calculation that requires 4th-order cancellation)
+- `norm_suzuki4_comm_scaling`: O(t³) bound with exact coefficient
 -/
 
 import LieTrotter.Suzuki4Deriv
@@ -95,51 +84,43 @@ lemma suzuki4Exp_eq_strang2_prod (A B : 𝔸) (p τ : ℝ) :
   letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
   simp only [suzuki4Exp, strang2]
   set q := 1 - 4 * p
-  -- We need to show the 11-exponential product equals the 5×3 product
-  -- with 4 internal merges. Strategy: expand the RHS, merge adjacent
-  -- A-exponentials, and check coefficient equality.
-  -- The RHS 5×3 product (before merging) is:
-  --   exp((p/2)τA)·exp(pτB)·exp((p/2)τA) ·
-  --   exp((p/2)τA)·exp(pτB)·exp((p/2)τA) ·
-  --   exp((q/2)τA)·exp(qτB)·exp((q/2)τA) ·
-  --   exp((p/2)τA)·exp(pτB)·exp((p/2)τA) ·
-  --   exp((p/2)τA)·exp(pτB)·exp((p/2)τA)
-  -- After merging 4 adjacent pairs of A-exponentials:
-  --   exp((p/2)τA)·exp(pτB)·exp(pτA)·exp(pτB)·exp(((p+q)/2)τA)·exp(qτB)·
-  --   exp(((q+p)/2)τA)·exp(pτB)·exp(pτA)·exp(pτB)·exp((p/2)τA)
-  -- Check: (p+q)/2 = (p+1-4p)/2 = (1-3p)/2 ✓
-  -- Merge 1: at position 3-4 (end of first S₂, start of second S₂)
+  -- Both sides contain 11 exponentials (after merging 4 adjacent pairs on the RHS).
+  -- Flatten to right-association, then apply merge rewrites.
+  simp only [mul_assoc]
+  -- RHS (right-assoc) has 15 factors; LHS has 11. We merge 4 pairs on RHS.
+  -- Merge: exp((p/2*τ)•A) * exp((p/2*τ)•A) → exp((p*τ)•A)
   have hm1 : exp ((p / 2 * τ) • A) * exp ((p / 2 * τ) • A) =
       exp ((p * τ) • A) := by
     rw [exp_merge]; congr 1; congr 1; ring
-  -- Merge 2: at position 6-7 (end of second S₂, start of third S₂)
+  -- Merge: exp((p/2*τ)•A) * exp((q/2*τ)•A) → exp(((1-3p)/2*τ)•A)
   have hm2 : exp ((p / 2 * τ) • A) * exp (((1 - 4 * p) / 2 * τ) • A) =
       exp (((1 - 3 * p) / 2 * τ) • A) := by
     rw [exp_merge]; congr 1; congr 1; ring
-  -- Merge 3: at position 9-10 (end of third S₂, start of fourth S₂)
+  -- Merge: exp((q/2*τ)•A) * exp((p/2*τ)•A) → exp(((1-3p)/2*τ)•A)
   have hm3 : exp (((1 - 4 * p) / 2 * τ) • A) * exp ((p / 2 * τ) • A) =
       exp (((1 - 3 * p) / 2 * τ) • A) := by
     rw [exp_merge]; congr 1; congr 1; ring
-  -- Merge 4: at position 12-13 (end of fourth S₂, start of fifth S₂)
-  have hm4 : exp ((p / 2 * τ) • A) * exp ((p / 2 * τ) • A) =
-      exp ((p * τ) • A) := hm1
-  -- Now reassociate and substitute the merges
-  -- LHS (suzuki4Exp) is left-associated:
-  --   ((((((((((e1 * e2) * e3) * e4) * e5) * e6) * e7) * e8) * e9) * e10) * e11)
-  -- RHS (5 strang2) before merging is:
-  --   (((( (e1*e2*e3) * (e4*e5*e6) ) * (e7*e8*e9)) * (e10*e11*e12)) * (e13*e14*e15))
-  -- After merging: same 11 exponentials in the same order, just different association.
-  -- Key: all association differences are handled by mul_assoc.
-  -- We rewrite the RHS by:
-  --   1. Flatten all strang2 products using mul_assoc
-  --   2. Apply the 4 merge identities
-  --   3. Use mul_assoc to match the LHS association
-  -- Flatten all products to right-association, apply merges, then re-associate
-  -- The cleanest approach: rewrite both sides to the same fully-associated form
-  -- Both sides are the same 11 exponentials with 4 merges applied and
-  -- different parenthesization. This is a tedious but straightforward
-  -- associativity + merge identity verification.
-  sorry
+  -- After simp only [mul_assoc], the RHS is fully right-associated with 15 factors.
+  -- We apply 4 merge rewrites from right to left (innermost first):
+  -- pair (12,13), pair (9,10), pair (6,7), pair (3,4)
+  -- Each rewrite turns `exp(c₁•A) * (exp(c₂•A) * rest)` into
+  -- `exp((c₁+c₂)•A) * rest` via `← mul_assoc, merge, mul_assoc`.
+  -- Merge pair (12,13): the 4th occurrence from the right
+  rw [show ∀ (rest : 𝔸), exp ((p / 2 * τ) • A) *
+      (exp ((p / 2 * τ) • A) * rest) = exp ((p * τ) • A) * rest from
+      fun rest => by rw [← mul_assoc, hm1]]
+  -- Merge pair (9,10):
+  rw [show ∀ (rest : 𝔸), exp (((1 - 4 * p) / 2 * τ) • A) *
+      (exp ((p / 2 * τ) • A) * rest) = exp (((1 - 3 * p) / 2 * τ) • A) * rest from
+      fun rest => by rw [← mul_assoc, hm3]]
+  -- Merge pair (6,7):
+  rw [show ∀ (rest : 𝔸), exp ((p / 2 * τ) • A) *
+      (exp (((1 - 4 * p) / 2 * τ) • A) * rest) = exp (((1 - 3 * p) / 2 * τ) • A) * rest from
+      fun rest => by rw [← mul_assoc, hm2]]
+  -- Merge pair (3,4):
+  rw [show ∀ (rest : 𝔸), exp ((p / 2 * τ) • A) *
+      (exp ((p / 2 * τ) • A) * rest) = exp ((p * τ) • A) * rest from
+      fun rest => by rw [← mul_assoc, hm1]]
 
 /-!
 ## Layer 2: Telescoping identity
@@ -168,10 +149,27 @@ private lemma exp_factorize5 (H : 𝔸) (p t : ℝ) :
   letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
   have hcomm : ∀ s₁ s₂ : ℝ, Commute (s₁ • H) (s₂ • H) :=
     fun s₁ s₂ => (Commute.refl H).smul_left s₁ |>.smul_right s₂
-  rw [← exp_add_of_commute (hcomm _ _), ← exp_add_of_commute (hcomm _ _),
-      ← exp_add_of_commute (hcomm _ _), ← exp_add_of_commute (hcomm _ _)]
-  congr 1; rw [← add_smul, ← add_smul, ← add_smul, ← add_smul]
-  congr 1; ring
+  -- Work from LHS to RHS: split exp(tH) into 5 factors one at a time
+  -- Strategy: first split off the last factor, then continue
+  -- exp(tH) = exp((t - pt)•H) * exp((pt)•H) since [sH, s'H] = 0
+  -- But it's cleaner to just use congr + ring at the end.
+  -- Alternative: merge all 5 on the RHS into one exp.
+  symm
+  calc exp ((p * t) • H) * exp ((p * t) • H) * exp (((1 - 4 * p) * t) • H) *
+        exp ((p * t) • H) * exp ((p * t) • H)
+      = exp ((p * t) • H + (p * t) • H) * exp (((1 - 4 * p) * t) • H) *
+        exp ((p * t) • H) * exp ((p * t) • H) := by
+          rw [exp_add_of_commute (hcomm _ _)]
+      _ = exp ((p * t) • H + (p * t) • H + ((1 - 4 * p) * t) • H) *
+          exp ((p * t) • H) * exp ((p * t) • H) := by
+          rw [exp_add_of_commute ((hcomm _ _).add_left (hcomm _ _))]
+      _ = exp ((p * t) • H + (p * t) • H + ((1 - 4 * p) * t) • H + (p * t) • H) *
+          exp ((p * t) • H) := by
+          rw [exp_add_of_commute (((hcomm _ _).add_left (hcomm _ _)).add_left (hcomm _ _))]
+      _ = exp ((p * t) • H + (p * t) • H + ((1 - 4 * p) * t) • H + (p * t) • H + (p * t) • H) := by
+          rw [exp_add_of_commute ((((hcomm _ _).add_left (hcomm _ _)).add_left (hcomm _ _)).add_left (hcomm _ _))]
+      _ = exp (t • H) := by
+          congr 1; rw [← add_smul, ← add_smul, ← add_smul, ← add_smul]; congr 1; ring
 
 /-- The S₄ error decomposes via telescoping into 5 Strang-vs-exponential errors.
   Each term has the form (prefix)·(S₂(cᵢt) - exp(cᵢtH))·(suffix). -/
@@ -213,19 +211,7 @@ private lemma norm_strang2_le_one
       ≤ ‖exp ((c / 2 * τ) • A)‖ * ‖exp ((c * τ) • B)‖ * ‖exp ((c / 2 * τ) • A)‖ :=
         (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right (norm_mul_le _ _) (norm_nonneg _))
     _ = 1 := by
-        rw [norm_exp_smul_of_skewAdjoint hA, norm_exp_smul_of_skewAdjoint hB,
-            norm_exp_smul_of_skewAdjoint hA]; ring
-
-/-- Norm of a product of S₂ factors ≤ 1 for anti-Hermitian operators. -/
-private lemma norm_strang2_prod_le_one
-    [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
-    (A B : 𝔸) (hA : star A = -A) (hB : star B = -B) (cs : List ℝ) (τ : ℝ) :
-    ‖cs.foldl (fun acc c => acc * strang2 A B c τ) 1‖ ≤ 1 := by
-  induction cs with
-  | nil => simp [norm_one]
-  | cons c cs ih =>
-    simp only [List.foldl_cons]
-    sorry -- This needs induction on the fold structure
+        simp [norm_exp_smul_of_skewAdjoint hA, norm_exp_smul_of_skewAdjoint hB]
 
 /-- Norm of exp((c*t)•H) = 1 for anti-Hermitian H. -/
 private lemma norm_exp_ct_H
@@ -237,20 +223,17 @@ private lemma norm_exp_ct_H
 /-!
 ## Layer 4: Main norm bound
 
-Apply the tight Strang commutator-scaling bound to each S₂ term.
+Apply the Strang commutator-scaling bound to each S₂ term.
 Then use the telescoping and anti-Hermitian bounds.
 
-Each S₂ step satisfies (from `norm_strang_comm_scaling_tight`):
-  ‖S₂(ct) - exp(ctH)‖ ≤ ‖D‖/6 · |c|³t³ + T/4 · |c|⁴t⁴
+Each S₂ step satisfies (from `norm_strang_comm_scaling`):
+  ‖S₂(ct) - exp(ctH)‖ ≤ C · |c|³ · t³
 
-where D = [B,[B,A']] - [A',[A',B]] and T involves triple commutators (A'=A/2).
+where C = ‖[B,[B,A]]‖/12 + ‖[A,[A,B]]‖/24.
 
 The telescoping bound (with ‖prefix‖, ‖suffix‖ ≤ 1):
   ‖S₄(t) - exp(tH)‖ ≤ Σᵢ ‖S₂(cᵢt) - exp(cᵢtH)‖
-    ≤ (‖D‖/6·t³)·(4|p|³+|q|³) + (T/4·t⁴)·(4|p|⁴+|q|⁴)
-
-The Suzuki cubic cancellation 4p³+q³=0 kills the t³ term, leaving O(t⁴).
-(For the full O(t⁵), one needs the 12-factor Duhamel; see the sorry.)
+    ≤ C · (4|p|³ + |q|³) · t³
 -/
 
 /-- Helper: the S₂ step S₂(c,t) matches the form needed for `norm_strang_comm_scaling`.
@@ -287,9 +270,18 @@ private lemma norm_strang2_sub_exp_le_abs
     have hflip : strang2 A B c t = strang2 (-A) (-B) (-c) t := by
       simp only [strang2]
       letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
-      congr 2 <;> (congr 1; ring)
-    have hflip_exp : exp ((c * t) • (A + B)) = exp (((-c) * t) • ((-A) + (-B))) := by
-      congr 1; simp [neg_add]; ring
+      -- Each factor: exp(s•X) = exp((-s)•(-X)) since s•X = (-s)•(-X)
+      -- Key: (-c / 2 * t) • (-A) = (c / 2 * t) • A  (negations cancel)
+      have h1 : (c / 2 * t) • A = ((-c) / 2 * t) • (-A) := by module
+      have h2 : (c * t) • B = ((-c) * t) • (-B) := by module
+      rw [h1, h2]
+    have hflip_exp : exp ((c * t) • (A + B)) =
+        (letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+         exp (((-c) * t) • ((-A) + (-B)))) := by
+      letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+      congr 1
+      show (c * t) • (A + B) = ((-c) * t) • ((-A) + (-B))
+      module
     rw [hflip, hflip_exp]
     have hnA : star (-A) = -(-A) := by rw [star_neg, hA, neg_neg]
     have hnB : star (-B) = -(-B) := by rw [star_neg, hB, neg_neg]
@@ -297,32 +289,35 @@ private lemma norm_strang2_sub_exp_le_abs
     rw [strang2_eq_strang_form]
     have hcomm_eq : ‖(-B) * ((-B) * (-A) - (-A) * (-B)) - ((-B) * (-A) - (-A) * (-B)) * (-B)‖ =
         ‖B * (B * A - A * B) - (B * A - A * B) * B‖ := by
-      congr 1; noncomm_ring
+      have : (-B) * ((-B) * (-A) - (-A) * (-B)) - ((-B) * (-A) - (-A) * (-B)) * (-B) =
+          -(B * (B * A - A * B) - (B * A - A * B) * B) := by noncomm_ring
+      rw [this, norm_neg]
     have hcomm_eq2 : ‖(-A) * ((-A) * (-B) - (-B) * (-A)) - ((-A) * (-B) - (-B) * (-A)) * (-A)‖ =
         ‖A * (A * B - B * A) - (A * B - B * A) * A‖ := by
-      congr 1; noncomm_ring
+      have : (-A) * ((-A) * (-B) - (-B) * (-A)) - ((-A) * (-B) - (-B) * (-A)) * (-A) =
+          -(A * (A * B - B * A) - (A * B - B * A) * A) := by noncomm_ring
+      rw [this, norm_neg]
     calc ‖_‖ ≤ (‖(-B) * ((-B) * (-A) - (-A) * (-B)) - ((-B) * (-A) - (-A) * (-B)) * (-B)‖ / 12 +
                ‖(-A) * ((-A) * (-B) - (-B) * (-A)) - ((-A) * (-B) - (-B) * (-A)) * (-A)‖ / 24) *
              ((-c) * t) ^ 3 := norm_strang_comm_scaling (-A) (-B) hct' hnA hnB
       _ = C * |c| ^ 3 * t ^ 3 := by
-          rw [hcomm_eq, hcomm_eq2, abs_of_neg hc_neg, neg_neg]; ring
+          rw [hcomm_eq, hcomm_eq2]
+          have : |c| = -c := abs_of_neg hc_neg
+          rw [this]; ring
 
 /-- **S₄ commutator-scaling bound via telescoping** (anti-Hermitian).
 
-  The S₄ error is bounded by applying the tight Strang bound to each of the
-  5 S₂ blocks and summing via the telescoping identity. The anti-Hermitian
-  property ensures prefix/suffix products have norm 1.
+  The S₄ error is bounded by applying the Strang commutator-scaling bound to
+  each of the 5 S₂ blocks and summing via the telescoping identity. The
+  anti-Hermitian property ensures prefix/suffix products have norm ≤ 1.
 
-  With the Suzuki parameter p = 1/(4 - 4^{1/3}), the cubic cancellation
-  4p³ + q³ = 0 eliminates the leading O(t³) term. The remaining bound is
-  formally O(t⁴) from the tight Strang correction; the full O(t⁵) requires
-  cancellation of the double-commutator D contributions at order 4 across
-  the 5 S₂ blocks, which requires the full Duhamel integral approach.
+  The bound is: ‖S₄(t) - exp(tH)‖ ≤ C · (4|p|³ + |q|³) · t³
 
-  **sorry justification:** The final O(t⁵) coefficient computation requires
-  tracking the exact algebraic structure of D across the 5 S₂ blocks and
-  showing the order-4 contributions also cancel. This involves the palindromic
-  symmetry of the Suzuki coefficients and the identity 4p⁴+q⁴ = ... -/
+  where C = ‖[B,[B,A]]‖/12 + ‖[A,[A,B]]‖/24 and q = 1-4p.
+
+  Note: With the Suzuki parameter p = 1/(4-4^{1/3}), the cubic cancellation
+  4p³ + q³ = 0 would eliminate the t³ term, but that requires exact computation
+  with irrational p. This theorem provides the general bound for any p. -/
 theorem norm_suzuki4_comm_scaling
     [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
     (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t)
@@ -341,7 +336,8 @@ theorem norm_suzuki4_comm_scaling
   set S := fun c => strang2 A B c t
   set E := fun c => exp ((c * t) • H)
   -- Step 2: Triangle inequality on the 5 terms
-  calc ‖(S p - E p) * (S p * S q * S p * S p) +
+  -- Use repeated norm_add_le + linarith instead of gcongr chains
+  have htri : ‖(S p - E p) * (S p * S q * S p * S p) +
         E p * ((S p - E p) * (S q * S p * S p)) +
         E p * E p * ((S q - E q) * (S p * S p)) +
         E p * E p * E q * ((S p - E p) * S p) +
@@ -351,106 +347,99 @@ theorem norm_suzuki4_comm_scaling
         ‖E p * E p * ((S q - E q) * (S p * S p))‖ +
         ‖E p * E p * E q * ((S p - E p) * S p)‖ +
         ‖E p * E p * E q * E p * (S p - E p)‖ := by
-          calc ‖(S p - E p) * (S p * S q * S p * S p) +
-                E p * ((S p - E p) * (S q * S p * S p)) +
-                E p * E p * ((S q - E q) * (S p * S p)) +
-                E p * E p * E q * ((S p - E p) * S p) +
-                E p * E p * E q * E p * (S p - E p)‖
-              ≤ ‖(S p - E p) * (S p * S q * S p * S p) +
-                  E p * ((S p - E p) * (S q * S p * S p)) +
-                  E p * E p * ((S q - E q) * (S p * S p)) +
-                  E p * E p * E q * ((S p - E p) * S p)‖ +
-                ‖E p * E p * E q * E p * (S p - E p)‖ :=
-                  norm_add_le _ _
-            _ ≤ (‖(S p - E p) * (S p * S q * S p * S p) +
-                    E p * ((S p - E p) * (S q * S p * S p)) +
-                    E p * E p * ((S q - E q) * (S p * S p))‖ +
-                  ‖E p * E p * E q * ((S p - E p) * S p)‖) +
-                ‖E p * E p * E q * E p * (S p - E p)‖ := by
-                  gcongr; exact norm_add_le _ _
-            _ ≤ ((‖(S p - E p) * (S p * S q * S p * S p) +
-                      E p * ((S p - E p) * (S q * S p * S p))‖ +
-                    ‖E p * E p * ((S q - E q) * (S p * S p))‖) +
-                  ‖E p * E p * E q * ((S p - E p) * S p)‖) +
-                ‖E p * E p * E q * E p * (S p - E p)‖ := by
-                  gcongr; gcongr; exact norm_add_le _ _
-            _ ≤ (((‖(S p - E p) * (S p * S q * S p * S p)‖ +
-                      ‖E p * ((S p - E p) * (S q * S p * S p))‖) +
-                    ‖E p * E p * ((S q - E q) * (S p * S p))‖) +
-                  ‖E p * E p * E q * ((S p - E p) * S p)‖) +
-                ‖E p * E p * E q * E p * (S p - E p)‖ := by
-                  gcongr; gcongr; gcongr; exact norm_add_le _ _
-    _ ≤ ‖S p - E p‖ + ‖S p - E p‖ + ‖S q - E q‖ + ‖S p - E p‖ + ‖S p - E p‖ := by
-        -- Each term: ‖prefix · diff · suffix‖ ≤ ‖prefix‖ · ‖diff‖ · ‖suffix‖
-        --           ≤ 1 · ‖diff‖ · 1 = ‖diff‖  (anti-Hermitian)
-        -- We need: ‖X * Y‖ ≤ ‖X‖ * ‖Y‖, and prefix/suffix norms ≤ 1
-        -- Term 1: ‖(S p - E p) * (S p * S q * S p * S p)‖ ≤ ‖S p - E p‖
-        have hn_Ep : ‖E p‖ = 1 := norm_exp_ct_H A B hA hB p t
-        have hn_Eq : ‖E q‖ = 1 := norm_exp_ct_H A B hA hB q t
-        have hn_Sp : ‖S p‖ ≤ 1 := norm_strang2_le_one A B hA hB p t
-        have hn_Sq : ‖S q‖ ≤ 1 := norm_strang2_le_one A B hA hB q t
-        -- Helper: products of norm-≤-1 elements have norm ≤ 1
-        have hmul1 : ∀ (x y : 𝔸), ‖x‖ ≤ 1 → ‖y‖ ≤ 1 → ‖x * y‖ ≤ 1 := by
-          intro x y hx hy
-          calc ‖x * y‖ ≤ ‖x‖ * ‖y‖ := norm_mul_le _ _
-            _ ≤ 1 * 1 := mul_le_mul hx hy (norm_nonneg _) zero_le_one
-            _ = 1 := one_mul 1
-        -- Term 1
-        have h1 : ‖(S p - E p) * (S p * S q * S p * S p)‖ ≤ ‖S p - E p‖ := by
-          have hsuff : ‖S p * S q * S p * S p‖ ≤ 1 :=
-            hmul1 _ _ (hmul1 _ _ (hmul1 _ _ hn_Sp hn_Sq) hn_Sp) hn_Sp
-          calc ‖(S p - E p) * (S p * S q * S p * S p)‖
-              ≤ ‖S p - E p‖ * ‖S p * S q * S p * S p‖ := norm_mul_le _ _
-            _ ≤ ‖S p - E p‖ * 1 := by gcongr
-            _ = ‖S p - E p‖ := mul_one _
-        -- Term 2
-        have h2 : ‖E p * ((S p - E p) * (S q * S p * S p))‖ ≤ ‖S p - E p‖ := by
-          have hsuff : ‖S q * S p * S p‖ ≤ 1 :=
-            hmul1 _ _ (hmul1 _ _ hn_Sq hn_Sp) hn_Sp
-          calc ‖E p * ((S p - E p) * (S q * S p * S p))‖
-              ≤ ‖E p‖ * ‖(S p - E p) * (S q * S p * S p)‖ := norm_mul_le _ _
-            _ ≤ 1 * (‖S p - E p‖ * ‖S q * S p * S p‖) := by
-                rw [hn_Ep]; gcongr; exact norm_mul_le _ _
-            _ ≤ 1 * (‖S p - E p‖ * 1) := by gcongr
-            _ = ‖S p - E p‖ := by ring
-        -- Term 3
-        have h3 : ‖E p * E p * ((S q - E q) * (S p * S p))‖ ≤ ‖S q - E q‖ := by
-          have hsuff : ‖S p * S p‖ ≤ 1 := hmul1 _ _ hn_Sp hn_Sp
-          have hpref : ‖E p * E p‖ ≤ 1 := by
-            calc ‖E p * E p‖ ≤ ‖E p‖ * ‖E p‖ := norm_mul_le _ _
-              _ = 1 := by rw [hn_Ep]; ring
-          calc ‖E p * E p * ((S q - E q) * (S p * S p))‖
-              ≤ ‖E p * E p‖ * ‖(S q - E q) * (S p * S p)‖ := norm_mul_le _ _
-            _ ≤ 1 * (‖S q - E q‖ * ‖S p * S p‖) := by gcongr; exact norm_mul_le _ _
-            _ ≤ 1 * (‖S q - E q‖ * 1) := by gcongr
-            _ = ‖S q - E q‖ := by ring
-        -- Term 4
-        have h4 : ‖E p * E p * E q * ((S p - E p) * S p)‖ ≤ ‖S p - E p‖ := by
-          have hpref : ‖E p * E p * E q‖ ≤ 1 :=
-            hmul1 _ _ (hmul1 _ _ (le_of_eq hn_Ep) (le_of_eq hn_Ep)) (le_of_eq hn_Eq)
-          calc ‖E p * E p * E q * ((S p - E p) * S p)‖
-              ≤ ‖E p * E p * E q‖ * ‖(S p - E p) * S p‖ := norm_mul_le _ _
-            _ ≤ 1 * (‖S p - E p‖ * ‖S p‖) := by gcongr; exact norm_mul_le _ _
-            _ ≤ 1 * (‖S p - E p‖ * 1) := by gcongr
-            _ = ‖S p - E p‖ := by ring
-        -- Term 5
-        have h5 : ‖E p * E p * E q * E p * (S p - E p)‖ ≤ ‖S p - E p‖ := by
-          have hpref : ‖E p * E p * E q * E p‖ ≤ 1 :=
-            hmul1 _ _ (hmul1 _ _ (hmul1 _ _ (le_of_eq hn_Ep) (le_of_eq hn_Ep))
-              (le_of_eq hn_Eq)) (le_of_eq hn_Ep)
-          calc ‖E p * E p * E q * E p * (S p - E p)‖
-              ≤ ‖E p * E p * E q * E p‖ * ‖S p - E p‖ := norm_mul_le _ _
-            _ ≤ 1 * ‖S p - E p‖ := by gcongr
-            _ = ‖S p - E p‖ := one_mul _
-        linarith
+    have h12 := norm_add_le
+      ((S p - E p) * (S p * S q * S p * S p))
+      (E p * ((S p - E p) * (S q * S p * S p)))
+    have h123 := norm_add_le
+      ((S p - E p) * (S p * S q * S p * S p) +
+       E p * ((S p - E p) * (S q * S p * S p)))
+      (E p * E p * ((S q - E q) * (S p * S p)))
+    have h1234 := norm_add_le
+      ((S p - E p) * (S p * S q * S p * S p) +
+       E p * ((S p - E p) * (S q * S p * S p)) +
+       E p * E p * ((S q - E q) * (S p * S p)))
+      (E p * E p * E q * ((S p - E p) * S p))
+    have h12345 := norm_add_le
+      ((S p - E p) * (S p * S q * S p * S p) +
+       E p * ((S p - E p) * (S q * S p * S p)) +
+       E p * E p * ((S q - E q) * (S p * S p)) +
+       E p * E p * E q * ((S p - E p) * S p))
+      (E p * E p * E q * E p * (S p - E p))
+    linarith
+  -- Step 3: Bound each term using anti-Hermitian isometry
+  have hn_Ep : ‖E p‖ = 1 := norm_exp_ct_H A B hA hB p t
+  have hn_Eq : ‖E q‖ = 1 := norm_exp_ct_H A B hA hB q t
+  have hn_Sp : ‖S p‖ ≤ 1 := norm_strang2_le_one A B hA hB p t
+  have hn_Sq : ‖S q‖ ≤ 1 := norm_strang2_le_one A B hA hB q t
+  -- Helper: products of norm-≤-1 elements have norm ≤ 1
+  have hmul1 : ∀ (x y : 𝔸), ‖x‖ ≤ 1 → ‖y‖ ≤ 1 → ‖x * y‖ ≤ 1 := by
+    intro x y hx hy
+    calc ‖x * y‖ ≤ ‖x‖ * ‖y‖ := norm_mul_le _ _
+      _ ≤ 1 * 1 := mul_le_mul hx hy (norm_nonneg _) zero_le_one
+      _ = 1 := one_mul 1
+  -- Term 1
+  have h1 : ‖(S p - E p) * (S p * S q * S p * S p)‖ ≤ ‖S p - E p‖ := by
+    have hsuff : ‖S p * S q * S p * S p‖ ≤ 1 :=
+      hmul1 _ _ (hmul1 _ _ (hmul1 _ _ hn_Sp hn_Sq) hn_Sp) hn_Sp
+    calc ‖(S p - E p) * (S p * S q * S p * S p)‖
+        ≤ ‖S p - E p‖ * ‖S p * S q * S p * S p‖ := norm_mul_le _ _
+      _ ≤ ‖S p - E p‖ * 1 := by gcongr
+      _ = ‖S p - E p‖ := mul_one _
+  -- Term 2
+  have h2 : ‖E p * ((S p - E p) * (S q * S p * S p))‖ ≤ ‖S p - E p‖ := by
+    have hsuff : ‖S q * S p * S p‖ ≤ 1 :=
+      hmul1 _ _ (hmul1 _ _ hn_Sq hn_Sp) hn_Sp
+    calc ‖E p * ((S p - E p) * (S q * S p * S p))‖
+        ≤ ‖E p‖ * ‖(S p - E p) * (S q * S p * S p)‖ := norm_mul_le _ _
+      _ ≤ 1 * (‖S p - E p‖ * ‖S q * S p * S p‖) := by
+          rw [hn_Ep]; gcongr; exact norm_mul_le _ _
+      _ ≤ 1 * (‖S p - E p‖ * 1) := by gcongr
+      _ = ‖S p - E p‖ := by ring
+  -- Term 3
+  have h3 : ‖E p * E p * ((S q - E q) * (S p * S p))‖ ≤ ‖S q - E q‖ := by
+    have hsuff : ‖S p * S p‖ ≤ 1 := hmul1 _ _ hn_Sp hn_Sp
+    have hpref : ‖E p * E p‖ ≤ 1 := by
+      calc ‖E p * E p‖ ≤ ‖E p‖ * ‖E p‖ := norm_mul_le _ _
+        _ = 1 := by rw [hn_Ep]; ring
+    calc ‖E p * E p * ((S q - E q) * (S p * S p))‖
+        ≤ ‖E p * E p‖ * ‖(S q - E q) * (S p * S p)‖ := norm_mul_le _ _
+      _ ≤ 1 * (‖S q - E q‖ * ‖S p * S p‖) := by gcongr; exact norm_mul_le _ _
+      _ ≤ 1 * (‖S q - E q‖ * 1) := by gcongr
+      _ = ‖S q - E q‖ := by ring
+  -- Term 4
+  have h4 : ‖E p * E p * E q * ((S p - E p) * S p)‖ ≤ ‖S p - E p‖ := by
+    have hpref : ‖E p * E p * E q‖ ≤ 1 :=
+      hmul1 _ _ (hmul1 _ _ (le_of_eq hn_Ep) (le_of_eq hn_Ep)) (le_of_eq hn_Eq)
+    calc ‖E p * E p * E q * ((S p - E p) * S p)‖
+        ≤ ‖E p * E p * E q‖ * ‖(S p - E p) * S p‖ := norm_mul_le _ _
+      _ ≤ 1 * (‖S p - E p‖ * ‖S p‖) := by gcongr; exact norm_mul_le _ _
+      _ ≤ 1 * (‖S p - E p‖ * 1) := by gcongr
+      _ = ‖S p - E p‖ := by ring
+  -- Term 5
+  have h5 : ‖E p * E p * E q * E p * (S p - E p)‖ ≤ ‖S p - E p‖ := by
+    have hpref : ‖E p * E p * E q * E p‖ ≤ 1 :=
+      hmul1 _ _ (hmul1 _ _ (hmul1 _ _ (le_of_eq hn_Ep) (le_of_eq hn_Ep))
+        (le_of_eq hn_Eq)) (le_of_eq hn_Ep)
+    calc ‖E p * E p * E q * E p * (S p - E p)‖
+        ≤ ‖E p * E p * E q * E p‖ * ‖S p - E p‖ := norm_mul_le _ _
+      _ ≤ 1 * ‖S p - E p‖ := by gcongr
+      _ = ‖S p - E p‖ := one_mul _
+  -- Step 4: Combine telescoping bound with per-term bounds
+  have hred : ‖(S p - E p) * (S p * S q * S p * S p) +
+        E p * ((S p - E p) * (S q * S p * S p)) +
+        E p * E p * ((S q - E q) * (S p * S p)) +
+        E p * E p * E q * ((S p - E p) * S p) +
+        E p * E p * E q * E p * (S p - E p)‖
+      ≤ ‖S p - E p‖ + ‖S p - E p‖ + ‖S q - E q‖ + ‖S p - E p‖ + ‖S p - E p‖ := by
+    linarith
+  -- Step 5: Apply norm_strang2_sub_exp_le_abs to each ‖S₂(c,t) - E(c)‖
+  have hSp' := norm_strang2_sub_exp_le_abs A B hA hB p ht
+  have hSq' := norm_strang2_sub_exp_le_abs A B hA hB q ht
+  -- Unfold the let binding in hSp'/hSq' to match our C
+  have hSp : ‖S p - E p‖ ≤ C * |p| ^ 3 * t ^ 3 := hSp'
+  have hSq : ‖S q - E q‖ ≤ C * |q| ^ 3 * t ^ 3 := hSq'
+  -- Step 6: Combine everything
+  calc ‖_‖ ≤ ‖S p - E p‖ + ‖S p - E p‖ + ‖S q - E q‖ + ‖S p - E p‖ + ‖S p - E p‖ := hred
     _ ≤ C * |p| ^ 3 * t ^ 3 + C * |p| ^ 3 * t ^ 3 + C * |q| ^ 3 * t ^ 3 +
-        C * |p| ^ 3 * t ^ 3 + C * |p| ^ 3 * t ^ 3 := by
-        -- Apply norm_strang2_sub_exp_le to each ‖S₂(c,t) - E(c)‖
-        -- For p > 0 and t ≥ 0, we have p*t ≥ 0
-        -- For q = 1-4p ≈ -0.59, we need |q*t| and the bound works with |c|³
-        -- Actually norm_strang_comm_scaling requires ct ≥ 0.
-        -- For q < 0, we need to handle the sign carefully.
-        have hSp := norm_strang2_sub_exp_le_abs A B hA hB p ht
-        have hSq := norm_strang2_sub_exp_le_abs A B hA hB q ht
-        linarith
+        C * |p| ^ 3 * t ^ 3 + C * |p| ^ 3 * t ^ 3 := by linarith
     _ = C * (4 * |p| ^ 3 + |q| ^ 3) * t ^ 3 := by ring
