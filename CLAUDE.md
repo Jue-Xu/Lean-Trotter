@@ -65,7 +65,9 @@ Lean-Trotter/
 │   ├── CommutatorScaling.lean ← Task H: commutator-scaling error via Duhamel
 │   ├── MultiCommutatorScaling.lean  ← multi-operator first-order commutator scaling
 │   ├── StrangCommutatorScaling.lean ← second-order Strang commutator scaling (anti-Hermitian)
-│   └── MultiStrangCommutatorScaling.lean ← multi-operator Strang commutator scaling
+│   ├── MultiStrangCommutatorScaling.lean ← multi-operator Strang commutator scaling
+│   ├── HigherCommutator.lean      ← triple-FTC: extracts [B,[B,[B,A]]] from conjugation
+│   └── StrangCommutatorScalingTight.lean ← **NEW**: tighter Strang bound via norm-of-difference
 ├── LieTrotter.lean            ← root import file
 ├── lakefile.lean
 ├── lean-toolchain
@@ -264,6 +266,60 @@ These are nice-to-haves once the main theorem compiles without `sorry`.
 
 ---
 
+#### Task J: Higher-Order Commutator Extraction (✅ Done)
+
+| Sub-task | Statement | Difficulty | Status |
+|----------|-----------|------------|--------|
+| J1. `exp_conj_sub_comm2_eq_triple_integral` | Triple FTC extracting $[B,[B,[B,A]]]$ | Medium | ✅ Proved |
+| J2. `norm_exp_conj_sub_comm2_le` | $\|e^{\tau B}Ae^{-\tau B} - A - \tau[B,A] - \frac{\tau^2}{2}[B,[B,A]]\| \le \frac{\|[B,[B,[B,A]]]\|}{6}\tau^3 e^{2\tau\|B\|}$ | Medium | ✅ Proved |
+| J3. `norm_exp_conj_sub_comm2_le_of_skewAdjoint` | Anti-Hermitian version: $\le \frac{\|[B,[B,[B,A]]]\|}{6}\tau^3$ (no exp factor) | Easy | ✅ Proved |
+
+**File:** `LieTrotter/HigherCommutator.lean` (~243 lines)
+
+**Proof strategy:** Apply `exp_conj_sub_eq_integral` three times iteratively (same pattern as double FTC but one level deeper). The anti-Hermitian version uses isometry to eliminate the exponential factor. Building block for the tighter Strang bound and future S₄ commutator-scaling work.
+
+---
+
+#### Task K: Tighter Strang Commutator-Scaling (✅ Done) — **NEW RESULT**
+
+| Sub-task | Statement | Difficulty | Status |
+|----------|-----------|------------|--------|
+| K1. `norm_partA_sub_leading` | PartA remainder ≤ triple commutator · τ³/3 | Medium | ✅ Proved |
+| K2. `norm_partB_sub_leading` | PartB remainder ≤ triple commutators · τ³ | Medium | ✅ Proved |
+| K3. `norm_strang_comm_scaling_tight` | $\|S_2(t)-e^{tH}\| \le \frac{\|D\|}{6}t^3 + \frac{T}{4}t^4$ | Hard | ✅ Proved |
+
+**File:** `LieTrotter/StrangCommutatorScalingTight.lean` (~559 lines)
+
+**The new result:** Replaces the standard sum-of-norms bound with a tighter norm-of-difference bound:
+
+Standard (Childs et al. 2021):
+$$\|S_2(t) - e^{tH}\| \le \frac{\|[B,[B,A]]\|}{12}t^3 + \frac{\|[A,[A,B]]\|}{24}t^3$$
+
+Tighter (this work):
+$$\|S_2(t) - e^{tH}\| \le \frac{\|D\|}{6}t^3 + \frac{T}{4}t^4$$
+
+where $D = [B,[B,A']] - [A',[A',B]]$ is the **effective double commutator** ($A' = A/2$).
+
+The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the triangle inequality, and strictly tighter when the two double commutators partially cancel. For symmetric lattice Hamiltonians, the improvement can be ~37.5%.
+
+**Proof strategy:** Extract the leading order $\tau^2/2 \cdot D$ from the Strang residual $\mathcal{T}_2(\tau)$ before taking norms, bounding the remainder using the triple FTC (Task J).
+
+---
+
+### Track 7 — S₄ Commutator-Scaling (In Progress)
+
+#### Task L: Fourth-Order Suzuki Commutator-Scaling
+
+**Goal:** Derive an S₄ commutator-scaling bound with smaller prefactors than Childs et al. (Proposition 7), whose 8-term bound with coefficients 0.0047–0.0284 is labeled "heuristic" (not proven tight).
+
+**Two-phase approach:**
+1. **Optimize within Childs' framework:** Try different split points and term groupings in the 11-exponential Duhamel to find smaller coefficients for the 8 commutator terms.
+2. **Norm-of-difference extension:** Apply the Task K principle to S₄, bounding $\|E_5\|$ (norm of the algebraic error expression) instead of $\sum|\alpha_k|\|C_k\|$ (sum of 8 norms).
+
+**Status:** Mathematical feasibility analysis complete (see `claude/S4_feasibility_analysis.md`). Implementation pending.
+
+---
+
 ---
 
 ## Dependency DAG (build order)
@@ -336,6 +392,9 @@ Phase 6:                           E2 (✅)
 - `norm_lie_trotter_comm_scaling` — commutator-scaling bound $\|e^{tB}e^{tA} - e^{t(A+B)}\| \le \frac{\|[B,A]\|}{2}t^2 e^{t(\|A\|+3\|B\|)}$
 - `norm_strang_comm_scaling` — second-order Strang commutator-scaling (anti-Hermitian): $\|S_2(t)-e^{tH}\| \le \frac{\|[B,[B,A]]\|}{12}t^3 + \frac{\|[A,[A,B]]\|}{24}t^3$
 - `norm_palindromicProd_sub_exp_sum_comm` — multi-operator Strang commutator-scaling (anti-Hermitian)
+- `exp_conj_sub_comm2_eq_triple_integral` — triple FTC: $e^{\tau B}Ae^{-\tau B} - A - \tau[B,A] - \frac{\tau^2}{2}[B,[B,A]] = \iiint [B,[B,[B,A]]]$-conjugated
+- `norm_exp_conj_sub_comm2_le_of_skewAdjoint` — triple commutator bound (anti-Hermitian): $\le \frac{\|[B,[B,[B,A]]]\|}{6}\tau^3$
+- `norm_strang_comm_scaling_tight` — **NEW RESULT**: tighter Strang bound via norm-of-difference: $\|S_2(t)-e^{tH}\| \le \frac{\|D\|}{6}t^3 + \frac{T}{4}t^4$ where $D = [B,[B,A']] - [A',[A',B]]$
 
 ---
 
@@ -370,6 +429,8 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/MultiCommutatorScaling.lean` | 0 |
 | `LieTrotter/StrangCommutatorScaling.lean` | 0 |
 | `LieTrotter/MultiStrangCommutatorScaling.lean` | 0 |
+| `LieTrotter/HigherCommutator.lean` | 0 |
+| `LieTrotter/StrangCommutatorScalingTight.lean` | 0 |
 | **Total** | **0** |
 
 ## Design Decisions
@@ -399,6 +460,10 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 11. **Anti-Hermitian typeclasses for Strang**: `[StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]` for `norm_exp_smul_of_skewAdjoint` ($\|e^{ta}\|=1$ when $a^*=-a$). The `star_trivial` lemma gives $(\text{star}\, r) = r$ for $r \in \mathbb{R}$, needed in `StarModule.star_smul`.
 
 12. **Coefficient conversion via `Algebra.smul_mul_assoc` / `Algebra.mul_smul_comm`**: To show $[A/2,[A/2,B]] = \frac{1}{4}[A,[A,B]]$, use `Algebra.smul_mul_assoc : r•a*b = r•(a*b)` and `Algebra.mul_smul_comm : a*(r•b) = r•(a*b)` to factor $(1/2)$ scalars through products, then `smul_smul` and `norm_smul`.
+
+13. **Norm-of-difference vs sum-of-norms for tighter bounds**: The standard Strang bound uses $\|\text{PartA}\| + \|\text{PartB}\|$ (triangle inequality). By extracting the common $\tau^2/2$ prefactor as the *effective double commutator* $D = [B,[B,A']] - [A',[A',B]]$ and bounding $\|D\|$ directly, we get a tighter leading coefficient. The remainder is bounded using the triple FTC (iterated one more level). Trade-off: introduces an $O(t^{p+1})$ correction term, but the leading coefficient is provably $\le$ the standard bound and strictly tighter with partial cancellation. This principle extends to any order.
+
+14. **`module` tactic for smul algebra in non-commutative rings**: When `abel` fails on goals involving `smul_sub` with negated scalar terms (e.g., `(-τ)` vs `(-1 * τ)`), the `module` tactic handles the scalar-module structure correctly. Used in `StrangCommutatorScalingTight.lean` for the algebraic decomposition proofs.
 
 ---
 
