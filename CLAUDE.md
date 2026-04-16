@@ -67,7 +67,8 @@ Lean-Trotter/
 │   ├── StrangCommutatorScaling.lean ← second-order Strang commutator scaling (anti-Hermitian)
 │   ├── MultiStrangCommutatorScaling.lean ← multi-operator Strang commutator scaling
 │   ├── HigherCommutator.lean      ← triple-FTC: extracts [B,[B,[B,A]]] from conjugation
-│   └── StrangCommutatorScalingTight.lean ← **NEW**: tighter Strang bound via norm-of-difference
+│   ├── StrangCommutatorScalingTight.lean ← tighter Strang bound via norm-of-difference
+│   └── Suzuki4OrderFive.lean          ← S₄ O(t⁵) bound (1 sorry for Duhamel core)
 ├── LieTrotter.lean            ← root import file
 ├── lakefile.lean
 ├── lean-toolchain
@@ -431,7 +432,8 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/MultiStrangCommutatorScaling.lean` | 0 |
 | `LieTrotter/HigherCommutator.lean` | 0 |
 | `LieTrotter/StrangCommutatorScalingTight.lean` | 0 |
-| **Total** | **0** |
+| `LieTrotter/Suzuki4OrderFive.lean` | 1 |
+| **Total** | **1** |
 
 ## Design Decisions
 

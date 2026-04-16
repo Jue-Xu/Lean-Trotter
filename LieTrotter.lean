@@ -42,3 +42,4 @@ import LieTrotter.StrangCommutatorScaling
 import LieTrotter.MultiStrangCommutatorScaling
 import LieTrotter.HigherCommutator
 import LieTrotter.StrangCommutatorScalingTight
+import LieTrotter.Suzuki4OrderFive
