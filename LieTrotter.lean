@@ -40,3 +40,4 @@ import LieTrotter.CommutatorScaling
 import LieTrotter.MultiCommutatorScaling
 import LieTrotter.StrangCommutatorScaling
 import LieTrotter.MultiStrangCommutatorScaling
+import LieTrotter.HigherCommutator
