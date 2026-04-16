@@ -1,0 +1,108 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{AI assistance in the development process}
+\label{sec:ai}
+
+We used LLM-based coding assistants (Claude Code, Anthropic) to accelerate
+formalization, in the same general direction as recent work on agentic
+autoformalization~\cite{ren2026merlean}.
+
+Our workflow followed a \emph{sorry-driven development} pattern:
+\begin{enumerate}
+  \item State all theorem signatures with \texttt{sorry} placeholders.
+  \item Verify that the signatures compose correctly (the main theorem
+    type-checks with all intermediates as \texttt{sorry}).
+  \item Fill \texttt{sorry}s bottom-up, from leaves of the dependency DAG
+    to the root.
+\end{enumerate}
+This approach worked well with LLM agents: independent leaves
+(e.g., the four exponential bounds B1--B4) could be assigned to parallel
+agents, each given the exact signature to fill and the list of available
+lemmas.
+
+\textbf{Where agents excelled.} ``Fill this \texttt{sorry} given these
+lemmas''---tasks with a clear specification and known
+ingredients---compiled on the first attempt when delegated to agents.
+Most of the exponential bounds and the assembly step were completed this way.
+
+\textbf{Where agents struggled.} ``Find the right proof approach''---tasks
+requiring mathematical insight, such as the Strang commutator-scaling argument
+or the algebraic factorization for the step error---required human-driven
+exploration. The agent's tendency to attempt minor variations of a failing
+approach (rather than reconsidering the overall strategy) became a bottleneck
+for these tasks.
+
+\textbf{A cautionary pattern.} As noted by Zhao et al.~\cite{zhao2025chsh},
+LLM agents sometimes quietly strengthen hypotheses to make a proof trivial.
+The \texttt{sorry}-first workflow guards against this: since all signatures are
+fixed before proof filling begins, adding hypotheses breaks the type-checking
+of downstream theorems.
+
+\subsection{Mathlib ecosystem}
+\label{sec:mathlib}
+
+Several gaps in \Mathlib were encountered and filled during this project:
+\begin{itemize}
+  \item $\norm{e^a} \le e^{\norm{a}}$ for general Banach algebras
+    (\leanref{ExpBounds.lean}{72}{norm\_exp\_le}).
+  \item $e^x - 1 - x \le x^2/2 \cdot e^x$ for $x \ge 0$
+    (\leanref{ExpBounds.lean}{129}{exp\_sub\_one\_sub\_bound\_real}).
+  \item $\norm{e^a - 1} \le e^{\norm{a}} - 1$
+    (\leanref{ExpBounds.lean}{88}{norm\_exp\_sub\_one\_le}).
+\end{itemize}
+These are natural candidates for upstreaming to \Mathlib.
+
+Working over a general field $\mathbb{K}$ (via \texttt{RCLike}) introduced
+friction with the calculus infrastructure, which assumes $\mathbb{R}$-module
+structure. Our pragmatic solution---working over $\mathbb{R}$ directly in the
+commutator-scaling files---is effective but means users must apply
+\texttt{restrictScalars} for $\mathbb{C}$ applications. A unified treatment
+would require additional typeclass instances in \Mathlib.
+
+\subsection{Formalization-driven proof design}
+\label{sec:formalization-insights}
+
+The formalization process influenced proof design in several ways:
+
+\textbf{Algebraic factorization.}
+The standard approach to the step error---expanding $e^a\,e^b$ to second order
+and bounding cross-terms---requires tracking non-commutative multinomial
+coefficients. In Lean, this involves dozens of \texttt{norm\_mul\_le} and
+\texttt{gcongr} steps for each cross-term. The algebraic factorization
+(\cref{sec:step-error}) splits the problem into two independent bounds,
+each handled by series comparison, reducing the proof length by approximately
+half. This factorization is arguably cleaner than the standard approach even
+on paper.
+
+\textbf{Duhamel without Gronwall.}
+The commutator-scaling proof was designed with Lean feasibility in mind.
+The standard approach uses Gronwall's inequality or ODE uniqueness, which
+would require formalizing existence and uniqueness for linear ODEs in
+Banach spaces---theory not yet available in \Mathlib. The Duhamel/FTC approach
+uses only the product rule and FTC-2, both already available.
+
+\textbf{\texttt{noncomm\_ring} vs.\ \texttt{ring}.}
+The \texttt{ring} tactic in Lean silently fails on non-commutative goals:
+it produces an unsolved subgoal rather than an error message. We discovered
+this only after extended debugging. The \texttt{noncomm\_ring} tactic handles
+free non-commutative ring identities correctly but cannot use commutativity
+hypotheses (e.g., $[a, e^a] = 0$). Our workaround: use \texttt{set} to make
+exponentials opaque, rewrite commutativity as equalities, then apply
+\texttt{noncomm\_ring} on the resulting free-ring identity.
+
+\subsection{Relation to quantum simulation}
+\label{sec:quantum}
+
+Our results are stated for general complete normed algebras, which include
+the bounded operators $B(\mathcal{H})$ on a Hilbert space as a special case.
+Specialization to finite-dimensional matrix algebras
+$M_d(\mathbb{C})$ is straightforward via \Mathlib's
+\texttt{Matrix.instNormedRing}.
+
+The commutator-scaling bounds are physically motivated by Hamiltonian
+simulation: for a lattice Hamiltonian $H = \sum_j h_j$ where each $h_j$ acts
+locally, the commutator $\comm{h_j}{h_k}$ vanishes for distant terms.
+Our formalized bounds could serve as certified building blocks for verified
+resource estimation in quantum algorithms, once combined with gate-count
+analysis for individual exponentials.

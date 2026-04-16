@@ -1,0 +1,58 @@
+\section{Conclusion and Future Work}
+\label{sec:conclusion}
+
+We have presented the first machine-checked formalization of the Lie--Trotter
+product formula, together with its higher-order extensions and
+commutator-scaling error bounds, in Lean~4 with the \Mathlib library.
+The development comprises over 4\,300 lines with zero \texttt{sorry} axioms
+and covers:
+\begin{itemize}
+  \item First-order Lie--Trotter convergence at rate $O(1/n)$;
+  \item Symmetric Strang splitting at rate $O(1/n^2)$;
+  \item Multi-operator generalizations of both formulas;
+  \item A fourth-order Suzuki integrator;
+  \item First- and second-order commutator-scaling bounds via a novel
+    Duhamel/FTC technique.
+\end{itemize}
+
+The Duhamel approach to commutator scaling---avoiding ODE uniqueness in favor
+of the fundamental theorem of calculus---may be of independent interest as a
+proof strategy for related product formula bounds.
+
+\paragraph{Future directions.}
+Several extensions are natural:
+\begin{enumerate}
+  \item \emph{Mathlib contributions.}
+    The exponential norm bounds (\leanref{ExpBounds.lean}{72}{norm\_exp\_le},
+    \leanref{ExpBounds.lean}{88}{norm\_exp\_sub\_one\_le},
+    \leanref{ExpBounds.lean}{129}{exp\_sub\_one\_sub\_bound\_real})
+    are general-purpose lemmas suitable for upstreaming to \Mathlib.
+
+  \item \emph{Tight higher-order Suzuki bounds.}
+    Our fourth-order Suzuki integrator currently has an $O(1/n^2)$ bound;
+    the tight $O(1/n^4)$ bound requires formalizing the parity-based
+    cancellation argument of Suzuki~\cite{suzukiGeneralTheoryFractal1991}.
+
+  \item \emph{Baker--Campbell--Hausdorff formula.}
+    The BCH formula $\log(e^A\,e^B) = A + B + \frac{1}{2}[A,B] + \cdots$
+    is closely related to the Trotter error expansion. A partial scaffold
+    exists in our repository.
+
+  \item \emph{Specialization to quantum systems.}
+    Connecting our abstract bounds to concrete gate-count estimates for
+    Hamiltonian simulation on quantum computers would bridge the gap between
+    formal mathematics and verified quantum algorithms.
+
+  \item \emph{Unbounded operators.}
+    The original Trotter--Kato theorem applies to strongly continuous
+    semigroups on Banach spaces, covering unbounded generators.
+    Formalizing this extension would require substantial additional
+    functional analysis infrastructure in \Mathlib.
+\end{enumerate}
+
+More broadly, our project demonstrates that substantial results in operator
+analysis---involving non-commutative algebra, power series manipulation,
+Fr\'{e}chet calculus, and Bochner integration---are within reach of current
+proof assistant technology.
+We hope this work encourages further formalization of the mathematical
+foundations underlying quantum algorithms.

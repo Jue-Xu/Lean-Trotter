@@ -1,0 +1,120 @@
+\section{Mathematical Background}
+\label{sec:background}
+
+\subsection{The Lie--Trotter product formula}
+\label{sec:bg-trotter}
+
+Let $\A$ be a unital Banach algebra over $\mathbb{K} \in \{\mathbb{R}, \mathbb{C}\}$
+with norm $\norm{\cdot}$ satisfying $\norm{1} = 1$ and $\norm{ab} \le \norm{a}\norm{b}$.
+The exponential
+\[
+  e^a = \sum_{k=0}^{\infty} \frac{a^k}{k!}
+\]
+converges absolutely for every $a \in \A$.
+
+Trotter~\cite{trotter1959product} proved that for bounded operators $A, B$,
+\[
+  e^{A+B} = \lim_{n\to\infty} \bigl(e^{A/n}\,e^{B/n}\bigr)^n.
+\]
+The standard proof proceeds in two steps:
+\begin{enumerate}
+  \item \emph{Telescoping}: the identity
+    $X^n - Y^n = \sum_{k=0}^{n-1} X^k(X-Y)Y^{n-1-k}$
+    gives
+    $\norm{X^n - Y^n} \le n\,\norm{X-Y}\,(\max\{\norm{X},\norm{Y}\})^{n-1}$.
+
+  \item \emph{Step error}: the single-step approximation satisfies
+    $\norm{e^a\,e^b - e^{a+b}} = O(\norm{a}\,\norm{b})$.
+\end{enumerate}
+Setting $X = e^{A/n}\,e^{B/n}$ and $Y = e^{(A+B)/n}$, the $O(1/n^2)$ step
+error is amplified by the factor $n$ from telescoping, yielding $O(1/n)$
+overall convergence.
+
+\subsection{Higher-order splitting methods}
+\label{sec:bg-splitting}
+
+The symmetric \emph{Strang splitting}~\cite{strang1968construction} uses
+\[
+  S_2(t) = e^{tA/2}\,e^{tB}\,e^{tA/2}
+\]
+to achieve $O(t^3)$ local error and $O(1/n^2)$ global convergence.
+Suzuki~\cite{suzukiGeneralTheoryFractal1991} showed that higher-order integrators can be
+constructed recursively: the fourth-order formula
+\[
+  S_4(t) = S_2(pt)^2\,S_2\bigl((1-4p)t\bigr)\,S_2(pt)^2
+  \qquad \text{with } p = \frac{1}{4 - 4^{1/3}}
+\]
+achieves $O(t^5)$ local error.
+
+Both formulas generalize to multiple operators $A_1, \ldots, A_m$.
+The first-order product $(e^{A_1/n} \cdots e^{A_m/n})^n$ converges at rate
+$O(1/n)$, while the palindromic product
+\[
+  S_2^{(m)}(t) = e^{tA_1/2}\,e^{tA_2/2}\cdots e^{tA_m}\cdots e^{tA_2/2}\,e^{tA_1/2}
+\]
+achieves $O(1/n^2)$.
+
+\subsection{Commutator-scaling error bounds}
+\label{sec:bg-commutator}
+
+The standard step error $\norm{e^a\,e^b - e^{a+b}} \le 2\norm{a}\norm{b}e^{\norm{a}+\norm{b}}$
+treats $A$ and $B$ as unrelated. When $A$ and $B$ nearly commute---as is
+typical for spatially local Hamiltonians---the error is much smaller.
+
+Childs et al.~\cite{childsTheoryTrotterError2021} showed that the leading error term is
+controlled by the commutator $\comm{B}{A} = BA - AB$ rather than the product
+$\norm{A}\norm{B}$. At first order,
+\begin{equation}\label{eq:comm-scaling-bg}
+  \norm{e^{tB}\,e^{tA} - e^{t(A+B)}}
+    \le \frac{\norm{\comm{B}{A}}}{2}\,t^2\,e^{t(\norm{A}+3\norm{B})}.
+\end{equation}
+For the Strang splitting, the leading commutator $\comm{B}{A}$ cancels by
+symmetry, and the error is controlled by double commutators:
+\begin{equation}\label{eq:strang-comm-bg}
+  \norm{S_2(t) - e^{tH}}
+    \le \Bigl(\frac{\norm{\comm{B}{\comm{B}{A}}}}{12}
+      + \frac{\norm{\comm{A}{\comm{A}{B}}}}{24}\Bigr)\,t^3.
+\end{equation}
+
+These commutator-scaling bounds are physically significant: for a lattice
+Hamiltonian $H = \sum_j h_j$ where each $h_j$ acts on a few neighboring sites,
+$\norm{\comm{h_j}{h_k}} = 0$ whenever the supports of $h_j$ and $h_k$ are
+disjoint, so the commutator-based bound can be polynomially tighter than the
+naive product bound~\cite{childsTheoryTrotterError2021}.
+
+\subsection{Lean~4 and Mathlib}
+\label{sec:bg-lean}
+
+\Lean is an interactive theorem prover and programming language based on
+dependent type theory~\cite{demoura2021lean4}. Proofs and programs share the
+same language, and correctness is guaranteed by a small trusted kernel that
+independently type-checks every proof term.
+
+The \Mathlib library~\cite{mathlib2020} provides formalized mathematics
+including abstract algebra, analysis, and topology. For our development,
+the key components are:
+\begin{itemize}
+  \item \texttt{NormedRing}, \texttt{NormedAlgebra}: typeclasses for
+    normed rings and algebras with submultiplicative norms.
+  \item \texttt{NormedSpace.exp}: the exponential function
+    $a \mapsto \sum_{k} a^k/k!$ in a complete normed algebra.
+  \item \texttt{intervalIntegral}: the Bochner integral over $[a,b]$,
+    with the fundamental theorem of calculus.
+  \item \texttt{HasDerivAt}: the Fr\'{e}chet derivative, with product rules
+    and chain rules for normed algebra-valued functions.
+\end{itemize}
+
+\paragraph{Related formalization work.}
+Formal verification has recently gained traction in mathematical physics and
+quantum information.
+Zhao and Yu~\cite{zhao2025chsh} formalized robust CHSH rigidity in \Lean,
+discovering a gap in the original proof of McKague~(2012) during the
+formalization process.
+Meiburg et al.~\cite{meiburg2025steinlemma} formalized a generalized
+quantum Stein's lemma, and
+Tooby-Smith~\cite{toobysmith2026higgs} formalized the stability of the
+two-Higgs-doublet potential, also identifying a literature error.
+These projects share the pattern of using formal verification not merely to
+certify known results but to expose subtle gaps in published proofs.
+Our work extends this program to quantum simulation, providing the first
+machine-checked proof of any product formula for operator exponentials.

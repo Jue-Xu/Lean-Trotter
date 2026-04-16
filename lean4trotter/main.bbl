@@ -1,0 +1,82 @@
+\begin{thebibliography}{11}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Childs et~al.(2021)Childs, Su, Tran, Wiebe, and
+  Zhu]{childsTheoryTrotterError2021}
+Andrew~M. Childs, Yuan Su, Minh~C. Tran, Nathan Wiebe, and Shuchen Zhu.
+\newblock Theory of {{Trotter Error}} with {{Commutator Scaling}}.
+\newblock \emph{Physical Review X}, 11\penalty0 (1):\penalty0 011020, February
+  2021.
+\newblock ISSN 2160-3308.
+\newblock \doi{10.1103/PhysRevX.11.011020}.
+\newblock URL \url{http://arxiv.org/abs/1912.08854}.
+
+\bibitem[de~Moura and Ullrich(2021)]{demoura2021lean4}
+Leonardo de~Moura and Sebastian Ullrich.
+\newblock The {L}ean~4 theorem prover and programming language.
+\newblock In \emph{International Conference on Automated Deduction}, pages
+  625--635. Springer, 2021.
+
+\bibitem[Lloyd(1996)]{lloydUniversalQuantumSimulators1996}
+Seth Lloyd.
+\newblock Universal {{Quantum Simulators}}.
+\newblock \emph{Science}, 273\penalty0 (5278):\penalty0 1073--1078, August
+  1996.
+\newblock ISSN 0036-8075, 1095-9203.
+\newblock \doi{10.1126/science.273.5278.1073}.
+\newblock URL \url{https://science.sciencemag.org/content/273/5278/1073}.
+
+\bibitem[Meiburg et~al.(2025)Meiburg, Lessa, and
+  Soldati]{meiburg2025steinlemma}
+Alex Meiburg, Leonardo~A. Lessa, and Rodolfo~R. Soldati.
+\newblock A formalization of the generalized quantum {S}tein's lemma in {L}ean,
+  2025.
+
+\bibitem[Ren et~al.(2026)Ren, Li, and Qi]{ren2026merlean}
+Yuanjie Ren, Jinzheng Li, and Yidi Qi.
+\newblock {MerLean}: An agentic framework for autoformalization in quantum
+  computation, 2026.
+
+\bibitem[Strang(1968)]{strang1968construction}
+Gilbert Strang.
+\newblock On the construction and comparison of difference schemes.
+\newblock \emph{SIAM Journal on Numerical Analysis}, 5\penalty0 (3):\penalty0
+  506--517, 1968.
+
+\bibitem[Suzuki(1991)]{suzukiGeneralTheoryFractal1991}
+Masuo Suzuki.
+\newblock General theory of fractal path integrals with applications to
+  many-body theories and statistical physics.
+\newblock \emph{Journal of Mathematical Physics}, 32\penalty0 (2):\penalty0
+  400--407, February 1991.
+\newblock ISSN 0022-2488.
+\newblock \doi{10.1063/1.529425}.
+\newblock URL \url{https://doi.org/10.1063/1.529425}.
+
+\bibitem[{The Mathlib Community}(2020)]{mathlib2020}
+{The Mathlib Community}.
+\newblock The {L}ean mathematical library.
+\newblock \emph{Proceedings of the 9th ACM SIGPLAN International Conference on
+  Certified Programs and Proofs}, pages 367--381, 2020.
+
+\bibitem[Tooby-Smith(2026)]{toobysmith2026higgs}
+Joseph Tooby-Smith.
+\newblock Formalizing the stability of the two {H}iggs doublet model potential
+  into {L}ean: identifying an error in the literature, 2026.
+
+\bibitem[Trotter(1959)]{trotter1959product}
+Hale~F. Trotter.
+\newblock On the product of semi-groups of operators.
+\newblock \emph{Proceedings of the American Mathematical Society}, 10\penalty0
+  (4):\penalty0 545--551, 1959.
+
+\bibitem[Zhao and Yu(2025)]{zhao2025chsh}
+Tianrun Zhao and Nengkun Yu.
+\newblock Formalizing {CHSH} rigidity in {L}ean~4.
+\newblock \emph{arXiv preprint arXiv:2604.03884}, 2025.
+
+\end{thebibliography}

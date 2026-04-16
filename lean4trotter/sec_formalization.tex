@@ -1,0 +1,236 @@
+\section{Formalization in Lean~4}
+\label{sec:formalization}
+
+\subsection{Project structure and statistics}
+\label{sec:project-structure}
+
+The formalization is organized into 13~Lean source files, listed in
+\cref{tab:files}. Each file is self-contained with explicit imports,
+enabling parallel development and independent verification.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}lrl@{}}
+\toprule
+\textbf{File} & \textbf{Lines} & \textbf{Content} \\
+\midrule
+\leansrc{Telescoping.lean}       & 106  & Algebraic telescoping + norm bound \\
+\leansrc{ExpBounds.lean}         & 212  & Exponential series remainder estimates \\
+\leansrc{StepError.lean}         & 674  & Quadratic step error (algebraic factorization) \\
+\leansrc{ExpDivPow.lean}         & 54   & $(e^{a/n})^n = e^a$ \\
+\leansrc{Assembly.lean}          & 146  & $O(1/n)$ convergence + main theorem \\
+\leansrc{StrangSplitting.lean}   & 492  & Strang splitting, $O(1/n^2)$ \\
+\leansrc{MultiOperator.lean}     & 288  & Multi-operator first-order \\
+\leansrc{MultiStrang.lean}       & 428  & Multi-operator Strang \\
+\leansrc{Suzuki4.lean}           & 466  & Fourth-order Suzuki integrator \\
+\leansrc{CommutatorScaling.lean} & 379  & Duhamel commutator-scaling \\
+\leansrc{MultiCommutatorScaling.lean}      & 128 & Multi-operator comm.\ scaling \\
+\leansrc{StrangCommutatorScaling.lean}     & 733 & Strang double-commutator scaling \\
+\leansrc{MultiStrangCommutatorScaling.lean}& 174 & Multi-op.\ Strang comm.\ scaling \\
+\midrule
+\textbf{Total} & \textbf{4\,280} & \textbf{0 \texttt{sorry} axioms} \\
+\bottomrule
+\end{tabular}
+\caption{Source files in the formalization.}
+\label{tab:files}
+\end{table}
+
+The development builds against Lean~4.29.0 and \Mathlib (commit
+\texttt{06a46dae}). Build time is under 3~seconds on a standard laptop
+after \Mathlib oleans are cached (\texttt{lake exe cache get}).
+
+\subsection{Type-level setup}
+\label{sec:type-setup}
+
+Our theorems are stated for a general complete normed algebra $\A$ over a
+field $\mathbb{K} \in \{\mathbb{R}, \mathbb{C}\}$:
+
+\begin{leancode}
+variable {K : Type*} [RCLike K]
+variable {A : Type*} [NormedRing A] [NormedAlgebra K A]
+  [NormOneClass A] [CompleteSpace A]
+\end{leancode}
+
+The typeclass \texttt{NormOneClass} requires $\norm{1} = 1$, which is needed
+for \texttt{norm\_pow\_le} in current \Mathlib. The main theorem is
+(\leanref{Assembly.lean}{121}{lie\_trotter}):
+
+\begin{leancode}
+theorem lie_trotter (A B : A) :
+    Filter.Tendsto
+      (fun n : N => (exp ((n : K)^{-1} * A) *
+                     exp ((n : K)^{-1} * B)) ^ n)
+      atTop (nhds (exp (A + B)))
+\end{leancode}
+
+\paragraph{The \texttt{include} pattern.}
+Since \texttt{NormedSpace.exp} no longer takes a field parameter in recent
+\Mathlib, the variable $\mathbb{K}$ does not appear in the type of theorems
+involving \texttt{exp}. Lean~4 drops unused type-level variables, so we must
+write \texttt{include K in} before each lemma whose proof (but not statement)
+requires $\mathbb{K}$
+(e.g., \leanref{ExpBounds.lean}{34}{exp\_tsum\_form}):
+
+\begin{leancode}
+include K in
+lemma exp_tsum_form (a : A) :
+    exp a = \sum' n, (((Nat.factorial n : K)^{-1}) * a ^ n : A) := by ...
+\end{leancode}
+
+\subsection{Telescoping in Lean}
+\label{sec:lean-telescoping}
+
+The telescoping identity~\eqref{eq:telescoping} is proved by induction on $n$
+using \texttt{Finset.sum\_range\_succ} to peel off the last term
+(\leanref{Telescoping.lean}{32}{telescoping\_direct}):
+
+\begin{leancode}
+theorem telescoping_direct (X Y : R) (n : N) :
+    (sum k in Finset.range n,
+      X ^ k * (X - Y) * Y ^ (n - 1 - k)) =
+      X ^ n - Y ^ n := by
+  induction n with
+  | zero => simp
+  | succ m ih =>
+    rw [Finset.sum_range_succ]
+    -- Factor Y from the inner sum to get the
+    -- inductive hypothesis
+    ...
+    noncomm_ring [pow_succ]
+\end{leancode}
+
+The final step uses \texttt{noncomm\_ring}, which handles polynomial identities
+in non-commutative rings. The standard \texttt{ring} tactic silently fails on
+non-commutative goals---it produces an unsolved subgoal rather than an error,
+which cost us significant debugging time early in the project.
+
+\subsection{Exponential bounds: filling Mathlib gaps}
+\label{sec:lean-exp-bounds}
+
+The bound $\norm{e^a} \le e^{\norm{a}}$ was not available in \Mathlib for
+general Banach algebras. Our proof works from the tsum representation
+(\leanref{ExpBounds.lean}{72}{norm\_exp\_le}):
+
+\begin{leancode}
+theorem norm_exp_le (a : A) :
+    ||exp a|| <= Real.exp ||a|| := by
+  rw [exp_tsum_form (K := K) a]
+  calc ||sum' n, ...||
+      <= sum' n, ||...||     -- norm_tsum_le_tsum_norm
+    _ <= sum' n, ||a||^n / n! -- norm_exp_term_le
+    _ = Real.exp ||a||        -- Real.hasSum_exp
+\end{leancode}
+
+The proof chains three standard ingredients: pulling the norm inside the tsum,
+bounding each term $\norm{a^n/n!} \le \norm{a}^n/n!$ via submultiplicativity,
+and recognizing the resulting series as $e^{\norm{a}}$.
+
+\subsection{Step error: algebraic factorization in Lean}
+\label{sec:lean-step-error}
+
+The factorization~\eqref{eq:factorization} is verified by \texttt{noncomm\_ring}.
+The cross-term bound~\eqref{eq:cross-term} is proved by induction using the
+non-commutative recurrence
+(\leanref{StepError.lean}{43}{norm\_pow\_add\_sub\_pow\_sub\_pow}):
+
+\begin{leancode}
+theorem norm_pow_add_sub_pow_sub_pow (a b : A) :
+    forall m : N, 1 <= m ->
+    ||(a + b) ^ m - a ^ m - b ^ m|| <=
+      (||a|| + ||b||) ^ m - ||a|| ^ m - ||b|| ^ m := by
+  intro m hm
+  induction m with
+  | zero => omega
+  | succ n ih => ...
+\end{leancode}
+
+At 674~lines, \leansrc{StepError.lean} is the longest file in the basic
+Lie--Trotter development (excluding commutator-scaling extensions).
+The inductive cross-term bound accounts for roughly half of this length,
+because each step requires explicit \texttt{norm\_mul\_le} applications and
+\texttt{gcongr} for the inductive comparison.
+
+\subsection{Commutator scaling: calculus in Lean}
+\label{sec:lean-commutator}
+
+The commutator-scaling proofs are the most technically demanding part of the
+formalization, as they require doing analysis---derivatives, interval integrals,
+FTC-2---in a non-commutative Banach algebra.
+
+\paragraph{Derivative computations.}
+The derivative $d/d\tau[e^{\tau B}] = B\,e^{\tau B}$ is provided by
+\texttt{hasDerivAt\_exp\_smul\_const'} in \Mathlib. The product rule
+\texttt{HasDerivAt.mul} extends to normed algebras. One subtlety:
+$(-\tau) \bullet B$ and $\tau \bullet (-B)$ are definitionally distinct but
+equal; we must normalize before applying derivative lemmas
+(\leanref{CommutatorScaling.lean}{75}{hasDerivAt\_exp\_conj}):
+
+\begin{leancode}
+lemma hasDerivAt_exp_conj (A B : A) (s : R) :
+    HasDerivAt
+      (fun u => exp (u * B) * A * exp ((-u) * B))
+      (exp (s * B) * (B * A - A * B) *
+       exp ((-s) * B)) s := by
+  simp_rw [show forall u : R, (-u) * B = u * (-B)
+    from fun u => by rw [neg_smul, smul_neg]]
+  ...
+\end{leancode}
+
+\paragraph{FTC-2 for integral representations.}
+The conjugation identity~\eqref{eq:conj-ftc} and the integral error
+representation~\eqref{eq:integral-error} are proved by
+\texttt{integral\_eq\_sub\_of\_hasDerivAt}
+(\leanref{CommutatorScaling.lean}{157}{exp\_conj\_sub\_eq\_integral}):
+
+\begin{leancode}
+theorem exp_conj_sub_eq_integral (A B : A) (t : R) :
+    exp (t * B) * A * exp ((-t) * B) - A =
+      integral s in (0 : R)..t,
+        exp (s * B) * (B * A - A * B) *
+        exp ((-s) * B) := by
+  have hderiv : forall u in Set.uIcc 0 t,
+      HasDerivAt ... := fun u _ =>
+    hasDerivAt_exp_conj A B u
+  have hint : IntervalIntegrable ... :=
+    (continuous_exp_conj_deriv A B).intervalIntegrable 0 t
+  exact (integral_eq_sub_of_hasDerivAt hderiv hint).symm
+\end{leancode}
+
+\paragraph{Pulling constants through integrals.}
+In a \texttt{NormedRing}, left-multiplication by a fixed element $c$ is
+\emph{not} a scalar multiplication---it is ring multiplication. To derive
+$c \cdot \int f = \int c \cdot f$, we use
+\texttt{ContinuousLinearMap.intervalIntegral\_comp\_comm} with
+$L = \texttt{ContinuousLinearMap.mul}\ \mathbb{R}\ \A\ c$, which views
+left-multiplication as a continuous linear map.
+
+\paragraph{Working over $\mathbb{R}$.}
+The commutator-scaling files work over $\texttt{NormedAlgebra}\ \mathbb{R}\ \A$
+directly, rather than a general $\mathbb{K}$. The reason is that the
+\texttt{HasDerivAt}/\texttt{intervalIntegral} machinery requires
+$\texttt{SMul}\ \mathbb{R}\ \A$, which is \emph{not} automatically synthesized
+from $\texttt{[RCLike K] [NormedAlgebra K A]}$. For applications with
+$\mathbb{K} = \mathbb{C}$, one can use
+$\texttt{NormedAlgebra.restrictScalars}\ \mathbb{R}\ \mathbb{C}\ \A$.
+
+\subsection{Multi-operator and Suzuki extensions}
+\label{sec:lean-extensions}
+
+The multi-operator formulas are proved by induction on the list of operators.
+The palindromic product is defined recursively
+(\leanref{MultiStrangCommutatorScaling.lean}{42}{palindromicProd}):
+
+\begin{leancode}
+def palindromicProd (ops : List A) (t : R) : A :=
+  match ops with
+  | [] => 1
+  | [a] => exp (t * a)
+  | a :: rest =>
+    exp ((t / 2) * a) *
+    palindromicProd rest t *
+    exp ((t / 2) * a)
+\end{leancode}
+
+The inductive step peels off the outermost $e^{tA_1/2}$ factors and applies the
+two-operator Strang bound to the pair $(A_1, A_2 + \cdots + A_m)$, then
+recurses on the inner product.

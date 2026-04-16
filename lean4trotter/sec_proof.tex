@@ -1,0 +1,339 @@
+\section{Proof Architecture}
+\label{sec:proof}
+
+Our formalization is organized into five independent tracks that compose to yield
+the main theorem and its extensions. \Cref{fig:dag} shows the dependency
+structure. We present the mathematical arguments here; the Lean formalization
+is discussed in \cref{sec:formalization}.
+
+\begin{figure}[ht]
+\centering
+\small
+\[
+\underbrace{
+  \begin{array}{c}
+  \texttt{Telescoping} \\[2pt]
+  X^n - Y^n = \sum X^k(X{-}Y)Y^{n{-}1{-}k}
+  \end{array}
+}_{\text{Track 1}}
+\quad
+\underbrace{
+  \begin{array}{c}
+  \texttt{ExpBounds} \\[2pt]
+  \|e^a\| \le e^{\|a\|}
+  \end{array}
+}_{\text{Track 2}}
+\quad
+\underbrace{
+  \begin{array}{c}
+  \texttt{ExpDivPow} \\[2pt]
+  (e^{a/n})^n = e^a
+  \end{array}
+}_{\text{Track 4}}
+\]
+\[
+\downarrow \qquad\qquad\qquad\qquad \downarrow
+\]
+\[
+\underbrace{
+  \begin{array}{c}
+  \texttt{StepError} \\[2pt]
+  \|e^a e^b - e^{a+b}\| \le 2\|a\|\|b\|\,e^{\|a\|+\|b\|}
+  \end{array}
+}_{\text{Track 3 (depends on Track 2)}}
+\]
+\[
+\downarrow
+\]
+\[
+\boxed{
+  \begin{array}{c}
+  \texttt{Assembly} \\[2pt]
+  (e^{A/n}\,e^{B/n})^n \to e^{A+B} \quad [O(1/n)]
+  \end{array}
+}
+\]
+\[
+\swarrow \qquad\qquad\qquad \searrow
+\]
+\[
+\underbrace{
+  \begin{array}{c}
+  \texttt{StrangSplitting} \\[2pt]
+  O(1/n^2)
+  \end{array}
+}_{\text{Extensions}}
+\quad
+\underbrace{
+  \begin{array}{c}
+  \texttt{Multi\{Operator,Strang\}} \\[2pt]
+  m\text{-operator}
+  \end{array}
+}_{\text{Extensions}}
+\quad
+\underbrace{
+  \begin{array}{c}
+  \texttt{CommutatorScaling} \\[2pt]
+  \|[B,A]\|\text{-scaling}
+  \end{array}
+}_{\text{Track 5 (independent)}}
+\]
+\caption{Dependency structure of the formalization.
+  Tracks~1--4 compose into the main theorem; extensions branch from the
+  assembly or develop independently.}
+\label{fig:dag}
+\end{figure}
+
+\subsection{Modular decomposition}
+\label{sec:modular}
+
+The proof of the Lie--Trotter formula decomposes into four independent
+components:
+\begin{description}[leftmargin=1.5em]
+  \item[Track~1 (Algebraic):] The telescoping identity and its norm bound.
+  \item[Track~2 (Analytic):] Exponential series remainder estimates.
+  \item[Track~3 (Step error):] The single-step approximation bound
+    $\norm{e^a\,e^b - e^{a+b}} \le 2\norm{a}\norm{b}\,e^{\norm{a}+\norm{b}}$.
+  \item[Track~4 (Connecting):] The identity $(e^{a/n})^n = e^a$.
+\end{description}
+Tracks 1--4 are combined in an assembly step to yield the convergence rate,
+from which the limit theorem follows by a standard $\varepsilon$-$N$ argument.
+The commutator-scaling bounds (Track~5) are an independent extension that
+refines the step error.
+
+\subsection{Telescoping and norm bounds}
+\label{sec:telescoping}
+
+The algebraic identity
+\begin{equation}\label{eq:telescoping}
+  X^n - Y^n = \sum_{k=0}^{n-1} X^k\,(X-Y)\,Y^{n-1-k}
+\end{equation}
+is proved by induction on $n$. The key step is factoring $Y$ out of the inner
+sum to match the inductive hypothesis: writing $Y^{m-k} = Y^{m-1-k} \cdot Y$
+converts $\sum_{k<m} X^k(X-Y)Y^{m-k}$ into $(\sum_{k<m} X^k(X-Y)Y^{m-1-k}) \cdot Y$.
+
+The norm bound follows by the triangle inequality applied to each summand:
+\begin{equation}\label{eq:norm-telescoping}
+  \norm{X^n - Y^n} \le n\,\norm{X-Y}\,M^{n-1},
+  \qquad M = \max\{\norm{X}, \norm{Y}\}.
+\end{equation}
+
+\subsection{Exponential series estimates}
+\label{sec:exp-bounds}
+
+We establish four bounds on the exponential in a complete normed algebra:
+\begin{align}
+  \norm{e^a} &\le e^{\norm{a}},
+    \label{eq:norm-exp} \\
+  \norm{e^a - 1} &\le e^{\norm{a}} - 1,
+    \label{eq:norm-exp-sub-one} \\
+  e^x - 1 - x &\le \tfrac{x^2}{2}\,e^x
+    \quad (x \ge 0),
+    \label{eq:exp-quadratic} \\
+  \norm{e^a - 1 - a} &\le \tfrac{\norm{a}^2}{2}\,e^{\norm{a}}.
+    \label{eq:norm-exp-quadratic}
+\end{align}
+
+The proofs use the power series representation $e^a = \sum_{n=0}^{\infty} a^n/n!$.
+Bounds \eqref{eq:norm-exp}--\eqref{eq:norm-exp-sub-one} follow from
+$\norm{\sum a^n/n!} \le \sum \norm{a}^n/n! = e^{\norm{a}}$ with appropriate
+index shifts. Bound \eqref{eq:exp-quadratic} uses the termwise estimate
+$x^{n+2}/(n+2)! \le (x^2/2) \cdot x^n/n!$ via the factorial inequality
+$2 \cdot n! \le (n+2)!$. Bound \eqref{eq:norm-exp-quadratic} combines
+\eqref{eq:exp-quadratic} with the same tsum comparison technique as
+\eqref{eq:norm-exp}.
+
+\begin{remark}
+  Bound \eqref{eq:norm-exp} was not available in \Mathlib for general
+  Banach algebras; \Mathlib only had the specialized result
+  \texttt{Complex.norm\_exp\_le\_exp\_norm} for $\mathbb{C}$.
+  Our proof from the power series fills this gap.
+\end{remark}
+
+\subsection{Step error via algebraic factorization}
+\label{sec:step-error}
+
+The single-step bound is the most delicate component. Rather than expanding
+$e^a\,e^b$ and $e^{a+b}$ to second order and bounding cross-terms directly
+(which is tractable on paper but unwieldy in a proof assistant due to
+non-commutative bookkeeping), we use an algebraic factorization:
+\begin{equation}\label{eq:factorization}
+  e^a\,e^b - e^{a+b}
+    = (e^a - 1)(e^b - 1) - \bigl(e^{a+b} - e^a - e^b + 1\bigr).
+\end{equation}
+The first term is bounded by $(e^{\norm{a}}-1)(e^{\norm{b}}-1)$ via
+\eqref{eq:norm-exp-sub-one}. For the second (cross) term, we prove by
+induction on the power $m$ that
+\begin{equation}\label{eq:cross-term}
+  \norm{(a+b)^m - a^m - b^m}
+    \le (\norm{a}+\norm{b})^m - \norm{a}^m - \norm{b}^m
+    \qquad (m \ge 1),
+\end{equation}
+using the non-commutative recurrence
+$(a+b)^{m+1} - a^{m+1} - b^{m+1} = (a+b)\bigl((a+b)^m - a^m - b^m\bigr) + ab^m + ba^m$.
+Summing over the exponential series, the cross term is also bounded by
+$(e^{\norm{a}}-1)(e^{\norm{b}}-1)$, so by the triangle inequality:
+\begin{equation}\label{eq:step-bound}
+  \norm{e^a\,e^b - e^{a+b}}
+    \le 2(e^{\norm{a}}-1)(e^{\norm{b}}-1)
+    \le 2\norm{a}\norm{b}\,e^{\norm{a}+\norm{b}},
+\end{equation}
+where the last step uses $(e^s-1)(e^t-1) \le st\,e^{s+t}$ for $s,t \ge 0$.
+
+\begin{remark}
+  The factorization \eqref{eq:factorization} was discovered during
+  formalization: the standard second-order expansion approach required
+  tracking non-commutative multinomial cross-terms, which was intractable
+  in Lean. The algebraic factorization reduces the problem to two
+  independent bounds, each handled by series comparison.
+\end{remark}
+
+\subsection{Assembly and convergence}
+\label{sec:assembly}
+
+Setting $P = e^{A/n}\,e^{B/n}$ and $Q = e^{(A+B)/n}$:
+\begin{enumerate}
+  \item $Q^n = e^{A+B}$ by the identity $(e^{a/n})^n = e^a$
+    (\leanref{ExpDivPow.lean}{31}{exp\_div\_pow}).
+  \item $\norm{P-Q} \le 2\norm{A}\norm{B}/n^2 \cdot e^{(\norm{A}+\norm{B})/n}$
+    by the step error with $a = A/n$, $b = B/n$.
+  \item $\max\{\norm{P},\norm{Q}\} \le e^{(\norm{A}+\norm{B})/n}$ by
+    \eqref{eq:norm-exp}.
+  \item Telescoping gives
+    $\norm{P^n - Q^n} \le n \cdot \norm{P-Q} \cdot M^{n-1}$.
+  \item The factors $e^{(\norm{A}+\norm{B})/n}$ combine:
+    $e^{s/n} \cdot (e^{s/n})^{n-1} = (e^{s/n})^n = e^s$, yielding
+    \[
+      \norm{(e^{A/n}\,e^{B/n})^n - e^{A+B}}
+        \le \frac{2\norm{A}\norm{B}\,e^{\norm{A}+\norm{B}}}{n}.
+    \]
+\end{enumerate}
+The main theorem $\lim_{n\to\infty} (e^{A/n}\,e^{B/n})^n = e^{A+B}$ follows
+by a standard $\varepsilon$-$N$ argument using the Archimedean property.
+
+\subsection{Duhamel approach to commutator scaling}
+\label{sec:commutator}
+
+The commutator-scaling bound \eqref{eq:comm-first} replaces the product
+$\norm{A}\norm{B}$ with $\norm{\comm{B}{A}}$. Our proof uses a
+variation-of-parameters (Duhamel) technique based on the fundamental theorem
+of calculus, avoiding ODE uniqueness theory entirely.
+
+\paragraph{Integral error representation.}
+Define the ``conjugated Trotter product''
+\begin{equation}\label{eq:w-def}
+  w(\tau) = e^{-\tau(A+B)}\,e^{\tau B}\,e^{\tau A}.
+\end{equation}
+By the product rule for Fr\'{e}chet derivatives in a normed algebra,
+\begin{equation}\label{eq:w-deriv}
+  w'(\tau) = e^{-\tau(A+B)}\,\bigl(e^{\tau B}\,A - A\,e^{\tau B}\bigr)\,e^{\tau A}
+  = e^{-\tau(A+B)}\,\comm{e^{\tau B}}{A}\,e^{\tau A}.
+\end{equation}
+The key cancellation is that the ``free'' terms involving $A+B$, $B$, and $A$
+sum to zero: $-(A+B) + B + A = 0$. The FTC-2 gives
+\begin{equation}\label{eq:integral-error}
+  e^{tB}\,e^{tA} - e^{t(A+B)}
+    = \int_0^t e^{(t-\tau)(A+B)}\,\comm{e^{\tau B}}{A}\,e^{\tau A}\,d\tau,
+\end{equation}
+after left-multiplying by $e^{t(A+B)}$ (which commutes with itself).
+
+\paragraph{Extracting the commutator.}
+The integrand contains $\comm{e^{\tau B}}{A} = e^{\tau B}A - Ae^{\tau B}$,
+which involves the \emph{exponential} of $B$. To extract the bare commutator
+$\comm{B}{A}$, we apply FTC-2 a second time to the conjugation map
+$s \mapsto e^{sB}\,A\,e^{-sB}$:
+\begin{equation}\label{eq:conj-ftc}
+  e^{\tau B}\,A\,e^{-\tau B} - A
+    = \int_0^{\tau} e^{sB}\,\comm{B}{A}\,e^{-sB}\,ds.
+\end{equation}
+This gives $\norm{e^{\tau B}\,A\,e^{-\tau B} - A}
+  \le \norm{\comm{B}{A}}\,\abs{\tau}\,e^{2\abs{\tau}\norm{B}}$
+by bounding the integrand and using
+$\norm{\int_0^\tau f} \le C\abs{\tau}$.
+Right-multiplying by $e^{\tau B}$ yields
+$\norm{\comm{e^{\tau B}}{A}} \le \norm{\comm{B}{A}}\,\abs{\tau}\,e^{3\abs{\tau}\norm{B}}$.
+
+\paragraph{Final bound.}
+Substituting into \eqref{eq:integral-error} and bounding the integral:
+\[
+  \norm{e^{tB}\,e^{tA} - e^{t(A+B)}}
+    \le \int_0^t e^{(t-\tau)(\norm{A}+\norm{B})} \cdot
+      \norm{\comm{B}{A}}\,\tau\,e^{3\tau\norm{B}} \cdot e^{\tau\norm{A}}\,d\tau.
+\]
+Simplifying the exponential factors and evaluating $\int_0^t \tau\,d\tau = t^2/2$
+gives the claimed bound \eqref{eq:comm-first}.
+
+\begin{remark}
+  The Duhamel approach requires only the product rule for Fr\'{e}chet
+  derivatives, the FTC-2 for Bochner integrals, and basic norm estimates---all
+  available in \Mathlib. The alternative approach via Gronwall's inequality
+  would require ODE existence/uniqueness theory, adding approximately 40 lines
+  of additional Lean infrastructure.
+\end{remark}
+
+\subsection{Second-order Strang commutator scaling}
+\label{sec:strang}
+
+For the Strang splitting $S_2(t) = e^{tA/2}\,e^{tB}\,e^{tA/2}$, we prove
+\begin{equation}\label{eq:strang-bound}
+  \norm{S_2(t) - e^{tH}}
+    \le \frac{\norm{\comm{B}{\comm{B}{A}}}}{12}\,t^3
+      + \frac{\norm{\comm{A}{\comm{A}{B}}}}{24}\,t^3,
+\end{equation}
+where $H = A + B$ and we additionally require that $A$ and $B$ are
+\emph{skew-adjoint} ($a^* = -a$), so that $\norm{e^{ta}} = 1$.
+
+The proof applies the same Duhamel strategy to
+$w(\tau) = e^{-\tau H}\,S_2(\tau)$, but now requires:
+\begin{enumerate}
+  \item A \emph{4-factor product rule} for $S_2(\tau) = e^{\tau A/2}\,e^{\tau B}\,e^{\tau A/2}$,
+    yielding $w'(\tau) = e^{-\tau H}\,\mathcal{T}_2(\tau)\,S_2(\tau)$, where $\mathcal{T}_2$
+    involves the commutators $\comm{A/2}{e^{\tau B}}$ and $\comm{e^{\tau B}}{A/2}$.
+
+  \item \emph{First-order cancellation}: the leading commutator terms cancel
+    exactly: $\comm{A/2}{B} + \comm{B}{A/2} = 0$.
+
+  \item A \emph{double FTC} on $s \mapsto e^{sB}\,A\,e^{-sB}$, expanding to
+    second order to extract $\comm{B}{\comm{B}{A}}$.
+
+  \item The \emph{``subtract-constant-at-$\tau$'' trick}: to bound
+    $\int_0^\tau F(s)\,ds - \tau\,F(\tau)$, rewrite as
+    $\int_0^\tau (F(s) - F(\tau))\,ds$ and bound $\norm{F(s) - F(\tau)}
+    \le C_A(\tau - s)$.
+    This avoids Fubini's theorem or integration by parts.
+\end{enumerate}
+
+\paragraph{The 4-factor product rule.}
+Write $A' = A/2$ and $H = A + B$. The conjugated Strang product
+\[
+  w(\tau) = e^{-\tau H}\,e^{\tau A'}\,e^{\tau B}\,e^{\tau A'}
+\]
+has four exponential factors, each contributing a derivative term via the
+Leibniz rule. Using $d/d\tau[e^{\tau X}] = X\,e^{\tau X}$ and collecting:
+\begin{equation}\label{eq:4factor}
+  w'(\tau) = e^{-\tau H}\,\mathcal{T}_2(\tau)\,S_2(\tau),
+\end{equation}
+where the \emph{Strang residual} is
+\[
+  \mathcal{T}_2(\tau)
+    = \bigl(e^{\tau A'}\,B\,e^{-\tau A'} - B\bigr)
+      + e^{\tau A'}\bigl(e^{\tau B}\,A'\,e^{-\tau B} - A'\bigr)e^{-\tau A'}.
+\]
+The key algebraic step is verifying that the ``free'' derivative terms
+$-H + A' + B + A'$ sum to zero (since $A' + A' = A$ and $H = A + B$).
+In Lean, the sum of the four derivative contributions is factored as
+$-(e^{-\tau H}) \cdot (H - A' - A' - B) \cdot S_2(\tau)$, where
+$H - A' - A' - B = 0$ is discharged by \texttt{abel}. The free-ring
+factoring is handled by \texttt{noncomm\_ring}.
+
+\paragraph{Coefficient conversion.}
+Since $A' = A/2$, the double commutators in the final bound involve
+half-scaled operators:
+$\comm{B}{\comm{B}{A'}} = \frac{1}{2}\comm{B}{\comm{B}{A}}$ and
+$\comm{A'}{\comm{A'}{B}} = \frac{1}{4}\comm{A}{\comm{A}{B}}$.
+The scalar factors are extracted through $\comm{cX}{Y} = c\,\comm{X}{Y}$
+(valid for central scalars) using \texttt{Algebra.smul\_mul\_assoc} and
+\texttt{Algebra.mul\_smul\_comm}, then \texttt{norm\_smul}.
+Combined with the integration constants ($1/6$ from the cubic integral
+and $1/2$ from the double FTC), this produces the final coefficients
+$1/12$ and $1/24$ in \eqref{eq:strang-bound}.
