@@ -68,7 +68,12 @@ Lean-Trotter/
 │   ├── MultiStrangCommutatorScaling.lean ← multi-operator Strang commutator scaling
 │   ├── HigherCommutator.lean      ← triple-FTC: extracts [B,[B,[B,A]]] from conjugation
 │   ├── StrangCommutatorScalingTight.lean ← tighter Strang bound via norm-of-difference
-│   └── Suzuki4OrderFive.lean          ← S₄ O(t⁵) bound (1 sorry for Duhamel core)
+│   ├── Suzuki4FullDuhamel.lean    ← S₄ O(t³) via 5-S₂ telescoping (sorry-free)
+│   ├── Suzuki4CommutatorScaling.lean ← `suzuki4Exp` definition (stub theorems removed)
+│   ├── Suzuki4HasDerivAt.lean     ← Module 1: HasDerivAt for 12-factor w₄
+│   ├── Suzuki4Module2.lean        ← Module 2: FTC-2 bridge ‖S₄-exp‖=‖w₄-1‖
+│   ├── Suzuki4Module3.lean        ← Module 3: FTC-2 reduction (residual → C·t⁵/5)
+│   └── Suzuki4OrderFive.lean      ← S₄ O(t⁵) target (1 sorry for Module 4 residual)
 ├── LieTrotter.lean            ← root import file
 ├── lakefile.lean
 ├── lean-toolchain
@@ -311,13 +316,53 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 
 #### Task L: Fourth-Order Suzuki Commutator-Scaling
 
-**Goal:** Derive an S₄ commutator-scaling bound with smaller prefactors than Childs et al. (Proposition 7), whose 8-term bound with coefficients 0.0047–0.0284 is labeled "heuristic" (not proven tight).
+**Goal:** Prove the genuine O(t⁵) S₄ bound with smaller prefactors than Childs et al. (Proposition 7), whose 8-term bound with coefficients 0.0047–0.0284 is labeled "heuristic" (not proven tight).
 
-**Two-phase approach:**
-1. **Optimize within Childs' framework:** Try different split points and term groupings in the 11-exponential Duhamel to find smaller coefficients for the 8 commutator terms.
-2. **Norm-of-difference extension:** Apply the Task K principle to S₄, bounding $\|E_5\|$ (norm of the algebraic error expression) instead of $\sum|\alpha_k|\|C_k\|$ (sum of 8 norms).
+#### Modular architecture (Modules 1-3 complete; Module 4 outstanding)
 
-**Status:** Mathematical feasibility analysis complete (see `claude/S4_feasibility_analysis.md`). Implementation pending.
+| Module | Statement | Status |
+|--------|-----------|--------|
+| L1. `hasDerivAt_w4` | HasDerivAt for `w₄(τ) = exp(-τH)·S₄(τ)` (12-factor product) | ✅ Proved |
+| L2. `norm_suzuki4_diff_eq_norm_relative` | `‖S₄(t)-exp(tH)‖ = ‖w₄(t)-1‖` (anti-Hermitian) | ✅ Proved |
+| L3. `norm_w4_sub_one_le_t5_via_residual` | FTC-2 reduction: residual bound → integrated bound | ✅ Proved |
+| L3'. `norm_suzuki4_order5_via_module3` | S₄ O(t⁵), conditional on residual bound | ✅ Proved (conditional) |
+| L4. (future) `norm_w4_deriv_le_t4` | Pointwise residual bound `‖w4Deriv τ‖ ≤ C·τ⁴` | 🔴 Open (research target) |
+
+**Files:**
+- `LieTrotter/Suzuki4HasDerivAt.lean` (~136 lines) — Module 1
+- `LieTrotter/Suzuki4Module2.lean` (~167 lines) — Module 2
+- `LieTrotter/Suzuki4Module3.lean` (~170 lines) — Module 3
+- `LieTrotter/Suzuki4OrderFive.lean` (~427 lines) — `norm_suzuki4_fifth_order` (the unconditional research target, 1 sorry)
+
+**Current architecture (Modules 1-3 sorry-free):**
+
+```
+Module 1 (HasDerivAt for 12-factor w₄)
+       ↓
+Module 2 (FTC-2 bridge: ‖S₄-exp‖ = ‖w₄-1‖)
+       ↓
+Module 3 (FTC-2 reduction: residual bound → C·t⁵/5)
+       ↓
+norm_suzuki4_order5_via_module3 (conditional on Module 4)
+```
+
+**Module 4 (research-target, the only remaining sorry):**
+
+Produce the pointwise residual bound `‖w4Deriv A B p τ‖ ≤ C·τ⁴` from the Suzuki order conditions. Requires:
+1. Explicit form for `w4Deriv` (replacing the `Classical.choose` from Module 2): compute the 12-term product-rule expansion and simplify to `exp(-τH) · 𝒯₄(τ) · S₄(τ)` where 𝒯₄ is a sum of 11 conjugation differences.
+2. Continuity of `w4Deriv` (follows from the explicit form).
+3. Order-condition cancellation (orders 0-3 of 𝒯₄ vanish):
+   - Order 0: `suzuki4_free_term` (✅ proved)
+   - Order 1: palindromic symmetry of S₄
+   - Order 2: another polynomial identity
+   - Order 3: `suzuki4_cubic_cancel` (4p³+q³=0, ✅ proved)
+4. Order-4 residual bound via 4-fold commutator FTC iteration.
+
+**Tighter bounds (existing, fully proved):**
+- `norm_suzuki4_comm_scaling`: O(t³) via 5-S₂ telescoping (norm-of-sum)
+- `norm_suzuki4_tight_proved`: O(t³)+O(t⁴) with norm-of-difference D and triple correction T
+
+The genuine O(t⁵) requires the SIGNED cubic cancellation 4p³+q³=0, applied at the integrand level (before norms). The triangle inequality kills this cancellation, which is why Modules 1-3's integrand-level FTC-2 reduction is necessary.
 
 ---
 
@@ -432,7 +477,12 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/MultiStrangCommutatorScaling.lean` | 0 |
 | `LieTrotter/HigherCommutator.lean` | 0 |
 | `LieTrotter/StrangCommutatorScalingTight.lean` | 0 |
-| `LieTrotter/Suzuki4OrderFive.lean` | 1 |
+| `LieTrotter/Suzuki4FullDuhamel.lean` | 0 |
+| `LieTrotter/Suzuki4CommutatorScaling.lean` | 0 (stubs removed; only `suzuki4Exp` def) |
+| `LieTrotter/Suzuki4HasDerivAt.lean` | 0 (Module 1) |
+| `LieTrotter/Suzuki4Module2.lean` | 0 (Module 2) |
+| `LieTrotter/Suzuki4Module3.lean` | 0 (Module 3 — FTC-2 reduction proved) |
+| `LieTrotter/Suzuki4OrderFive.lean` | 1 (unconditional research target — Module 4) |
 | **Total** | **1** |
 
 ## Design Decisions

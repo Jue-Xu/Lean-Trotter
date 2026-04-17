@@ -70,51 +70,19 @@ def suzuki4Exp (A B : 𝔸) (p t : ℝ) : 𝔸 :=
   exp ((a₁ * t) • A)
 
 /-!
-## Phase 1: Exact S₄ commutator-scaling (Childs' framework, rigorous)
+## S₄ commutator-scaling theorems
 
-The 10 interfaces contribute conjugation terms. After expanding to order 3
-and canceling via order conditions, the order-4 remainder involves
-8 independent 4-fold nested commutators [X₄,[X₃,[X₂,[X₁,A']]]] where
-each Xᵢ ∈ {A, B} and the innermost is [B,A] (or [A,B] = -[B,A]).
+The Phase 1/Phase 2 stub theorems originally placed here have been
+SUPERSEDED by the explicit Module 1-3 architecture in:
+- `LieTrotter.Suzuki4HasDerivAt` (Module 1: HasDerivAt)
+- `LieTrotter.Suzuki4Module2` (Module 2: FTC-2 bridge)
+- `LieTrotter.Suzuki4Module3` (Module 3: FTC-2 reduction)
+
+The conditional O(t⁵) S₄ bound is provided by
+`LieTrotter.Suzuki4Module3.norm_suzuki4_order5_via_module3`, which gives
+a CLEAN reduction to a pointwise residual bound on `w4Deriv A B p τ`.
+
+The unconditional (research-target) version remains as
+`LieTrotter.Suzuki4OrderFive.norm_suzuki4_fifth_order` with one sorry
+representing the genuine Module 4 algebraic core.
 -/
-
-/-- **Phase 1: Rigorous S₄ commutator-scaling** (anti-Hermitian).
-
-  `‖S₄(t) - exp(tH)‖ ≤ Σₖ αₖ ‖Cₖ‖ · t⁵`
-
-  where αₖ are EXACT algebraic coefficients (polynomials in p = 1/(4-4^{1/3})).
-  This rigorizes Childs et al. Proposition 7 (which gives 4-decimal approximations). -/
-theorem norm_suzuki4_comm_scaling_exact
-    [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
-    (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t)
-    (hA : star A = -A) (hB : star B = -B) :
-    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤
-      sorry -- 8-term bound with exact algebraic coefficients
-      := by
-  sorry
-
-/-!
-## Phase 2: Norm-of-difference S₄ bound
-
-Instead of 8 separate commutator norms, bound ‖E₅‖ where E₅ is the single
-algebraic error expression. This is always ≤ the Phase 1 bound and strictly
-tighter when the 4-fold commutators partially cancel.
--/
-
-/-- **Phase 2: Tighter S₄ commutator-scaling** (norm-of-difference).
-
-  `‖S₄(t) - exp(tH)‖ ≤ ‖E₅‖ · t⁵ + O(t⁶)`
-
-  where E₅ = Σₖ αₖ Cₖ is the single algebraic error expression.
-  Since ‖E₅‖ ≤ Σ|αₖ|‖Cₖ‖ by the triangle inequality, this is always
-  ≤ the Phase 1 bound and strictly tighter with partial cancellation. -/
-theorem norm_suzuki4_comm_scaling_tight
-    [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
-    (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t)
-    (hA : star A = -A) (hB : star B = -B) :
-    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤
-      sorry -- ‖E₅(A,B)‖ · t⁵ + correction · t⁶
-      := by
-  sorry
