@@ -189,4 +189,32 @@ lemma w4Deriv_funext (A B : 𝔸) (p : ℝ) :
   funext τ
   exact w4Deriv_eq_w4DerivExplicit A B p τ
 
+/-!
+## Module 4b-B1: Order-0 cancellation `w4Deriv A B p 0 = 0`
+
+At τ=0, every exponential factor reduces to `exp(0) = 1`. Each of the
+12 terms in `w4DerivExplicit` collapses to a single `dⱼ` (with
+d₀ = -(A+B)). The sum equals `-(A+B) + Σⱼ₌₁^¹¹ dⱼ = 0` by
+`suzuki4_free_term`.
+-/
+
+/-- **Module 4b-B1**: the derivative `w4Deriv A B p 0` vanishes at τ=0. -/
+lemma w4DerivExplicit_at_zero (A B : 𝔸) (p : ℝ) :
+    w4DerivExplicit A B p 0 = 0 := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  unfold w4DerivExplicit
+  -- All `(c * 0) • X = 0 • X = 0`, `exp 0 = 1`
+  simp only [mul_zero, zero_smul, exp_zero, mul_one, one_mul, neg_zero]
+  -- Remaining goal is an algebraic identity: the 12 dⱼ terms sum to 0
+  -- d₀ = -(A+B), d₁ = p/2•A, d₂ = p•B, ..., d₁₁ = p/2•A
+  -- Sum: -(A+B) + (A+B) = 0 via suzuki4_free_term
+  have hfree := suzuki4_free_term A B p
+  -- hfree : (p/2)•A + p•B + p•A + p•B + ((1-3p)/2)•A + (1-4p)•B +
+  --         ((1-3p)/2)•A + p•B + p•A + p•B + (p/2)•A = A + B
+  linear_combination (norm := module) hfree
+
+/-- Corollary: `w4Deriv A B p 0 = 0`. -/
+lemma w4Deriv_at_zero (A B : 𝔸) (p : ℝ) : w4Deriv A B p 0 = 0 := by
+  rw [w4Deriv_eq_w4DerivExplicit, w4DerivExplicit_at_zero]
+
 end
