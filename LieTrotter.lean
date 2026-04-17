@@ -47,3 +47,4 @@ import LieTrotter.Suzuki4HasDerivAt
 import LieTrotter.Suzuki4Module2
 import LieTrotter.Suzuki4Module3
 import LieTrotter.Suzuki4Module4
+import LieTrotter.Suzuki4ChildsForm

@@ -74,7 +74,8 @@ Lean-Trotter/
 │   ├── Suzuki4Module2.lean        ← Module 2: FTC-2 bridge ‖S₄-exp‖=‖w₄-1‖
 │   ├── Suzuki4Module3.lean        ← Module 3: FTC-2 reduction (residual → C·t⁵/5)
 │   ├── Suzuki4Module4.lean        ← Module 4a: continuity of w4Deriv
-│   └── Suzuki4OrderFive.lean      ← S₄ O(t⁵) target (1 sorry for Module 4b residual)
+│   ├── Suzuki4ChildsForm.lean     ← Childs Prop pf4_bound_2term (8 explicit 4-fold commutators, 1 sorry)
+│   └── Suzuki4OrderFive.lean      ← S₄ O(t⁵) abstract-form target (1 sorry for Module 4b residual)
 ├── LieTrotter.lean            ← root import file
 ├── lakefile.lean
 ├── lean-toolchain
@@ -329,13 +330,16 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 | L3'. `norm_suzuki4_order5_via_module3` | S₄ O(t⁵), conditional on residual bound | ✅ Proved (conditional) |
 | L4a. `continuous_w4Deriv` | Continuity of extracted derivative (via analytic / ContDiff) | ✅ Proved |
 | L4b. (future) `norm_w4_deriv_le_t4` | Pointwise residual bound `‖w4Deriv τ‖ ≤ C·τ⁴` | 🔴 Open (research target) |
+| L5. `norm_suzuki4_childs_via_residual` | Conditional Childs-form bound (8 explicit 4-fold commutators) | ✅ Proved |
+| L5'. `norm_suzuki4_childs_form` | Unconditional Childs Prop pf4_bound_2term | 🔴 Open (= Module 4b) |
 
 **Files:**
 - `LieTrotter/Suzuki4HasDerivAt.lean` (~136 lines) — Module 1
 - `LieTrotter/Suzuki4Module2.lean` (~167 lines) — Module 2
 - `LieTrotter/Suzuki4Module3.lean` (~170 lines) — Module 3
 - `LieTrotter/Suzuki4Module4.lean` (~150 lines) — Module 4a (continuity)
-- `LieTrotter/Suzuki4OrderFive.lean` (~427 lines) — `norm_suzuki4_fifth_order` (the unconditional research target, 1 sorry)
+- `LieTrotter/Suzuki4ChildsForm.lean` (~210 lines) — Childs Prop pf4_bound_2term + conditional reduction
+- `LieTrotter/Suzuki4OrderFive.lean` (~427 lines) — `norm_suzuki4_fifth_order` (alternative-form research target, 1 sorry)
 
 **Current architecture (Modules 1-3 + 4a sorry-free):**
 
@@ -492,8 +496,9 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/Suzuki4Module2.lean` | 0 (Module 2) |
 | `LieTrotter/Suzuki4Module3.lean` | 0 (Module 3 — FTC-2 reduction proved) |
 | `LieTrotter/Suzuki4Module4.lean` | 0 (Module 4a — continuity proved) |
-| `LieTrotter/Suzuki4OrderFive.lean` | 1 (unconditional research target — Module 4b) |
-| **Total** | **1** |
+| `LieTrotter/Suzuki4ChildsForm.lean` | 1 (unconditional Childs Prop pf4_bound_2term — Module 4b) |
+| `LieTrotter/Suzuki4OrderFive.lean` | 1 (alternative-form unconditional bound — Module 4b) |
+| **Total** | **2** |
 
 ## Design Decisions
 
