@@ -74,6 +74,7 @@ Lean-Trotter/
 │   ├── Suzuki4Module2.lean        ← Module 2: FTC-2 bridge ‖S₄-exp‖=‖w₄-1‖
 │   ├── Suzuki4Module3.lean        ← Module 3: FTC-2 reduction (residual → C·t⁵/5)
 │   ├── Suzuki4Module4.lean        ← Module 4a: continuity of w4Deriv
+│   ├── Suzuki4DerivExplicit.lean  ← Module 4b-A1/A2/A3/B1: explicit derivative + order-0
 │   ├── Suzuki4ChildsForm.lean     ← Childs Prop pf4_bound_2term (8 explicit 4-fold commutators, 1 sorry)
 │   └── Suzuki4OrderFive.lean      ← S₄ O(t⁵) abstract-form target (1 sorry for Module 4b residual)
 ├── LieTrotter.lean            ← root import file
@@ -329,9 +330,14 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 | L3. `norm_w4_sub_one_le_t5_via_residual` | FTC-2 reduction: residual bound → integrated bound | ✅ Proved |
 | L3'. `norm_suzuki4_order5_via_module3` | S₄ O(t⁵), conditional on residual bound | ✅ Proved (conditional) |
 | L4a. `continuous_w4Deriv` | Continuity of extracted derivative (via analytic / ContDiff) | ✅ Proved |
-| L4b. (future) `norm_w4_deriv_le_t4` | Pointwise residual bound `‖w4Deriv τ‖ ≤ C·τ⁴` | 🔴 Open (research target) |
+| L4b-A1. `hasDerivAt_w4Explicit` | HasDerivAt with explicit 12-term derivative | ✅ Proved |
+| L4b-A2. `w4Deriv_eq_w4DerivExplicit` | Extracted derivative equals explicit form (uniqueness) | ✅ Proved |
+| L4b-A3. `w4DerivExplicit_eq_exp_mul_residual` | Factorization `w4DerivExplicit = exp(-τH)·w4Residual` | ✅ Proved |
+| L4b-B1. `w4Deriv_at_zero` | Order-0 cancellation `w4Deriv 0 = 0` (uses `suzuki4_free_term`) | ✅ Proved |
+| L4b-B2—B7. (future) | Orders 1-3 cancellations via FTC expansions | 🔴 Open |
+| L4b-C1, C2. (future) | Order-4 residual bound + final assembly | 🔴 Open |
 | L5. `norm_suzuki4_childs_via_residual` | Conditional Childs-form bound (8 explicit 4-fold commutators) | ✅ Proved |
-| L5'. `norm_suzuki4_childs_form` | Unconditional Childs Prop pf4_bound_2term | 🔴 Open (= Module 4b) |
+| L5'. `norm_suzuki4_childs_form` | Unconditional Childs Prop pf4_bound_2term | 🔴 Open (= Module 4b-C2) |
 
 **Files:**
 - `LieTrotter/Suzuki4HasDerivAt.lean` (~136 lines) — Module 1
@@ -341,18 +347,22 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 - `LieTrotter/Suzuki4ChildsForm.lean` (~210 lines) — Childs Prop pf4_bound_2term + conditional reduction
 - `LieTrotter/Suzuki4OrderFive.lean` (~427 lines) — `norm_suzuki4_fifth_order` (alternative-form research target, 1 sorry)
 
-**Current architecture (Modules 1-3 + 4a sorry-free):**
+**Current architecture (Modules 1-3 + 4a + 4b partial sorry-free):**
 
 ```
-Module 1 (HasDerivAt for 12-factor w₄)
+Module 1 (HasDerivAt for 12-factor w₄) ✅
        ↓
-Module 2 (FTC-2 bridge: ‖S₄-exp‖ = ‖w₄-1‖)
+Module 2 (FTC-2 bridge: ‖S₄-exp‖ = ‖w₄-1‖) ✅
        ↓
-Module 3 (FTC-2 reduction: residual bound → C·t⁵/5)
+Module 3 (FTC-2 reduction: residual bound → C·t⁵/5) ✅
        ↓
-Module 4a (continuous_w4Deriv ✓) + Module 4b (residual bound 🔴)
+Module 4a (continuous_w4Deriv ✓)
        ↓
-norm_suzuki4_order5_via_module3 (conditional on Module 4b only)
+Module 4b-A1/A2/A3 (explicit derivative + factorization + order-0 ✓)
+       ↓
+Module 4b-B2-C2 (orders 1-4 order-condition analysis 🔴)
+       ↓
+norm_suzuki4_order5_via_module3 (conditional on residual bound only)
 ```
 
 **Module 4a (continuity, ✅ done):** `continuous_w4Deriv` proved via:
@@ -496,8 +506,9 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/Suzuki4Module2.lean` | 0 (Module 2) |
 | `LieTrotter/Suzuki4Module3.lean` | 0 (Module 3 — FTC-2 reduction proved) |
 | `LieTrotter/Suzuki4Module4.lean` | 0 (Module 4a — continuity proved) |
-| `LieTrotter/Suzuki4ChildsForm.lean` | 1 (unconditional Childs Prop pf4_bound_2term — Module 4b) |
-| `LieTrotter/Suzuki4OrderFive.lean` | 1 (alternative-form unconditional bound — Module 4b) |
+| `LieTrotter/Suzuki4DerivExplicit.lean` | 0 (Module 4b-A1/A2/A3/B1 — 4 sub-tasks proved) |
+| `LieTrotter/Suzuki4ChildsForm.lean` | 1 (unconditional Childs Prop pf4_bound_2term — Module 4b-C2) |
+| `LieTrotter/Suzuki4OrderFive.lean` | 1 (alternative-form unconditional bound — Module 4b-C2) |
 | **Total** | **2** |
 
 ## Design Decisions
