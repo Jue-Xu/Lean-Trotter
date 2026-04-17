@@ -294,4 +294,163 @@ lemma norm_w4DerivExplicit_eq_norm_residual (A B : 𝔸)
 
 end AntiHermitianBound
 
+/-!
+## Module 4b-A3': Cleaner residual form `w4Residual = s4' - H·s4`
+
+The exp-factorization form `w4Residual = exp(τH) · w4DerivExplicit` has
+an equivalent, more tractable expression: `w4Residual = s4DerivExplicit - H · s4Func`.
+
+This follows from the product rule for `w4Func = exp(-τH) · s4Func`:
+  `w4DerivExplicit = -H · exp(-τH) · s4Func + exp(-τH) · s4DerivExplicit`
+                   `= exp(-τH) · (s4DerivExplicit - H · s4Func)`  (using [H, exp(-τH)]=0)
+
+Hence `w4Residual = exp(τH) · w4DerivExplicit = s4DerivExplicit - H · s4Func`.
+
+This form has the advantage that s4DerivExplicit and s4Func are both
+continuously differentiable (no `Classical.choose`), making subsequent
+Taylor / FTC expansions direct.
+-/
+
+/-- Explicit 11-term derivative of `s4Func`. -/
+def s4DerivExplicit (A B : 𝔸) (p : ℝ) (τ : ℝ) : 𝔸 :=
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  let e1  : 𝔸 := exp ((p/2 * τ) • A)
+  let e2  : 𝔸 := exp ((p * τ) • B)
+  let e3  : 𝔸 := exp ((p * τ) • A)
+  let e4  : 𝔸 := exp ((p * τ) • B)
+  let e5  : 𝔸 := exp (((1-3*p)/2 * τ) • A)
+  let e6  : 𝔸 := exp (((1-4*p) * τ) • B)
+  let e7  : 𝔸 := exp (((1-3*p)/2 * τ) • A)
+  let e8  : 𝔸 := exp ((p * τ) • B)
+  let e9  : 𝔸 := exp ((p * τ) • A)
+  let e10 : 𝔸 := exp ((p * τ) • B)
+  let e11 : 𝔸 := exp ((p/2 * τ) • A)
+  let d1  : 𝔸 := (p/2 : ℝ) • A
+  let d2  : 𝔸 := (p : ℝ) • B
+  let d3  : 𝔸 := (p : ℝ) • A
+  let d4  : 𝔸 := (p : ℝ) • B
+  let d5  : 𝔸 := ((1-3*p)/2 : ℝ) • A
+  let d6  : 𝔸 := ((1-4*p) : ℝ) • B
+  let d7  : 𝔸 := ((1-3*p)/2 : ℝ) • A
+  let d8  : 𝔸 := (p : ℝ) • B
+  let d9  : 𝔸 := (p : ℝ) • A
+  let d10 : 𝔸 := (p : ℝ) • B
+  let d11 : 𝔸 := (p/2 : ℝ) • A
+  -- 11 product-rule terms
+  (d1 * e1) * e2 * e3 * e4 * e5 * e6 * e7 * e8 * e9 * e10 * e11
+  + e1 * (d2 * e2) * e3 * e4 * e5 * e6 * e7 * e8 * e9 * e10 * e11
+  + e1 * e2 * (d3 * e3) * e4 * e5 * e6 * e7 * e8 * e9 * e10 * e11
+  + e1 * e2 * e3 * (d4 * e4) * e5 * e6 * e7 * e8 * e9 * e10 * e11
+  + e1 * e2 * e3 * e4 * (d5 * e5) * e6 * e7 * e8 * e9 * e10 * e11
+  + e1 * e2 * e3 * e4 * e5 * (d6 * e6) * e7 * e8 * e9 * e10 * e11
+  + e1 * e2 * e3 * e4 * e5 * e6 * (d7 * e7) * e8 * e9 * e10 * e11
+  + e1 * e2 * e3 * e4 * e5 * e6 * e7 * (d8 * e8) * e9 * e10 * e11
+  + e1 * e2 * e3 * e4 * e5 * e6 * e7 * e8 * (d9 * e9) * e10 * e11
+  + e1 * e2 * e3 * e4 * e5 * e6 * e7 * e8 * e9 * (d10 * e10) * e11
+  + e1 * e2 * e3 * e4 * e5 * e6 * e7 * e8 * e9 * e10 * (d11 * e11)
+
+/-- `HasDerivAt (s4Func A B p) (s4DerivExplicit A B p τ) τ`. -/
+lemma hasDerivAt_s4Explicit (A B : 𝔸) (p τ : ℝ) :
+    HasDerivAt (s4Func A B p) (s4DerivExplicit A B p τ) τ := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  -- Per-factor derivatives at τ (same as in hasDerivAt_w4Explicit)
+  have h1  := hasDerivAt_exp_smul_mul' A (p/2) τ
+  have h2  := hasDerivAt_exp_smul_mul' B p τ
+  have h3  := hasDerivAt_exp_smul_mul' A p τ
+  have h4  := hasDerivAt_exp_smul_mul' B p τ
+  have h5  := hasDerivAt_exp_smul_mul' A ((1-3*p)/2) τ
+  have h6  := hasDerivAt_exp_smul_mul' B (1-4*p) τ
+  have h7  := hasDerivAt_exp_smul_mul' A ((1-3*p)/2) τ
+  have h8  := hasDerivAt_exp_smul_mul' B p τ
+  have h9  := hasDerivAt_exp_smul_mul' A p τ
+  have h10 := hasDerivAt_exp_smul_mul' B p τ
+  have h11 := hasDerivAt_exp_smul_mul' A (p/2) τ
+  have hs2  := h1.mul h2
+  have hs3  := hs2.mul h3
+  have hs4  := hs3.mul h4
+  have hs5  := hs4.mul h5
+  have hs6  := hs5.mul h6
+  have hs7  := hs6.mul h7
+  have hs8  := hs7.mul h8
+  have hs9  := hs8.mul h9
+  have hs10 := hs9.mul h10
+  have hs11 := hs10.mul h11
+  convert hs11 using 1
+  show s4DerivExplicit A B p τ = _
+  unfold s4DerivExplicit
+  simp only [Pi.mul_apply]
+  noncomm_ring
+
+/-- **Module 4b-A3'**: `w4Residual = s4DerivExplicit - (A+B)·s4Func`.
+
+  This is the cleaner residual form, avoiding the `Classical.choose` inside. -/
+lemma w4Residual_eq_s4Deriv_sub_H_s4 (A B : 𝔸) (p τ : ℝ) :
+    w4Residual A B p τ = s4DerivExplicit A B p τ - (A + B) * s4Func A B p τ := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  -- Strategy: use HasDerivAt uniqueness to relate w4DerivExplicit and s4DerivExplicit
+  -- via the product rule for w4Func = exp(-τH) * s4Func.
+  -- w4DerivExplicit = d/dτ w4Func = (d/dτ exp(-τH)) * s4Func + exp(-τH) * s4DerivExplicit
+  --                = -H * exp(-τH) * s4Func + exp(-τH) * s4DerivExplicit
+  --                = exp(-τH) * (s4DerivExplicit - H * s4Func)   (since [H, e0] = 0)
+  -- w4Residual = exp(τH) * w4DerivExplicit = 1 * (s4DerivExplicit - H * s4Func)
+  --            = s4DerivExplicit - H * s4Func
+  -- Build HasDerivAt for exp(-τH) · s4Func, then equate with hasDerivAt_w4Explicit
+  have hpre := hasDerivAt_exp_neg_smul' (A + B) τ
+  have hs4 := hasDerivAt_s4Explicit A B p τ
+  have hw4_prod := hpre.mul hs4
+  -- hw4_prod : HasDerivAt ((fun u => exp((-u)•(A+B))) * s4Func A B p) (prod_deriv) τ
+  -- The Pi.mul form equals w4Func A B p
+  have hfun : (fun u : ℝ => exp ((-u) • (A + B))) * s4Func A B p = w4Func A B p := by
+    funext u
+    show exp ((-u) • (A + B)) * s4Func A B p u = w4Func A B p u
+    rfl
+  rw [hfun] at hw4_prod
+  -- hw4_prod : HasDerivAt (w4Func A B p) (prod_deriv) τ
+  -- And we have hasDerivAt_w4Explicit : HasDerivAt (w4Func A B p) (w4DerivExplicit ...) τ
+  have heq := (hasDerivAt_w4Explicit A B p τ).unique hw4_prod
+  -- heq : w4DerivExplicit A B p τ = prod_deriv
+  -- prod_deriv is the product-rule output:
+  -- (-H * exp(-τH)) * s4Func τ + exp(-τH) * s4DerivExplicit τ
+  -- which equals exp(-τH) * (s4DerivExplicit τ - H * s4Func τ) using [H, e0] = 0
+  unfold w4Residual
+  -- Goal: exp(τH) * w4DerivExplicit = s4DerivExplicit - H*s4Func
+  rw [heq]
+  -- Goal: exp(τH) * (prod_deriv) = s4DerivExplicit - H*s4Func
+  -- prod_deriv = -H·exp(-τH)·s4 + exp(-τH)·s4Deriv
+  -- Use Commute of H with exp(-τH) to refactor
+  have hcomm_H : (-(A + B)) * exp ((-τ) • (A + B)) = exp ((-τ) • (A + B)) * (-(A + B)) := by
+    have h1 : Commute (A + B) (((-τ) : ℝ) • (A + B)) :=
+      (Commute.refl (A + B)).smul_right _
+    have h2 : Commute (A + B) (exp ((-τ) • (A + B))) := h1.exp_right
+    -- h2 : (A+B) * exp(-τH) = exp(-τH) * (A+B)
+    rw [neg_mul, h2.eq, mul_neg]
+  -- Also need Commute((τ)•(A+B)) ((-τ)•(A+B)) for combining exp(τH) * exp(-τH)
+  have hinv_comm : Commute ((τ : ℝ) • (A + B)) ((-τ) • (A + B)) :=
+    (Commute.refl (A + B)).smul_left _ |>.smul_right _
+  have hinv : exp ((τ : ℝ) • (A + B)) * exp ((-τ) • (A + B)) = 1 := by
+    rw [← exp_add_of_commute hinv_comm]
+    rw [show (τ : ℝ) • (A + B) + (-τ) • (A + B) = (0 : ℝ) • (A + B) from by
+      rw [← add_smul]; ring_nf]
+    simp
+  -- Rewrite the prod_deriv:
+  -- prod_deriv = -(A+B) * exp(-τH) * s4Func τ + exp(-τH) * s4DerivExplicit τ
+  -- Factor exp(-τH): prod_deriv = exp(-τH) * (-(A+B) * s4Func τ + s4DerivExplicit τ)
+  -- using hcomm_H: -(A+B) * exp(-τH) = exp(-τH) * -(A+B)
+  show exp ((τ : ℝ) • (A + B)) * ((-(A + B)) * exp ((-τ) • (A + B)) * s4Func A B p τ +
+    exp ((-τ) • (A + B)) * s4DerivExplicit A B p τ) =
+    s4DerivExplicit A B p τ - (A + B) * s4Func A B p τ
+  rw [hcomm_H]
+  -- After rewrite: exp(τH) * (exp(-τH) * -(A+B) * s4Func + exp(-τH) * s4Deriv)
+  -- Distribute mul over add, then pull exp(τH) · exp(-τH) = 1
+  rw [mul_add]
+  rw [show exp ((τ : ℝ) • (A + B)) * (exp ((-τ) • (A + B)) * (-(A + B)) * s4Func A B p τ) =
+      (exp ((τ : ℝ) • (A + B)) * exp ((-τ) • (A + B))) * ((-(A + B)) * s4Func A B p τ) from by
+    noncomm_ring]
+  rw [show exp ((τ : ℝ) • (A + B)) * (exp ((-τ) • (A + B)) * s4DerivExplicit A B p τ) =
+      (exp ((τ : ℝ) • (A + B)) * exp ((-τ) • (A + B))) * s4DerivExplicit A B p τ from by
+    noncomm_ring]
+  rw [hinv, one_mul, one_mul]
+  -- Goal: -(A+B) * s4Func τ + s4DerivExplicit τ = s4DerivExplicit τ - (A+B) * s4Func τ
+  noncomm_ring
+
 end
