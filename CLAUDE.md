@@ -73,7 +73,8 @@ Lean-Trotter/
 │   ├── Suzuki4HasDerivAt.lean     ← Module 1: HasDerivAt for 12-factor w₄
 │   ├── Suzuki4Module2.lean        ← Module 2: FTC-2 bridge ‖S₄-exp‖=‖w₄-1‖
 │   ├── Suzuki4Module3.lean        ← Module 3: FTC-2 reduction (residual → C·t⁵/5)
-│   └── Suzuki4OrderFive.lean      ← S₄ O(t⁵) target (1 sorry for Module 4 residual)
+│   ├── Suzuki4Module4.lean        ← Module 4a: continuity of w4Deriv
+│   └── Suzuki4OrderFive.lean      ← S₄ O(t⁵) target (1 sorry for Module 4b residual)
 ├── LieTrotter.lean            ← root import file
 ├── lakefile.lean
 ├── lean-toolchain
@@ -326,15 +327,17 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 | L2. `norm_suzuki4_diff_eq_norm_relative` | `‖S₄(t)-exp(tH)‖ = ‖w₄(t)-1‖` (anti-Hermitian) | ✅ Proved |
 | L3. `norm_w4_sub_one_le_t5_via_residual` | FTC-2 reduction: residual bound → integrated bound | ✅ Proved |
 | L3'. `norm_suzuki4_order5_via_module3` | S₄ O(t⁵), conditional on residual bound | ✅ Proved (conditional) |
-| L4. (future) `norm_w4_deriv_le_t4` | Pointwise residual bound `‖w4Deriv τ‖ ≤ C·τ⁴` | 🔴 Open (research target) |
+| L4a. `continuous_w4Deriv` | Continuity of extracted derivative (via analytic / ContDiff) | ✅ Proved |
+| L4b. (future) `norm_w4_deriv_le_t4` | Pointwise residual bound `‖w4Deriv τ‖ ≤ C·τ⁴` | 🔴 Open (research target) |
 
 **Files:**
 - `LieTrotter/Suzuki4HasDerivAt.lean` (~136 lines) — Module 1
 - `LieTrotter/Suzuki4Module2.lean` (~167 lines) — Module 2
 - `LieTrotter/Suzuki4Module3.lean` (~170 lines) — Module 3
+- `LieTrotter/Suzuki4Module4.lean` (~150 lines) — Module 4a (continuity)
 - `LieTrotter/Suzuki4OrderFive.lean` (~427 lines) — `norm_suzuki4_fifth_order` (the unconditional research target, 1 sorry)
 
-**Current architecture (Modules 1-3 sorry-free):**
+**Current architecture (Modules 1-3 + 4a sorry-free):**
 
 ```
 Module 1 (HasDerivAt for 12-factor w₄)
@@ -343,20 +346,26 @@ Module 2 (FTC-2 bridge: ‖S₄-exp‖ = ‖w₄-1‖)
        ↓
 Module 3 (FTC-2 reduction: residual bound → C·t⁵/5)
        ↓
-norm_suzuki4_order5_via_module3 (conditional on Module 4)
+Module 4a (continuous_w4Deriv ✓) + Module 4b (residual bound 🔴)
+       ↓
+norm_suzuki4_order5_via_module3 (conditional on Module 4b only)
 ```
 
-**Module 4 (research-target, the only remaining sorry):**
+**Module 4a (continuity, ✅ done):** `continuous_w4Deriv` proved via:
+- `w4Func A B p` is `ContDiff ℝ ⊤` (composition of analytic exp with smooth linear maps; products of smooth functions are smooth).
+- `ContDiff.continuous_deriv` gives `Continuous (deriv (w4Func A B p))`.
+- HasDerivAt uniqueness: `w4Deriv = deriv (w4Func A B p)`, hence continuous.
+
+**Module 4b (residual bound, 🔴 remaining sorry):**
 
 Produce the pointwise residual bound `‖w4Deriv A B p τ‖ ≤ C·τ⁴` from the Suzuki order conditions. Requires:
 1. Explicit form for `w4Deriv` (replacing the `Classical.choose` from Module 2): compute the 12-term product-rule expansion and simplify to `exp(-τH) · 𝒯₄(τ) · S₄(τ)` where 𝒯₄ is a sum of 11 conjugation differences.
-2. Continuity of `w4Deriv` (follows from the explicit form).
-3. Order-condition cancellation (orders 0-3 of 𝒯₄ vanish):
-   - Order 0: `suzuki4_free_term` (✅ proved)
+2. Order-condition cancellation (orders 0-3 of 𝒯₄ vanish):
+   - Order 0: `suzuki4_free_term` (✅ proved as standalone identity; `w4Deriv 0 = 0` consequence is deferred — see Module 4 file for direct attempt + Pi-mul obstacle)
    - Order 1: palindromic symmetry of S₄
    - Order 2: another polynomial identity
    - Order 3: `suzuki4_cubic_cancel` (4p³+q³=0, ✅ proved)
-4. Order-4 residual bound via 4-fold commutator FTC iteration.
+3. Order-4 residual bound via 4-fold commutator FTC iteration.
 
 **Tighter bounds (existing, fully proved):**
 - `norm_suzuki4_comm_scaling`: O(t³) via 5-S₂ telescoping (norm-of-sum)
@@ -482,7 +491,8 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/Suzuki4HasDerivAt.lean` | 0 (Module 1) |
 | `LieTrotter/Suzuki4Module2.lean` | 0 (Module 2) |
 | `LieTrotter/Suzuki4Module3.lean` | 0 (Module 3 — FTC-2 reduction proved) |
-| `LieTrotter/Suzuki4OrderFive.lean` | 1 (unconditional research target — Module 4) |
+| `LieTrotter/Suzuki4Module4.lean` | 0 (Module 4a — continuity proved) |
+| `LieTrotter/Suzuki4OrderFive.lean` | 1 (unconditional research target — Module 4b) |
 | **Total** | **1** |
 
 ## Design Decisions
