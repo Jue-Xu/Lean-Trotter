@@ -453,4 +453,56 @@ lemma w4Residual_eq_s4Deriv_sub_H_s4 (A B : 𝔸) (p τ : ℝ) :
   -- Goal: -(A+B) * s4Func τ + s4DerivExplicit τ = s4DerivExplicit τ - (A+B) * s4Func τ
   noncomm_ring
 
+/-!
+## Smoothness consequences of the cleaner form
+
+Since `s4Func` is smooth (Module 4a pattern) and `s4DerivExplicit` is
+its derivative function, both are C^∞. Hence `w4Residual` (defined as
+`s4' - H·s4`) is also C^∞.
+
+This enables Taylor expansion / iterated FTC arguments for subsequent
+order-condition analysis.
+-/
+
+/-- `s4DerivExplicit` is continuous (composition/products of continuous functions). -/
+lemma continuous_s4DerivExplicit (A B : 𝔸) (p : ℝ) :
+    Continuous (s4DerivExplicit A B p) := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  unfold s4DerivExplicit
+  -- Each exp((c*τ)•X) is continuous; products / sums of continuous are continuous
+  have hexp : ∀ (c : ℝ) (X : 𝔸),
+      Continuous (fun u : ℝ => exp ((c * u) • X)) := fun c X =>
+    exp_continuous.comp ((continuous_const.mul continuous_id).smul continuous_const)
+  have c1 := hexp (p/2) A
+  have c2 := hexp p B
+  have c3 := hexp p A
+  have c4 := hexp p B
+  have c5 := hexp ((1-3*p)/2) A
+  have c6 := hexp (1-4*p) B
+  have c7 := hexp ((1-3*p)/2) A
+  have c8 := hexp p B
+  have c9 := hexp p A
+  have c10 := hexp p B
+  have c11 := hexp (p/2) A
+  -- Sum of 11 products, each is continuous
+  fun_prop
+
+/-- `s4Func` is continuous. -/
+lemma continuous_s4Func (A B : 𝔸) (p : ℝ) : Continuous (s4Func A B p) := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  unfold s4Func
+  have hexp : ∀ (c : ℝ) (X : 𝔸),
+      Continuous (fun u : ℝ => exp ((c * u) • X)) := fun c X =>
+    exp_continuous.comp ((continuous_const.mul continuous_id).smul continuous_const)
+  fun_prop
+
+/-- `w4Residual` is continuous. -/
+lemma continuous_w4Residual (A B : 𝔸) (p : ℝ) :
+    Continuous (w4Residual A B p) := by
+  -- w4Residual τ = s4DerivExplicit τ - (A+B) * s4Func τ
+  have h : w4Residual A B p = (fun τ => s4DerivExplicit A B p τ - (A + B) * s4Func A B p τ) := by
+    funext τ; exact w4Residual_eq_s4Deriv_sub_H_s4 A B p τ
+  rw [h]
+  exact (continuous_s4DerivExplicit A B p).sub (continuous_const.mul (continuous_s4Func A B p))
+
 end
