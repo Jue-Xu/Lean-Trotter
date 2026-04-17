@@ -217,4 +217,81 @@ lemma w4DerivExplicit_at_zero (A B : 𝔸) (p : ℝ) :
 lemma w4Deriv_at_zero (A B : 𝔸) (p : ℝ) : w4Deriv A B p 0 = 0 := by
   rw [w4Deriv_eq_w4DerivExplicit, w4DerivExplicit_at_zero]
 
+/-!
+## Module 4b-A3: Factorization `w4DerivExplicit = exp(-τH) · w4Residual`
+
+For anti-Hermitian operators, `exp((-τ)•(A+B))` is an isometry, so
+bounding `w4DerivExplicit` reduces to bounding `w4Residual` defined as
+the "conjugated" form `exp(τ•(A+B)) · w4DerivExplicit`.
+
+This is the simplest factorization (via `exp(τH) · exp(-τH) = 1`). The
+"commutator form" `w4Residual = Σⱼ [Lⱼ(τ), dⱼ] · Rⱼ(τ)` is a separate
+equivalence proved later when needed for the order-condition analysis.
+-/
+
+/-- The "residual" function: conjugate `w4DerivExplicit` by `exp(τH)`. -/
+def w4Residual (A B : 𝔸) (p : ℝ) (τ : ℝ) : 𝔸 :=
+  exp ((τ : ℝ) • (A + B)) * w4DerivExplicit A B p τ
+
+/-- **Module 4b-A3**: `w4DerivExplicit = exp(-τ•H) · w4Residual`. -/
+lemma w4DerivExplicit_eq_exp_mul_residual (A B : 𝔸) (p τ : ℝ) :
+    w4DerivExplicit A B p τ = exp ((-τ) • (A + B)) * w4Residual A B p τ := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  unfold w4Residual
+  -- Goal: w4Deriv = exp(-τH) * (exp(τH) * w4Deriv)
+  -- Reassociate and use exp(-τH) * exp(τH) = 1
+  rw [← mul_assoc]
+  have hcomm : Commute ((-τ) • (A + B)) ((τ : ℝ) • (A + B)) :=
+    (Commute.refl (A + B)).smul_left _ |>.smul_right _
+  have hinv : exp ((-τ) • (A + B)) * exp ((τ : ℝ) • (A + B)) = 1 := by
+    rw [← exp_add_of_commute hcomm]
+    rw [show (-τ) • (A + B) + (τ : ℝ) • (A + B) = (0 : ℝ) • (A + B) from by
+      rw [← add_smul]; ring_nf]
+    simp
+  rw [hinv, one_mul]
+
+/-- At τ=0, `w4Residual` also vanishes (via `w4DerivExplicit_at_zero`). -/
+lemma w4Residual_at_zero (A B : 𝔸) (p : ℝ) : w4Residual A B p 0 = 0 := by
+  unfold w4Residual
+  rw [w4DerivExplicit_at_zero, mul_zero]
+
+/-!
+### Anti-Hermitian isometry: `‖w4DerivExplicit τ‖ = ‖w4Residual τ‖`
+-/
+
+section AntiHermitianBound
+variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
+
+/-- For anti-Hermitian A, B, bounds on `w4Residual` transfer to bounds on
+  `w4DerivExplicit` with the same norm (since `exp((-τ)•H)` is unitary). -/
+lemma norm_w4DerivExplicit_eq_norm_residual (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) (p τ : ℝ) :
+    ‖w4DerivExplicit A B p τ‖ = ‖w4Residual A B p τ‖ := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  have hAB : star (A + B) = -(A + B) := by rw [star_add, hA, hB, neg_add]
+  rw [w4DerivExplicit_eq_exp_mul_residual]
+  -- ‖exp((-τ)•H) * w4Residual‖ = ‖w4Residual‖ since ‖exp((-τ)•H)‖ = 1 is an isometry
+  apply le_antisymm
+  · calc ‖exp ((-τ) • (A + B)) * w4Residual A B p τ‖
+        ≤ ‖exp ((-τ) • (A + B))‖ * ‖w4Residual A B p τ‖ := norm_mul_le _ _
+      _ = ‖w4Residual A B p τ‖ := by
+          rw [norm_exp_smul_of_skewAdjoint hAB]; ring
+  · -- Reverse: ‖w4Residual‖ = ‖exp(τH) * exp(-τH) * w4Residual‖ ≤ 1 * ‖exp(-τH) * w4Residual‖
+    have hcomm : Commute ((τ : ℝ) • (A + B)) ((-τ) • (A + B)) :=
+      (Commute.refl (A + B)).smul_left _ |>.smul_right _
+    have hinv : exp ((τ : ℝ) • (A + B)) * exp ((-τ) • (A + B)) = 1 := by
+      rw [← exp_add_of_commute hcomm]
+      rw [show (τ : ℝ) • (A + B) + (-τ) • (A + B) = (0 : ℝ) • (A + B) from by
+        rw [← add_smul]; ring_nf]
+      simp
+    calc ‖w4Residual A B p τ‖
+        = ‖exp ((τ : ℝ) • (A + B)) * (exp ((-τ) • (A + B)) * w4Residual A B p τ)‖ := by
+          rw [← mul_assoc, hinv, one_mul]
+      _ ≤ ‖exp ((τ : ℝ) • (A + B))‖ *
+          ‖exp ((-τ) • (A + B)) * w4Residual A B p τ‖ := norm_mul_le _ _
+      _ = ‖exp ((-τ) • (A + B)) * w4Residual A B p τ‖ := by
+          rw [norm_exp_smul_of_skewAdjoint hAB]; ring
+
+end AntiHermitianBound
+
 end
