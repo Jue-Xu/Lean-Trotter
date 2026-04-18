@@ -610,10 +610,72 @@ lemma iteratedDeriv_w4Func_order3_zero_iff_of_order2
       iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3 := by
   rw [iteratedDeriv_w4Func_order3_eq, h2]
   -- Goal: s4'''(0) - 3·(A+B)·(A+B)² + 2·(A+B)³ = 0 ↔ s4'''(0) = (A+B)³
-  -- Rewrite LHS as s4'''(0) - (A+B)³ via noncomm_ring algebra
   have halg : iteratedDeriv 3 (s4Func A B p) 0
       - 3 * (A + B) * (A + B) ^ 2 + 2 * (A + B) ^ 3
       = iteratedDeriv 3 (s4Func A B p) 0 - (A + B) ^ 3 := by noncomm_ring
+  rw [halg]
+  exact sub_eq_zero
+
+/-!
+### Order-4 Leibniz bridge for w4Func
+
+Applying Mathlib's `iteratedDeriv_mul` with n=4:
+  iteratedDeriv 4 w4Func 0 = Σᵢ C(4,i)·(-H)^i·s4^(4-i)(0)
+    = s4⁴(0) - 4H·s4'''(0) + 6H²·s4''(0) - 4H³·(A+B) + H⁴
+    = s4⁴(0) - 4H·s4'''(0) + 6H²·s4''(0) - 3H⁴
+
+Under orders 2 and 3 (`s4''(0) = H²`, `s4'''(0) = H³`), simplifies to
+`s4⁴(0) - H⁴`.
+-/
+
+/-- **Key Leibniz reduction (order-4)**: unconditional form. -/
+lemma iteratedDeriv_w4Func_order4_eq (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 4 (w4Func A B p) 0 =
+      iteratedDeriv 4 (s4Func A B p) 0
+      - 4 * (A + B) * iteratedDeriv 3 (s4Func A B p) 0
+      + 6 * (A + B) ^ 2 * iteratedDeriv 2 (s4Func A B p) 0
+      - 3 * (A + B) ^ 4 := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  have hfunext : w4Func A B p =
+      (fun τ : ℝ => exp ((-τ) • (A + B))) * s4Func A B p := by
+    funext τ
+    show w4Func A B p τ = _
+    rfl
+  rw [hfunext]
+  rw [iteratedDeriv_mul (contDiffAt_exp_neg_smul (A + B) 0)
+    ((contDiff_s4Func A B p).contDiffAt (n := 4))]
+  simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add,
+    iteratedDeriv_exp_neg_smul_at_zero, iteratedDeriv_s4Func_order0,
+    iteratedDeriv_s4Func_order1,
+    show (4 - 0 : ℕ) = 4 from rfl, show (4 - 1 : ℕ) = 3 from rfl,
+    show (4 - 2 : ℕ) = 2 from rfl, show (4 - 3 : ℕ) = 1 from rfl,
+    show (4 - 4 : ℕ) = 0 from rfl, pow_zero, pow_one]
+  have h0 : (Nat.choose 4 0 : ℕ) = 1 := rfl
+  have h1 : (Nat.choose 4 1 : ℕ) = 4 := rfl
+  have h2 : (Nat.choose 4 2 : ℕ) = 6 := rfl
+  have h3 : (Nat.choose 4 3 : ℕ) = 4 := rfl
+  have h4 : (Nat.choose 4 4 : ℕ) = 1 := rfl
+  rw [h0, h1, h2, h3, h4]
+  simp only [Nat.cast_one, Nat.cast_ofNat, one_mul, mul_one, add_zero]
+  have hsq : (-(A + B)) ^ 2 = (A + B) ^ 2 := by noncomm_ring
+  have hcb : (-(A + B)) ^ 3 = -((A + B) ^ 3) := by noncomm_ring
+  have hq4 : (-(A + B)) ^ 4 = (A + B) ^ 4 := by noncomm_ring
+  rw [hsq, hcb, hq4]
+  noncomm_ring
+
+/-- **Corollary**: under orders 2 and 3, order-4 vanishing ⟺ `s4⁴(0) = H⁴`. -/
+lemma iteratedDeriv_w4Func_order4_zero_iff_of_order23
+    (A B : 𝔸) (p : ℝ)
+    (h2 : iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2)
+    (h3 : iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3) :
+    iteratedDeriv 4 (w4Func A B p) 0 = 0 ↔
+      iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4 := by
+  rw [iteratedDeriv_w4Func_order4_eq, h2, h3]
+  have halg : iteratedDeriv 4 (s4Func A B p) 0
+      - 4 * (A + B) * (A + B) ^ 3
+      + 6 * (A + B) ^ 2 * (A + B) ^ 2
+      - 3 * (A + B) ^ 4
+      = iteratedDeriv 4 (s4Func A B p) 0 - (A + B) ^ 4 := by noncomm_ring
   rw [halg]
   exact sub_eq_zero
 
