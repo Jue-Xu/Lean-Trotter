@@ -274,6 +274,80 @@ lemma deriv_w4Func_at_zero (A B : 𝔸) (p : ℝ) : deriv (w4Func A B p) 0 = 0 :
   rw [(hasDerivAt_w4_explicit A B p 0).deriv]
   exact w4Deriv_at_zero A B p
 
+/-!
+## Structural decomposition of `w4DerivExplicit`
+
+We establish the identity
+
+  `w4DerivExplicit A B p τ = -H · w4Func(τ) + exp(-τH) · s4DerivExplicit(τ)`
+
+where `H = A + B`. This follows by reassociating the 12-term definition:
+the first term `(-H·e₀)·e₁·…·e₁₁ = -H · (e₀·e₁·…·e₁₁) = -H · w4Func(τ)`,
+and the remaining 11 terms all start with `e₀`, factoring as
+`e₀ · (11-term s4DerivExplicit sum) = exp(-τH) · s4DerivExplicit(τ)`.
+
+This decomposition is useful for future iterated-derivative computations,
+since it reduces the 12-factor expression to a sum of simpler products.
+-/
+
+/-- **Structural decomposition**: `w4DerivExplicit = -H · w4Func + exp(-τH) · s4DerivExplicit`. -/
+lemma w4DerivExplicit_decomp (A B : 𝔸) (p τ : ℝ) :
+    w4DerivExplicit A B p τ =
+      -(A + B) * w4Func A B p τ + exp ((-τ) • (A + B)) * s4DerivExplicit A B p τ := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  unfold w4DerivExplicit w4Func s4Func s4DerivExplicit
+  noncomm_ring
+
+/-!
+## Corollary: `w4Residual` has a simpler form
+
+Via `w4Residual = s4DerivExplicit - H·s4Func` (already in Suzuki4DerivExplicit),
+and `w4DerivExplicit_decomp` above, we can relate the derivatives of w4DerivExplicit
+and s4DerivExplicit cleanly.
+-/
+
+/-- `w4Func A B p 0 = 1` via `w4Func_zero`. Re-exported for local convenience. -/
+lemma w4Func_at_zero (A B : 𝔸) (p : ℝ) : w4Func A B p 0 = 1 := w4Func_zero A B p
+
+/-- `s4DerivExplicit A B p 0 = A + B` (via free-term identity at τ=0). -/
+lemma s4DerivExplicit_at_zero (A B : 𝔸) (p : ℝ) :
+    s4DerivExplicit A B p 0 = A + B := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  unfold s4DerivExplicit
+  simp only [mul_zero, zero_smul, exp_zero, mul_one, one_mul]
+  exact suzuki4_free_term A B p
+
+/-- `w4DerivExplicit A B p 0 = 0` via the structural decomposition + boundary values.
+  This gives a cleaner proof than the direct simp reduction used earlier. -/
+lemma w4DerivExplicit_at_zero_via_decomp (A B : 𝔸) (p : ℝ) :
+    w4DerivExplicit A B p 0 = 0 := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  rw [w4DerivExplicit_decomp, w4Func_at_zero, s4DerivExplicit_at_zero]
+  simp [neg_zero, zero_smul, exp_zero]
+
+/-!
+## Future work: `hasDerivAt_w4DerivExplicit_at_zero`
+
+Using `w4DerivExplicit_decomp` above, a clean HasDerivAt proof for
+`w4DerivExplicit` at τ=0 reduces the order-2 vanishing of `w4Func` to the
+statement `deriv (s4DerivExplicit A B p) 0 = H²`, which is equivalent to
+`s4_pairwise_commutator_sum_zero` applied at the operator level.
+
+The reduction is:
+  w4Func''(0) = d/dτ[w4DerivExplicit A B p]|_{τ=0}
+           = d/dτ[-H · w4Func + exp(-τH) · s4DerivExplicit]|_{τ=0}
+           = -H · w4Func'(0) + [-H · 1 · s4DerivExplicit(0) + 1 · deriv(s4DerivExplicit)(0)]
+           = 0 - H² + deriv(s4DerivExplicit)(0)
+           = deriv(s4DerivExplicit)(0) - H²
+
+So w4Func''(0) = 0 ⟺ deriv(s4DerivExplicit)(0) = H².
+
+This identity, combined with the explicit computation
+`deriv(s4DerivExplicit)(0) = Σⱼ dⱼ² + 2·Σ_{i<j} dᵢ·dⱼ` (requires Step 1
+from the handoff, ~200 lines), would close order-2 via
+`s4_pairwise_commutator_sum_zero`.
+-/
+
 /-- **Order-1 vanishing for w4Func (within any set)**. Follows from
   `deriv_w4Func_at_zero` via ContDiff structure. -/
 lemma iteratedDerivWithin_w4Func_order1 (A B : 𝔸) (p : ℝ) {t : ℝ} (ht : 0 < t) :
