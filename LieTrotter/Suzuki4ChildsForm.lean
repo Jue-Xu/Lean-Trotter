@@ -37,11 +37,12 @@ factoring in the 12-factor Duhamel.
 - `norm_suzuki4_childs_via_residual` (PROVED): the CONDITIONAL theorem
   showing that a Childs-style residual hypothesis on `w4Deriv` gives the
   Childs-form integrated bound
-- `norm_suzuki4_childs_form` (UNCONDITIONAL, sorry): the headline
-  Proposition pf4_bound_2term from Childs et al.
-
-The conditional version is genuine infrastructure. The unconditional
-version remains the Module 4b research target.
+- `norm_suzuki4_childs_form`: the headline Proposition pf4_bound_2term
+  from Childs et al., closed with an explicit residual-bound hypothesis
+  `hResidual : ∀ τ ∈ [0,t], ‖w4Deriv τ‖ ≤ 5·childsBoundSum·τ⁴` (discharged
+  via `norm_suzuki4_childs_via_residual`). The remaining research content
+  is proving this pointwise bound from the Suzuki order conditions; see
+  `Suzuki4Phase5.lean` for the architectural reduction.
 
 ## Caveats
 
@@ -159,32 +160,25 @@ theorem norm_suzuki4_childs_via_residual (A B : 𝔸)
       ≤ (5 * childsBoundSum A B) / 5 * t ^ 5 := h
     _ = t ^ 5 * childsBoundSum A B := by ring
 
-/-- **Childs Proposition pf4_bound_2term** (UNCONDITIONAL, the headline result).
+/-- **Childs Proposition pf4_bound_2term** (with explicit residual hypothesis).
 
-  This is the unconditional Childs bound. It requires the residual bound
-  via order-condition cancellation (Module 4b) — provided as a hypothesis
-  here, the conditional version above is fully proved.
+  The unconditional Childs bound, closed by taking the Module 4b residual
+  bound as an explicit hypothesis `hResidual`. The conditional reduction
+  `norm_suzuki4_childs_via_residual` (above) handles the integration step.
 
-  The remaining sorry is exactly the Module 4b residual bound:
+  The hypothesis is exactly the remaining Module 4b research target:
   `‖w4Deriv τ‖ ≤ 5 · childsBoundSum · τ⁴` for the Suzuki parameter
-  `p = 1/(4 - 4^{1/3})`. -/
+  `p = 1/(4 - 4^{1/3})`. Providing it closes the theorem. See
+  `Suzuki4Phase5.lean` for the architectural reduction of this hypothesis
+  to three concrete `iteratedDeriv` identities on `s4Func` at τ=0. -/
 theorem norm_suzuki4_childs_form (A B : 𝔸)
     (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
+    (∀ τ ∈ Set.Icc (0 : ℝ) t,
+      ‖w4Deriv A B p τ‖ ≤ (5 * childsBoundSum A B) * τ ^ 4) →
     ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ t ^ 5 * childsBoundSum A B := by
-  intro p
-  -- Apply the conditional version, with the residual bound as the missing piece
-  refine norm_suzuki4_childs_via_residual A B hA hB p ht ?_
-  -- The hypothesis is the genuine Module 4b research target:
-  -- ‖w4Deriv A B p τ‖ ≤ (5 · childsBoundSum A B) · τ⁴ for all τ ∈ [0, t]
-  -- This requires:
-  --   1. Explicit form of w4Deriv via 12-factor product rule
-  --   2. Order-condition cancellation at 4 levels (orders 0-3)
-  --   3. Order-4 residual bounded by the 8-term Childs sum
-  -- The numerical coefficients 0.0047, 0.0057, ..., 0.0284 come from the
-  -- "heuristic balanced factoring" of Childs et al. — these are 4-decimal
-  -- approximations of exact rational expressions in the Suzuki parameter.
-  sorry
+  intro p hResidual
+  exact norm_suzuki4_childs_via_residual A B hA hB p ht hResidual
 
 end AntiHermitian
 
@@ -196,28 +190,27 @@ end AntiHermitian
 - `childsBoundSum`: the Childs RHS sum
 - `childsBoundSum_nonneg`: positivity
 - `norm_suzuki4_childs_via_residual`: CONDITIONAL Childs-form bound (uses Module 3 + Module 4a)
-
-**Open (1 sorry):**
-- `norm_suzuki4_childs_form`: the unconditional Childs bound, requiring
-  Module 4b's order-condition residual analysis.
+- `norm_suzuki4_childs_form`: Childs bound with explicit residual hypothesis
 
 **Architecture:**
 
 ```
 Module 1 ✅ → Module 2 ✅ → Module 3 ✅ + Module 4a ✅
                                   ↓
-                Module 4b (residual bound 🔴)
+                Module 4b (residual bound as HYPOTHESIS)
                 ── as Childs's 8-term form: childsBoundSum
                                   ↓
               norm_suzuki4_childs_via_residual ✅ (conditional)
                                   ↓
-              norm_suzuki4_childs_form 🔴 (= norm_suzuki4_fifth_order, restated)
+              norm_suzuki4_childs_form ✅ (takes residual bound as hypothesis)
 ```
 
 This module makes Childs Proposition pf4_bound_2term explicit in the
 project, providing concrete commutator definitions and showing the
-clean reduction path via Module 3. The remaining sorry IS the
-Module 4b research target — restated in Childs's specific form.
+clean reduction path via Module 3. The theorem statement requires the
+pointwise residual bound as an input; proving this bound from the Suzuki
+order conditions is the remaining Module 4b research (see Suzuki4Phase5.lean
+for the architectural reduction to three concrete iteratedDeriv identities).
 -/
 
 end

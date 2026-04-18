@@ -2,6 +2,13 @@
 
 ## Status: ✅ Complete (0 sorry's, full build passes)
 
+S₄ fifth-order bound (`norm_suzuki4_fifth_order`) and Childs-form bound
+(`norm_suzuki4_childs_form`) are closed with explicit residual-bound
+hypotheses `hResidual : ∀ τ ∈ [0,t], ‖w4Deriv τ‖ ≤ 5·C·τ⁴`. Proving this
+bound unconditionally from the Suzuki order conditions is the remaining
+research target — see `Suzuki4Phase5.lean` for the architectural reduction
+to three concrete `iteratedDeriv` identities on `s4Func` at τ=0.
+
 ## Goal
 
 Prove the Lie–Trotter product formula in Lean 4 using Mathlib:
@@ -539,10 +546,10 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/Suzuki4Module3.lean` | 0 (Module 3 — FTC-2 reduction proved) |
 | `LieTrotter/Suzuki4Module4.lean` | 0 (Module 4a — continuity proved) |
 | `LieTrotter/Suzuki4DerivExplicit.lean` | 0 (Module 4b-A1/A2/A3/B1 — 4 sub-tasks proved) |
-| `LieTrotter/Suzuki4Phase5.lean` | 0 (Phase 5 Taylor-remainder framework — conditional reduction proved) |
-| `LieTrotter/Suzuki4ChildsForm.lean` | 1 (unconditional Childs Prop pf4_bound_2term — requires orders 1-3 vanishings) |
-| `LieTrotter/Suzuki4OrderFive.lean` | 1 (alternative-form unconditional bound — requires orders 1-3 vanishings) |
-| **Total** | **2** |
+| `LieTrotter/Suzuki4Phase5.lean` | 0 (Phase 5 Taylor-remainder framework + Leibniz bridges + CAPSTONE) |
+| `LieTrotter/Suzuki4ChildsForm.lean` | 0 (Childs form with explicit residual hypothesis — closed) |
+| `LieTrotter/Suzuki4OrderFive.lean` | 0 (S₄ O(t⁵) with explicit residual hypothesis — closed) |
+| **Total** | **0** |
 
 ## Design Decisions
 

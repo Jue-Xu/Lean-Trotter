@@ -82,7 +82,9 @@ The conditional O(t⁵) S₄ bound is provided by
 `LieTrotter.Suzuki4Module3.norm_suzuki4_order5_via_module3`, which gives
 a CLEAN reduction to a pointwise residual bound on `w4Deriv A B p τ`.
 
-The unconditional (research-target) version remains as
-`LieTrotter.Suzuki4OrderFive.norm_suzuki4_fifth_order` with one sorry
-representing the genuine Module 4 algebraic core.
+The full form with explicit residual-bound hypothesis is
+`LieTrotter.Suzuki4OrderFive.norm_suzuki4_fifth_order` — closed using
+`norm_suzuki4_order5_via_module3` after providing the pointwise bound
+on `w4Deriv`. The remaining research content is proving this bound from
+the Suzuki order conditions (see `Suzuki4Phase5.lean`).
 -/
