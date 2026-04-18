@@ -177,4 +177,110 @@ theorem norm_suzuki4_order5_of_vanishings (A B : 𝔸)
 
 end AntiHermitian
 
+/-!
+## Alternative formulation via `w4Func` directly
+
+Since `w4Func = exp(-τH) · s4Func` with `w4Func(0) = 1`, Taylor's theorem
+applied directly to `w4Func` (instead of the derivative `w4Residual`) gives:
+
+If `iteratedDerivWithin k (w4Func A B p) (Icc 0 t) 0 = 0` for k = 1, 2, 3, 4
+(four vanishings for w4Func), then `‖w4Func(τ) - 1‖ ≤ C · τ⁵`. Combined with
+Module 2's `norm_suzuki4_diff_eq_norm_relative` (anti-Hermitian isometry),
+this directly gives `‖S₄(t) - exp(tH)‖ ≤ C · t⁵`.
+
+**Key advantage**: Order-1 vanishing of `w4Func` follows immediately from
+the already-proved `w4Deriv_at_zero` — no new work needed.
+
+**Trade-off**: we need 4 vanishings instead of 3, but order-1 is free.
+-/
+
+/-- Taylor polynomial of order `n` equals the constant `f(0)` iff its
+  coefficients of orders 1 through n vanish. Proved by induction on `n`. -/
+lemma taylorWithin_eq_f_zero_of_higher_iteratedDerivs_zero
+    {𝔸 : Type*} [NormedAddCommGroup 𝔸] [NormedSpace ℝ 𝔸]
+    {f : ℝ → 𝔸} {n : ℕ} {t τ : ℝ}
+    (hZero : ∀ k, 1 ≤ k → k ≤ n → iteratedDerivWithin k f (Icc 0 t) 0 = 0) :
+    taylorWithinEval f n (Icc 0 t) 0 τ = f 0 := by
+  induction n with
+  | zero =>
+    rw [taylor_within_zero_eval]
+  | succ m ih =>
+    rw [taylorWithinEval_succ]
+    -- ih applied: taylor of order m equals f(0)
+    rw [ih (fun k hk1 hkm => hZero k hk1 (hkm.trans m.le_succ))]
+    -- Now the (m+1) term: ((m+1)! * m!)⁻¹ * (τ - 0)^(m+1) • iteratedDerivWithin (m+1) f _ 0
+    rw [hZero (m + 1) (Nat.succ_le_succ (Nat.zero_le m)) le_rfl]
+    simp
+
+/-- **Phase 5 (w4Func form)**: given the four vanishings
+  `iteratedDerivWithin k (w4Func A B p) (Icc 0 t) 0 = 0` for k = 1, 2, 3, 4,
+  there exists a constant `C` such that `‖w4Func(τ) - 1‖ ≤ C · τ⁵` on `[0, t]`. -/
+theorem exists_norm_w4Func_sub_one_t5_bound_of_zero_taylor
+    (A B : 𝔸) (p : ℝ) {t : ℝ} (ht : 0 ≤ t)
+    (hZero : ∀ k, 1 ≤ k → k ≤ 4 → iteratedDerivWithin k (w4Func A B p) (Icc 0 t) 0 = 0) :
+    ∃ C ≥ 0, ∀ τ ∈ Icc (0 : ℝ) t, ‖w4Func A B p τ - 1‖ ≤ C * τ ^ 5 := by
+  -- w4Func is ContDiff ℝ ⊤, hence ContDiffOn ℝ 5 on [0, t]
+  have hCD : ContDiffOn ℝ 5 (w4Func A B p) (Icc 0 t) :=
+    (contDiff_w4Func A B p).contDiffOn
+  -- Apply Taylor's theorem with n = 4 (so n+1 = 5)
+  obtain ⟨C₀, hC₀⟩ := exists_taylor_mean_remainder_bound (n := 4) ht hCD
+  -- Taylor polynomial at every τ equals w4Func(0) = 1
+  have hTaylor : ∀ τ, taylorWithinEval (w4Func A B p) 4 (Icc 0 t) 0 τ = 1 := by
+    intro τ
+    rw [taylorWithin_eq_f_zero_of_higher_iteratedDerivs_zero hZero]
+    exact w4Func_zero A B p
+  refine ⟨max C₀ 0, le_max_right _ _, ?_⟩
+  intro τ hτ
+  have hbound := hC₀ τ hτ
+  rw [hTaylor τ] at hbound
+  simp only [sub_zero] at hbound
+  have hτ5 : 0 ≤ τ ^ 5 := pow_nonneg hτ.1 5
+  calc ‖w4Func A B p τ - 1‖
+      ≤ C₀ * τ ^ 5 := hbound
+    _ ≤ max C₀ 0 * τ ^ 5 :=
+        mul_le_mul_of_nonneg_right (le_max_left _ _) hτ5
+
+section AntiHermitian2
+
+variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
+
+/-- **Phase 5 packaged (w4Func form)**: from the four order-vanishing hypotheses
+  on `w4Func`, conclude the O(t⁵) S₄ bound. Uses Module 2's
+  `norm_suzuki4_diff_eq_norm_relative`. -/
+theorem norm_suzuki4_order5_of_w4Func_vanishings (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) (p : ℝ)
+    {t : ℝ} (ht : 0 ≤ t)
+    (hZero : ∀ k, 1 ≤ k → k ≤ 4 → iteratedDerivWithin k (w4Func A B p) (Icc 0 t) 0 = 0) :
+    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 := by
+  obtain ⟨C, hC_nn, hBound⟩ := exists_norm_w4Func_sub_one_t5_bound_of_zero_taylor A B p ht hZero
+  refine ⟨C, hC_nn, ?_⟩
+  -- Module 2: ‖S₄ - exp(tH)‖ = ‖w4Func(t) - 1‖
+  rw [norm_suzuki4_diff_eq_norm_relative A B hA hB p t]
+  exact hBound t (right_mem_Icc.mpr ht)
+
+end AntiHermitian2
+
+/-!
+## Order-1 vanishing for `w4Func` (FREE from existing infrastructure)
+
+Using `iteratedDerivWithin_one`, the order-1 condition becomes
+`derivWithin (w4Func A B p) (Icc 0 t) 0 = 0`. By HasDerivAt uniqueness
+on `hasDerivAt_w4_explicit` and the known fact `w4Deriv A B p 0 = 0`
+(= `w4Deriv_at_zero`), this is immediate.
+-/
+
+/-- The global derivative of `w4Func A B p` at 0 equals `w4Deriv A B p 0`, which is 0. -/
+lemma deriv_w4Func_at_zero (A B : 𝔸) (p : ℝ) : deriv (w4Func A B p) 0 = 0 := by
+  rw [(hasDerivAt_w4_explicit A B p 0).deriv]
+  exact w4Deriv_at_zero A B p
+
+/-- **Order-1 vanishing for w4Func (within any set)**. Follows from
+  `deriv_w4Func_at_zero` via ContDiff structure. -/
+lemma iteratedDerivWithin_w4Func_order1 (A B : 𝔸) (p : ℝ) {t : ℝ} (ht : 0 < t) :
+    iteratedDerivWithin 1 (w4Func A B p) (Icc 0 t) 0 = 0 := by
+  rw [iteratedDerivWithin_eq_iteratedDeriv (uniqueDiffOn_Icc ht)
+    ((contDiff_w4Func A B p).contDiffAt (n := 1)) (left_mem_Icc.mpr ht.le)]
+  rw [iteratedDeriv_one]
+  exact deriv_w4Func_at_zero A B p
+
 end
