@@ -890,4 +890,59 @@ theorem w4Residual_eq_comm_sum (A B : 𝔸) (p τ : ℝ) :
   -- noncomm_ring should close this with the substituted free-term identity
   noncomm_ring
 
+/-!
+### Iterated-FTC route for order-2/3 bounds
+
+Rather than computing `s4Func^(k)(0)` explicitly for higher `k`, we use
+Phase 1's commutator form and iterated FTC. For each `j ≥ 1`:
+
+  `commⱼ(τ) := [Lⱼ(τ), dⱼ] · Rⱼ(τ)`
+
+with `commⱼ(0) = 0` (trivially). The key observation: each commⱼ
+involves a multi-exponential `Lⱼ`, whose conjugation structure can be
+peeled layer-by-layer using `exp_conj_sub_eq_integral` — one per
+exponential factor.
+
+**Phase 5 outline (the final bridge):**
+1. For each `j`, bound `‖commⱼ(τ)‖` via iterated FTC on `Lⱼ`'s factors.
+2. Sum over `j` and apply the order-1/2/3 cancellations to eliminate
+   the leading `τ`, `τ²`, `τ³` contributions.
+3. The remaining residual is `O(τ⁴)` with 4-fold-commutator coefficients.
+
+The polynomial-level identities needed at each cancellation stage are
+now all proven:
+- Order-1: `s4_pairwise_commutator_sum_zero` (palindromic)
+- Order-2: automatic (no separate identity, palindromic structure)
+- Order-3: `suzuki4_phase3_{aba,a2b,bab}` (all ∝ Suzuki cubic)
+
+Only the operator-level integration + triangle inequality remain.
+-/
+
+/-!
+### Anti-Hermitian norm of `w4Residual` = Anti-Hermitian norm of `w4DerivExplicit`
+
+For applying Module 3's conditional bound, we need
+`‖w4Deriv τ‖ ≤ C · τ⁴`. Combining our results:
+- `w4Deriv = w4DerivExplicit` (4b-A2)
+- `‖w4DerivExplicit τ‖ = ‖w4Residual τ‖` (4b-A3, anti-Hermitian)
+- For palindromic Suzuki: `‖w4Residual τ‖ = O(τ⁴)` (the remaining work)
+
+The following lemma packages the first two equalities for convenient
+application.
+-/
+
+section AntiHermitianNorm
+variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
+
+/-- **Bridge norm equality**: `‖w4Deriv τ‖ = ‖w4Residual τ‖` for anti-Hermitian
+  A, B. Combines `w4Deriv_eq_w4DerivExplicit` (4b-A2) and
+  `norm_w4DerivExplicit_eq_norm_residual` (4b-A3). -/
+lemma norm_w4Deriv_eq_norm_residual (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) (p τ : ℝ) :
+    ‖w4Deriv A B p τ‖ = ‖w4Residual A B p τ‖ := by
+  rw [w4Deriv_eq_w4DerivExplicit]
+  exact norm_w4DerivExplicit_eq_norm_residual A B hA hB p τ
+
+end AntiHermitianNorm
+
 end
