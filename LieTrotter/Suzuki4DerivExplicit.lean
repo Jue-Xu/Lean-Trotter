@@ -505,4 +505,81 @@ lemma continuous_w4Residual (A B : 𝔸) (p : ℝ) :
   rw [h]
   exact (continuous_s4DerivExplicit A B p).sub (continuous_const.mul (continuous_s4Func A B p))
 
+/-!
+## Phase 1 (per MODULE4B-STRATEGY.md): Commutator form
+
+Express `w4Residual` as a sum of 11 commutator terms:
+
+  `w4Residual(τ) = Σⱼ ([Lⱼ(τ), dⱼ] · Rⱼ(τ))`
+
+where Lⱼ = ∏_{i<j} eᵢ, Rⱼ = ∏_{i≥j} eᵢ, and `[Lⱼ, dⱼ] = Lⱼ·dⱼ - dⱼ·Lⱼ`.
+
+Proof outline:
+- `w4Residual = s4DerivExplicit - (A+B)·s4Func` (from A3')
+- `s4DerivExplicit = Σⱼ Lⱼ·dⱼ·Rⱼ` (definitional unfolding)
+- `(A+B)·s4Func = (Σⱼ dⱼ)·s4Func = Σⱼ dⱼ·Lⱼ·Rⱼ` (using `suzuki4_free_term` + `s4Func = Lⱼ·Rⱼ`)
+- Subtracting term-by-term: `Σⱼ (Lⱼ·dⱼ - dⱼ·Lⱼ)·Rⱼ = Σⱼ [Lⱼ, dⱼ]·Rⱼ`
+
+The proof reduces to a `noncomm_ring` algebraic identity AFTER substituting
+`A+B = Σⱼ dⱼ` (which is `suzuki4_free_term`).
+-/
+
+/-- **Phase 1 (commutator form)**: `w4Residual` decomposes as 11 commutator terms.
+
+  Each term `[Lⱼ(τ), dⱼ]·Rⱼ(τ)` vanishes at τ=0 (since Lⱼ(0) = 1 commutes
+  with dⱼ trivially). For τ > 0, it can be analyzed via FTC extraction
+  (Phases 2-4 of the strategy). -/
+theorem w4Residual_eq_comm_sum (A B : 𝔸) (p τ : ℝ) :
+    w4Residual A B p τ =
+      letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+      let e1  : 𝔸 := exp ((p/2 * τ) • A)
+      let e2  : 𝔸 := exp ((p * τ) • B)
+      let e3  : 𝔸 := exp ((p * τ) • A)
+      let e4  : 𝔸 := exp ((p * τ) • B)
+      let e5  : 𝔸 := exp (((1-3*p)/2 * τ) • A)
+      let e6  : 𝔸 := exp (((1-4*p) * τ) • B)
+      let e7  : 𝔸 := exp (((1-3*p)/2 * τ) • A)
+      let e8  : 𝔸 := exp ((p * τ) • B)
+      let e9  : 𝔸 := exp ((p * τ) • A)
+      let e10 : 𝔸 := exp ((p * τ) • B)
+      let e11 : 𝔸 := exp ((p/2 * τ) • A)
+      let d1  : 𝔸 := (p/2 : ℝ) • A
+      let d2  : 𝔸 := (p : ℝ) • B
+      let d3  : 𝔸 := (p : ℝ) • A
+      let d4  : 𝔸 := (p : ℝ) • B
+      let d5  : 𝔸 := ((1-3*p)/2 : ℝ) • A
+      let d6  : 𝔸 := ((1-4*p) : ℝ) • B
+      let d7  : 𝔸 := ((1-3*p)/2 : ℝ) • A
+      let d8  : 𝔸 := (p : ℝ) • B
+      let d9  : 𝔸 := (p : ℝ) • A
+      let d10 : 𝔸 := (p : ℝ) • B
+      let d11 : 𝔸 := (p/2 : ℝ) • A
+      -- L_j = e_1 · ... · e_{j-1} (empty for j=1)
+      -- R_j = e_j · ... · e_{11}
+      -- 11 commutator terms: (L_j · d_j - d_j · L_j) · R_j
+      (1 * d1 - d1 * 1) * (e1 * e2 * e3 * e4 * e5 * e6 * e7 * e8 * e9 * e10 * e11)
+      + (e1 * d2 - d2 * e1) * (e2 * e3 * e4 * e5 * e6 * e7 * e8 * e9 * e10 * e11)
+      + (e1 * e2 * d3 - d3 * (e1 * e2)) * (e3 * e4 * e5 * e6 * e7 * e8 * e9 * e10 * e11)
+      + (e1 * e2 * e3 * d4 - d4 * (e1 * e2 * e3)) * (e4 * e5 * e6 * e7 * e8 * e9 * e10 * e11)
+      + (e1 * e2 * e3 * e4 * d5 - d5 * (e1 * e2 * e3 * e4)) * (e5 * e6 * e7 * e8 * e9 * e10 * e11)
+      + (e1 * e2 * e3 * e4 * e5 * d6 - d6 * (e1 * e2 * e3 * e4 * e5)) * (e6 * e7 * e8 * e9 * e10 * e11)
+      + (e1 * e2 * e3 * e4 * e5 * e6 * d7 - d7 * (e1 * e2 * e3 * e4 * e5 * e6)) * (e7 * e8 * e9 * e10 * e11)
+      + (e1 * e2 * e3 * e4 * e5 * e6 * e7 * d8 - d8 * (e1 * e2 * e3 * e4 * e5 * e6 * e7)) * (e8 * e9 * e10 * e11)
+      + (e1 * e2 * e3 * e4 * e5 * e6 * e7 * e8 * d9 - d9 * (e1 * e2 * e3 * e4 * e5 * e6 * e7 * e8)) * (e9 * e10 * e11)
+      + (e1 * e2 * e3 * e4 * e5 * e6 * e7 * e8 * e9 * d10 - d10 * (e1 * e2 * e3 * e4 * e5 * e6 * e7 * e8 * e9)) * (e10 * e11)
+      + (e1 * e2 * e3 * e4 * e5 * e6 * e7 * e8 * e9 * e10 * d11 - d11 * (e1 * e2 * e3 * e4 * e5 * e6 * e7 * e8 * e9 * e10)) * e11
+      := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  -- Use the cleaner form w4Residual = s4DerivExplicit - (A+B)·s4Func
+  rw [w4Residual_eq_s4Deriv_sub_H_s4]
+  -- Substitute A+B = Σⱼ dⱼ via suzuki4_free_term (in REVERSE)
+  rw [show (A + B) = (p/2 : ℝ) • A + (p : ℝ) • B + (p : ℝ) • A + (p : ℝ) • B +
+        ((1-3*p)/2 : ℝ) • A + ((1-4*p) : ℝ) • B + ((1-3*p)/2 : ℝ) • A +
+        (p : ℝ) • B + (p : ℝ) • A + (p : ℝ) • B + (p/2 : ℝ) • A from
+    (suzuki4_free_term A B p).symm]
+  -- Now everything unfolds to a noncommutative algebraic identity
+  unfold s4DerivExplicit s4Func
+  -- noncomm_ring should close this with the substituted free-term identity
+  noncomm_ring
+
 end
