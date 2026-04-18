@@ -457,4 +457,93 @@ lemma iteratedDerivWithin_w4Func_order1 (A B : 𝔸) (p : ℝ) {t : ℝ} (ht : 0
   rw [iteratedDeriv_one]
   exact deriv_w4Func_at_zero A B p
 
+/-- **Order-1 vanishing for w4Func (global iteratedDeriv form)**, for use with
+  Mathlib's `iteratedDeriv_mul` Leibniz rule. -/
+lemma iteratedDeriv_w4Func_order1 (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 1 (w4Func A B p) 0 = 0 := by
+  rw [iteratedDeriv_one]
+  exact deriv_w4Func_at_zero A B p
+
+/-- **Order-0 for w4Func**: `iteratedDeriv 0 (w4Func A B p) 0 = 1`. -/
+lemma iteratedDeriv_w4Func_order0 (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 0 (w4Func A B p) 0 = 1 := by
+  rw [iteratedDeriv_zero]
+  exact w4Func_zero A B p
+
+/-- **Order-0 for s4Func**: `iteratedDeriv 0 (s4Func A B p) 0 = 1`. -/
+lemma iteratedDeriv_s4Func_order0 (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 0 (s4Func A B p) 0 = 1 := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  rw [iteratedDeriv_zero]
+  unfold s4Func
+  simp only [mul_zero, zero_smul, exp_zero, mul_one, one_mul]
+
+/-- **Order-1 for s4Func**: `iteratedDeriv 1 (s4Func A B p) 0 = A + B`. -/
+lemma iteratedDeriv_s4Func_order1 (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 1 (s4Func A B p) 0 = A + B := by
+  rw [iteratedDeriv_one, (hasDerivAt_s4Explicit A B p 0).deriv]
+  exact s4DerivExplicit_at_zero A B p
+
+/-- Iterated derivative of `exp((-τ)•H)` at 0 equals `(-H)^k`.
+  Follows from `iteratedDeriv_exp_smul_mul_at_zero` with `c = -1`. -/
+lemma iteratedDeriv_exp_neg_smul_at_zero (H : 𝔸) (k : ℕ) :
+    iteratedDeriv k (fun τ : ℝ => exp ((-τ) • H)) 0 = (-H) ^ k := by
+  have heq : (fun τ : ℝ => exp ((-τ) • H)) = (fun τ : ℝ => exp (((-1 : ℝ) * τ) • H)) := by
+    funext τ; congr 1; rw [neg_one_mul]
+  rw [heq]
+  rw [iteratedDeriv_exp_smul_mul_at_zero H (-1) k]
+  rw [show ((-1 : ℝ) • H) = -H from by rw [neg_one_smul]]
+
+/-- ContDiffAt of `exp((-τ)•H)` at any point. -/
+lemma contDiffAt_exp_neg_smul (H : 𝔸) (τ : ℝ) {n : WithTop ℕ∞} :
+    ContDiffAt ℝ n (fun u : ℝ => exp ((-u) • H)) τ := by
+  have heq : (fun u : ℝ => exp ((-u) • H)) = (fun u : ℝ => exp (((-1 : ℝ) * u) • H)) := by
+    funext u; congr 1; rw [neg_one_mul]
+  rw [heq]
+  exact contDiffAt_exp_smul_mul H (-1) τ
+
+/-- **Key Leibniz reduction**: order-2 of w4Func expressed in terms of order-2 of s4Func.
+  Using `w4Func = exp(-τH) · s4Func` and Mathlib's Leibniz rule:
+
+    iteratedDeriv 2 (w4Func A B p) 0 = iteratedDeriv 2 (s4Func A B p) 0 - (A+B)^2
+
+  This is the crucial bridge: proving `iteratedDeriv 2 (s4Func A B p) 0 = (A+B)^2`
+  gives order-2 vanishing of w4Func. -/
+lemma iteratedDeriv_w4Func_order2_eq (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 2 (w4Func A B p) 0 =
+      iteratedDeriv 2 (s4Func A B p) 0 - (A + B) ^ 2 := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  -- Rewrite w4Func as the pointwise product of exp(-τH) and s4Func
+  have hfunext : w4Func A B p =
+      (fun τ : ℝ => exp ((-τ) • (A + B))) * s4Func A B p := by
+    funext τ
+    show w4Func A B p τ = _
+    rfl
+  rw [hfunext]
+  -- Apply Mathlib's iteratedDeriv_mul
+  rw [iteratedDeriv_mul (contDiffAt_exp_neg_smul (A + B) 0)
+    ((contDiff_s4Func A B p).contDiffAt (n := 2))]
+  -- Expand the sum
+  simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add,
+    iteratedDeriv_exp_neg_smul_at_zero, iteratedDeriv_s4Func_order0,
+    iteratedDeriv_s4Func_order1,
+    show (2 - 0 : ℕ) = 2 from rfl, show (2 - 1 : ℕ) = 1 from rfl,
+    show (2 - 2 : ℕ) = 0 from rfl, pow_zero, pow_one]
+  -- The sum is now:
+  --   C(2,0) · 1 · iteratedDeriv 2 s4Func 0 + C(2,1) · (-(A+B)) · (A+B) + C(2,2) · (A+B)^2 · 1
+  -- Need to show this equals `iteratedDeriv 2 (s4Func A B p) 0 - (A+B)^2`.
+  have h0 : (Nat.choose 2 0 : ℕ) = 1 := rfl
+  have h1 : (Nat.choose 2 1 : ℕ) = 2 := rfl
+  have h2 : (Nat.choose 2 2 : ℕ) = 1 := rfl
+  rw [h0, h1, h2]
+  -- Goal: ↑1 · 1 · iDer₂ s4 0 + (↑2 · (-(A+B)) · (A+B) + (↑1 · (-(A+B))^2 · 1 + 0)) = iDer₂ s4 0 - (A+B)^2
+  -- Normalize the Nat casts
+  simp only [Nat.cast_one, Nat.cast_ofNat, one_mul, mul_one, add_zero]
+  -- Goal: iDer₂ s4 0 + (2 · (-(A+B)) · (A+B) + (-(A+B))^2) = iDer₂ s4 0 - (A+B)^2
+  have hsq : (-(A + B)) ^ 2 = (A + B) ^ 2 := by noncomm_ring
+  have h2mul : (2 : 𝔸) * (-(A + B)) * (A + B) = -(2 * (A + B) * (A + B)) := by noncomm_ring
+  rw [hsq, h2mul]
+  -- Goal: iDer₂ s4 0 + (-(2 · (A+B) · (A+B)) + (A+B)^2) = iDer₂ s4 0 - (A+B)^2
+  noncomm_ring
+
 end
