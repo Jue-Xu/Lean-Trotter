@@ -122,6 +122,37 @@ lemma iteratedDerivWithin_w4Residual_order0 (A B : 𝔸) (p : ℝ) (s : Set ℝ)
   exact w4Residual_at_zero A B p
 
 /-!
+## Bridge: `iteratedDerivWithin` at 0 within `[0, t]` = `iteratedDeriv` at 0
+
+For `0 ≤ t`, the within-derivative at the left endpoint of `Icc 0 t` agrees
+with the global `iteratedDeriv` (since `w4Residual` is `ContDiff ℝ ⊤`). This
+converts the remaining orders 1-3 vanishing hypotheses into the equivalent
+simpler `iteratedDeriv` form, which may be easier to prove via explicit
+derivative calculations.
+-/
+
+/-- Bridge: `iteratedDerivWithin k (w4Residual A B p) (Icc 0 t) 0` equals
+  the global `iteratedDeriv k (w4Residual A B p) 0`, for `0 < t`. -/
+lemma iteratedDerivWithin_w4Residual_eq_iteratedDeriv (A B : 𝔸) (p : ℝ) (k : ℕ)
+    {t : ℝ} (ht : 0 < t) :
+    iteratedDerivWithin k (w4Residual A B p) (Icc 0 t) 0 =
+      iteratedDeriv k (w4Residual A B p) 0 :=
+  iteratedDerivWithin_eq_iteratedDeriv (uniqueDiffOn_Icc ht)
+    ((contDiff_w4Residual A B p).contDiffAt) (left_mem_Icc.mpr ht.le)
+
+/-- Alternative form of the conditional reduction, stated using the global
+  `iteratedDeriv` instead of `iteratedDerivWithin`. Easier to discharge because
+  it matches the ContDiff derivative framework. -/
+theorem exists_norm_w4Residual_t4_bound_of_iteratedDeriv_zero
+    (A B : 𝔸) (p : ℝ) {t : ℝ} (ht : 0 < t)
+    (hZero : ∀ k, k ≤ 3 → iteratedDeriv k (w4Residual A B p) 0 = 0) :
+    ∃ C ≥ 0, ∀ τ ∈ Icc (0 : ℝ) t, ‖w4Residual A B p τ‖ ≤ C * τ ^ 4 := by
+  apply exists_norm_w4Residual_t4_bound_of_zero_taylor A B p ht.le
+  intro k hk
+  rw [iteratedDerivWithin_w4Residual_eq_iteratedDeriv A B p k ht]
+  exact hZero k hk
+
+/-!
 ## Closing the two outer sorries
 
 The final assembly uses `norm_suzuki4_order5_from_residual_bound` from
