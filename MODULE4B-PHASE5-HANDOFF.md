@@ -1,21 +1,35 @@
 # Module 4b Phase 5 Handoff
 
-## Status as of last commit (`6c89f6f`)
+## Status as of last commit (`44754e7`)
 
-**Sorry count: 2** (`norm_suzuki4_fifth_order`, `norm_suzuki4_childs_form` — both endpoint research targets, untouched).
+**Sorry count: 2** (`norm_suzuki4_fifth_order`, `norm_suzuki4_childs_form` — both endpoint research targets, unchanged).
 
-**`Suzuki4DerivExplicit.lean`: 979 lines, 0 sorry, all build-clean.**
+**Phase 5 Taylor-reduction framework delivered**:
+- `Suzuki4DerivExplicit.lean`: 979 lines, 0 sorry
+- `Suzuki4Phase5.lean`: 180 lines, 0 sorry (NEW)
 
-The chain to close the remaining sorries is now **end-to-end packaged**:
+The chain to close the remaining sorries is now **Taylor-reduced**:
 
 ```
-Phase 5 (the only remaining work):
-  ‖w4Residual(τ)‖ ≤ C·τ⁴   ← TARGET
+Phase 5 framework (delivered):
+  Orders 1, 2, 3 iteratedDeriv vanishings at τ=0   ← NEW TARGET
+       ↓ (exists_norm_w4Residual_t4_bound_of_iteratedDeriv_zero — PROVED)
+  ‖w4Residual(τ)‖ ≤ C·τ⁴ on [0, t]
        ↓ (norm_suzuki4_order5_from_residual_bound — PROVED)
   ‖S₄(t) - exp(tH)‖ ≤ C/5·t⁵
        ↓ (Module 3 + Childs Form conditionals — PROVED)
   Closes norm_suzuki4_fifth_order ∧ norm_suzuki4_childs_form
 ```
+
+The remaining work is now three concrete claims:
+```
+iteratedDeriv 1 (w4Residual A B p) 0 = 0   (palindromic, uses s4_pairwise_commutator_sum_zero)
+iteratedDeriv 2 (w4Residual A B p) 0 = 0   (palindromic of higher order)
+iteratedDeriv 3 (w4Residual A B p) 0 = 0   (uses suzuki4_phase3_{aba,a2b,bab})
+```
+
+Each requires Step 1-3 of the plan below (explicit HasDerivAt for `w4DerivExplicit`
+or `s4DerivExplicit` with product-rule expansion + evaluation at τ=0).
 
 ## What's already proved (15+ commits)
 
