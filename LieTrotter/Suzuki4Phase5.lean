@@ -680,6 +680,38 @@ lemma iteratedDeriv_w4Func_order4_zero_iff_of_order23
   exact sub_eq_zero
 
 /-!
+## Bridge: `iteratedDeriv 2 s4Func = deriv s4DerivExplicit`
+
+Using `hasDerivAt_s4Explicit` (functional equality `deriv s4Func = s4DerivExplicit`
+via funext and deriv uniqueness), we reduce the iteratedDeriv problem to a
+standard deriv problem.
+-/
+
+/-- The derivative function of `s4Func A B p` equals `s4DerivExplicit A B p`,
+  as a functional equality. -/
+lemma deriv_s4Func_eq_s4DerivExplicit (A B : 𝔸) (p : ℝ) :
+    deriv (s4Func A B p) = s4DerivExplicit A B p := by
+  funext τ
+  exact (hasDerivAt_s4Explicit A B p τ).deriv
+
+/-- `iteratedDeriv 2 (s4Func A B p) = deriv (s4DerivExplicit A B p)` as functions. -/
+lemma iteratedDeriv_s4Func_order2_eq_deriv (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 2 (s4Func A B p) = deriv (s4DerivExplicit A B p) := by
+  rw [iteratedDeriv_succ, iteratedDeriv_one, deriv_s4Func_eq_s4DerivExplicit]
+
+/-- Corollary at τ=0: order-2 of s4Func = deriv of s4DerivExplicit at 0. -/
+lemma iteratedDeriv_s4Func_order2_at_zero (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 2 (s4Func A B p) 0 = deriv (s4DerivExplicit A B p) 0 := by
+  rw [iteratedDeriv_s4Func_order2_eq_deriv]
+
+/-- **Reduction of identity h2**: order-2 identity of s4Func ⟺
+  `deriv (s4DerivExplicit A B p) 0 = (A + B)²`. -/
+lemma iteratedDeriv_s4Func_order2_eq_iff (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2 ↔
+      deriv (s4DerivExplicit A B p) 0 = (A + B) ^ 2 := by
+  rw [iteratedDeriv_s4Func_order2_at_zero]
+
+/-!
 ## Capstone: closing S₄ O(t⁵) via the s4Func iteratedDeriv identities
 
 With the Leibniz bridges above, the four w4Func order-vanishing hypotheses
