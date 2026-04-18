@@ -524,6 +524,130 @@ The proof reduces to a `noncomm_ring` algebraic identity AFTER substituting
 `A+B = Σⱼ dⱼ` (which is `suzuki4_free_term`).
 -/
 
+/-!
+### Polynomial identities for order-condition cancellations
+
+The operator-level cancellations in Phases 2-4 reduce to scalar
+polynomial identities in the Suzuki parameter `p`. We isolate these
+identities here so that the operator-level proofs can simply rewrite
+using them.
+-/
+
+/-- Sum of `cᵢ · cⱼ` over (i, j) pairs with i < j, position i is A, position j is B.
+  The 15 AB-pairs are: (1,2), (1,4), (1,6), (1,8), (1,10), (3,4), (3,6),
+  (3,8), (3,10), (5,6), (5,8), (5,10), (7,8), (7,10), (9,10). -/
+def s4_sumAB (p : ℝ) : ℝ :=
+  -- i=1 (A, c=p/2)
+  (p/2)*p + (p/2)*p + (p/2)*(1-4*p) + (p/2)*p + (p/2)*p +
+  -- i=3 (A, c=p)
+  p*p + p*(1-4*p) + p*p + p*p +
+  -- i=5 (A, c=(1-3p)/2)
+  ((1-3*p)/2)*(1-4*p) + ((1-3*p)/2)*p + ((1-3*p)/2)*p +
+  -- i=7 (A, c=(1-3p)/2)
+  ((1-3*p)/2)*p + ((1-3*p)/2)*p +
+  -- i=9 (A, c=p)
+  p*p
+
+/-- Sum of `cᵢ · cⱼ` over (i, j) pairs with i < j, position i is B, position j is A.
+  The 15 BA-pairs are: (2,3), (2,5), (2,7), (2,9), (2,11), (4,5), (4,7),
+  (4,9), (4,11), (6,7), (6,9), (6,11), (8,9), (8,11), (10,11). -/
+def s4_sumBA (p : ℝ) : ℝ :=
+  -- i=2 (B, c=p)
+  p*p + p*((1-3*p)/2) + p*((1-3*p)/2) + p*p + p*(p/2) +
+  -- i=4 (B, c=p)
+  p*((1-3*p)/2) + p*((1-3*p)/2) + p*p + p*(p/2) +
+  -- i=6 (B, c=1-4p)
+  (1-4*p)*((1-3*p)/2) + (1-4*p)*p + (1-4*p)*(p/2) +
+  -- i=8 (B, c=p)
+  p*p + p*(p/2) +
+  -- i=10 (B, c=p)
+  p*(p/2)
+
+/-- **Phase 2 polynomial identity (palindromic order-1 cancellation)**:
+  `s4_sumAB = s4_sumBA` (both equal 1/2 by computation; equality follows from
+  the palindromic symmetry of S₄). Pure scalar polynomial identity in `p`. -/
+lemma s4_sumAB_eq_sumBA (p : ℝ) : s4_sumAB p = s4_sumBA p := by
+  unfold s4_sumAB s4_sumBA
+  ring
+
+/-- Both sums equal `1/2`. -/
+lemma s4_sumAB_eq_half (p : ℝ) : s4_sumAB p = 1 / 2 := by
+  unfold s4_sumAB
+  ring
+
+/-- Both sums equal `1/2`. -/
+lemma s4_sumBA_eq_half (p : ℝ) : s4_sumBA p = 1 / 2 := by
+  unfold s4_sumBA
+  ring
+
+/-!
+### Operator-level order-1 cancellation
+
+The polynomial identity `s4_sumAB = s4_sumBA` immediately gives the
+operator-level cancellation `Σ_{i<j} [dᵢ, dⱼ] = 0`, which is the
+order-1 coefficient of the τ-Taylor expansion of `w4Residual`.
+
+The 55 commutator pairs split into:
+- 25 same-type pairs (both A or both B): each `[Xᵢ, Xⱼ] = 0`
+- 15 AB pairs (Xᵢ=A, Xⱼ=B): contribute `s4_sumAB · [A, B]`
+- 15 BA pairs (Xᵢ=B, Xⱼ=A): contribute `s4_sumBA · [B, A] = -s4_sumBA · [A, B]`
+
+Total = `(s4_sumAB - s4_sumBA) · [A, B] = 0 · [A, B] = 0`.
+
+For brevity, we expand each `[dᵢ, dⱼ] = cᵢcⱼ·(XᵢXⱼ - XⱼXᵢ)`. After
+factoring, the sum collapses to `(s4_sumAB - s4_sumBA)·(A·B - B·A) = 0`.
+-/
+
+/-- **Phase 2 operator-level order-1 cancellation**: the sum of all
+  pair-commutators of the Suzuki insertions vanishes.
+
+  This is the τ-linear coefficient of `w4Residual(τ)` near τ=0. It
+  vanishes due to the palindromic symmetry of S₄ (Phase 2 of the
+  strategy doc). -/
+lemma s4_pairwise_commutator_sum_zero (A B : 𝔸) (p : ℝ) :
+    -- Sum of [dᵢ, dⱼ] = cᵢcⱼ·(XᵢXⱼ - XⱼXᵢ) over all 55 ordered pairs (i<j).
+    -- Same-type pairs vanish trivially. We list only the AB and BA pairs.
+    -- Each row corresponds to a fixed first index i.
+    -- AB pairs:
+    ((p/2 : ℝ) * p) • (A * B - B * A) +
+    ((p/2 : ℝ) * p) • (A * B - B * A) +
+    ((p/2 : ℝ) * (1-4*p)) • (A * B - B * A) +
+    ((p/2 : ℝ) * p) • (A * B - B * A) +
+    ((p/2 : ℝ) * p) • (A * B - B * A) +
+    (p * p : ℝ) • (A * B - B * A) +
+    (p * (1-4*p) : ℝ) • (A * B - B * A) +
+    (p * p : ℝ) • (A * B - B * A) +
+    (p * p : ℝ) • (A * B - B * A) +
+    (((1-3*p)/2) * (1-4*p) : ℝ) • (A * B - B * A) +
+    (((1-3*p)/2) * p : ℝ) • (A * B - B * A) +
+    (((1-3*p)/2) * p : ℝ) • (A * B - B * A) +
+    (((1-3*p)/2) * p : ℝ) • (A * B - B * A) +
+    (((1-3*p)/2) * p : ℝ) • (A * B - B * A) +
+    (p * p : ℝ) • (A * B - B * A) +
+    -- BA pairs (each contributes -cᵢcⱼ·(A·B - B·A) since [B,A] = -[A,B])
+    -((p * p : ℝ) • (A * B - B * A)) +
+    -((p * ((1-3*p)/2) : ℝ) • (A * B - B * A)) +
+    -((p * ((1-3*p)/2) : ℝ) • (A * B - B * A)) +
+    -((p * p : ℝ) • (A * B - B * A)) +
+    -((p * (p/2) : ℝ) • (A * B - B * A)) +
+    -((p * ((1-3*p)/2) : ℝ) • (A * B - B * A)) +
+    -((p * ((1-3*p)/2) : ℝ) • (A * B - B * A)) +
+    -((p * p : ℝ) • (A * B - B * A)) +
+    -((p * (p/2) : ℝ) • (A * B - B * A)) +
+    -(((1-4*p) * ((1-3*p)/2) : ℝ) • (A * B - B * A)) +
+    -(((1-4*p) * p : ℝ) • (A * B - B * A)) +
+    -(((1-4*p) * (p/2) : ℝ) • (A * B - B * A)) +
+    -((p * p : ℝ) • (A * B - B * A)) +
+    -((p * (p/2) : ℝ) • (A * B - B * A)) +
+    -((p * (p/2) : ℝ) • (A * B - B * A))
+    = 0 := by
+  -- Factor out (A·B - B·A): coefficient is sumAB - sumBA = 0
+  have h := s4_sumAB_eq_sumBA p
+  -- After factoring, the coefficient on (A·B - B·A) equals s4_sumAB - s4_sumBA
+  -- module tactic handles the smul/abelian-group identity
+  unfold s4_sumAB s4_sumBA at h
+  module
+
 /-- **Phase 1 (commutator form)**: `w4Residual` decomposes as 11 commutator terms.
 
   Each term `[Lⱼ(τ), dⱼ]·Rⱼ(τ)` vanishes at τ=0 (since Lⱼ(0) = 1 commutes
