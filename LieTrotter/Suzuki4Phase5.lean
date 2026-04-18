@@ -546,4 +546,11 @@ lemma iteratedDeriv_w4Func_order2_eq (A B : 𝔸) (p : ℝ) :
   -- Goal: iDer₂ s4 0 + (-(2 · (A+B) · (A+B)) + (A+B)^2) = iDer₂ s4 0 - (A+B)^2
   noncomm_ring
 
+/-- **Corollary**: order-2 vanishing of w4Func is equivalent to `s4''(0) = (A+B)²`. -/
+lemma iteratedDeriv_w4Func_order2_zero_iff (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 2 (w4Func A B p) 0 = 0 ↔
+      iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2 := by
+  rw [iteratedDeriv_w4Func_order2_eq]
+  exact sub_eq_zero
+
 end
