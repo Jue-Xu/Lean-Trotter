@@ -369,6 +369,29 @@ lemma iteratedDeriv_exp_smul_mul_at_zero (X : 𝔸) (c : ℝ) (k : ℕ) :
   rw [iteratedDeriv_exp_smul_mul_fn]
   simp
 
+/-- Each `exp((c·τ)•X)` is `ContDiffAt ℝ ∞` at every point (analytic). -/
+lemma contDiffAt_exp_smul_mul (X : 𝔸) (c : ℝ) (τ : ℝ) {n : WithTop ℕ∞} :
+    ContDiffAt ℝ n (fun u : ℝ => exp ((c * u) • X)) τ := by
+  have heq : (fun u : ℝ => (c * u) • X) = (fun u : ℝ => u • (c • X)) := by
+    funext u; rw [mul_comm, mul_smul]
+  have h_lin : ContDiffAt ℝ n (fun u : ℝ => (c * u) • X) τ := by
+    rw [heq]; exact (contDiff_id (𝕜 := ℝ)).smul contDiff_const |>.contDiffAt
+  have h_exp_cd : ContDiff ℝ n (exp : 𝔸 → 𝔸) := contDiff_iff_contDiffAt.mpr fun y =>
+    (NormedSpace.exp_analytic (𝕂 := ℝ) y).contDiffAt
+  exact h_exp_cd.contDiffAt.comp τ h_lin
+
+/-!
+### Two-factor Leibniz application
+
+The 2-factor iteratedDeriv at 0 has the form
+  `iteratedDeriv 2 (fun τ => exp(c₁τ•X₁) * exp(c₂τ•X₂)) 0 = (c₂•X₂)² + 2·(c₁•X₁)·(c₂•X₂) + (c₁•X₁)²`
+
+via Mathlib's `iteratedDeriv_mul` + the base case above. A full Lean proof
+requires careful handling of Nat-cast coercions in the binomial coefficients
+and ℕ-smul vs ℝ-smul distinctions. Deferred to subsequent session when we
+need the multi-factor generalization.
+-/
+
 /-!
 ## Future work: Leibniz-rule path for order-n vanishings
 
