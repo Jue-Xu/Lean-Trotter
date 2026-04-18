@@ -326,26 +326,59 @@ lemma w4DerivExplicit_at_zero_via_decomp (A B : 𝔸) (p : ℝ) :
   simp [neg_zero, zero_smul, exp_zero]
 
 /-!
-## Future work: `hasDerivAt_w4DerivExplicit_at_zero`
+## Future work: Leibniz-rule path for order-n vanishings
 
-Using `w4DerivExplicit_decomp` above, a clean HasDerivAt proof for
-`w4DerivExplicit` at τ=0 reduces the order-2 vanishing of `w4Func` to the
-statement `deriv (s4DerivExplicit A B p) 0 = H²`, which is equivalent to
-`s4_pairwise_commutator_sum_zero` applied at the operator level.
+**KEY INSIGHT**: Mathlib provides `iteratedDeriv_mul` (a Leibniz-rule
+formula for iterated derivatives of products):
 
-The reduction is:
-  w4Func''(0) = d/dτ[w4DerivExplicit A B p]|_{τ=0}
-           = d/dτ[-H · w4Func + exp(-τH) · s4DerivExplicit]|_{τ=0}
-           = -H · w4Func'(0) + [-H · 1 · s4DerivExplicit(0) + 1 · deriv(s4DerivExplicit)(0)]
-           = 0 - H² + deriv(s4DerivExplicit)(0)
-           = deriv(s4DerivExplicit)(0) - H²
+  iteratedDeriv n (f * g) x = Σ_{i=0..n} C(n,i) · iteratedDeriv i f x · iteratedDeriv (n-i) g x
 
-So w4Func''(0) = 0 ⟺ deriv(s4DerivExplicit)(0) = H².
+Using this iteratively on the 11-factor product s4Func, and the fact
+that `iteratedDeriv k (fun τ => exp((c·τ)•X)) 0 = (c•X)^k` (a baby
+lemma needed), we can compute:
 
-This identity, combined with the explicit computation
-`deriv(s4DerivExplicit)(0) = Σⱼ dⱼ² + 2·Σ_{i<j} dᵢ·dⱼ` (requires Step 1
-from the handoff, ~200 lines), would close order-2 via
-`s4_pairwise_commutator_sum_zero`.
+  iteratedDeriv n (s4Func A B p) 0 = multinomial sum of ordered products
+    of `k` copies of `dⱼ`'s (with multinomial coefficients)
+
+For n=2: `iteratedDeriv 2 (s4Func) 0 = Σⱼ dⱼ² + 2·Σ_{i<j} dᵢ·dⱼ`
+For n=3: `iteratedDeriv 3 (s4Func) 0 = Σⱼ dⱼ³ + 3·Σ_{(i,j) i≠j} dᵢdⱼ² (...)` etc.
+
+Then via the decomposition
+  `w4Func^(n)(0) = Σ_{i=0..n} C(n,i) · (-H)^i · iteratedDeriv (n-i) (s4Func) 0`
+(same Leibniz rule applied to w4Func = exp(-τH) · s4Func), we derive
+w4Func^(n)(0) as a polynomial in H combined with s4Func's Taylor
+coefficients.
+
+**Order-2 reduction**:
+  w4Func''(0) = s4''(0) - 2H·s4'(0) + H²·s4(0)
+             = s4''(0) - 2H² + H²
+             = s4''(0) - H²
+
+Vanishes iff s4''(0) = H², i.e., Σⱼ dⱼ² + 2·Σ_{i<j} dᵢdⱼ = H²,
+i.e., Σ_{i<j} [dᵢ, dⱼ] = 0 — `s4_pairwise_commutator_sum_zero`.
+
+**Order-3 reduction**:
+  w4Func'''(0) = s4'''(0) - 3H·s4''(0) + 3H²·s4'(0) - H³·s4(0)
+
+If s4(0) = 1, s4'(0) = H, s4''(0) = H² (from order-2), then:
+  w4Func'''(0) = s4'''(0) - 3H·H² + 3H²·H - H³
+             = s4'''(0) - H³
+
+Vanishes iff s4'''(0) = H³, i.e., the Phase 3 polynomial identities
+(`suzuki4_phase3_{aba,a2b,bab}` multiplied by suzuki4_cubic_cancel).
+
+**Remaining concrete work** (for a future session):
+1. Prove `iteratedDeriv_exp_smul_mul` (base case): for `fun τ => exp((c·τ)•X)`,
+   `iteratedDeriv k · 0 = (c•X)^k`. ~30 lines.
+2. Apply Leibniz rule iteratively on s4Func to get explicit expansion of
+   iteratedDeriv n s4Func 0. Complexity grows combinatorially.
+3. Match against multinomial expansion of H^n and use
+   s4_pairwise_commutator_sum_zero / suzuki4_phase3 to cancel.
+
+The Leibniz path is PREFERABLE to explicit HasDerivAt.mul chains because:
+- Mathlib's Leibniz rule does much of the combinatorial bookkeeping
+- iteratedDeriv level skips HasDerivAt → deriv conversion
+- Each order follows the same template (just different binomial coefficients)
 -/
 
 /-- **Order-1 vanishing for w4Func (within any set)**. Follows from
