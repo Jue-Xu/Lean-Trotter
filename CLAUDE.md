@@ -344,8 +344,12 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 | L4b-Taylor'. `exists_norm_w4Func_sub_one_t5_bound_of_zero_taylor` | Alternative Taylor-reduction for w4Func | ✅ Proved |
 | L4b-Taylor-1. `iteratedDerivWithin_w4Func_order1` | Order-1 of w4Func PROVED via `w4Deriv_at_zero` | ✅ Proved |
 | L4b-decomp. `w4DerivExplicit_decomp` | `w4DerivExplicit = -H·w4Func + exp(-τH)·s4DerivExplicit` | ✅ Proved |
-| L4b-bridge. (future) | `deriv (s4DerivExplicit A B p) 0 = H²` (core of order-2 of w4Func) | 🔴 Open |
-| L4b-C1, C2. (future) | w4Func orders 2, 3, 4 vanishings + final assembly | 🔴 Open |
+| L4b-Leibniz. `iteratedDeriv_exp_smul_mul_at_zero` | Base case: iteratedDeriv k exp((c·τ)•X) 0 = (c•X)^k | ✅ Proved |
+| L4b-br-2. `iteratedDeriv_w4Func_order2_eq` / `_zero_iff` | Order-2 bridge: w4Func''(0) = s4''(0) - H² | ✅ Proved |
+| L4b-br-3. `iteratedDeriv_w4Func_order3_eq` / `_zero_iff_of_order2` | Order-3 bridge (conditional on order-2) | ✅ Proved |
+| L4b-br-4. `iteratedDeriv_w4Func_order4_eq` / `_zero_iff_of_order23` | Order-4 bridge (conditional on orders 2, 3) | ✅ Proved |
+| L4b-CAPSTONE. `norm_suzuki4_order5_of_s4Func_iteratedDerivs` | Close S₄ O(t⁵) given 3 s4Func identities | ✅ Proved |
+| L4b-identities. (future) | `iteratedDeriv k (s4Func A B p) 0 = (A+B)^k` for k=2,3,4 | 🔴 Open |
 | L5. `norm_suzuki4_childs_via_residual` | Conditional Childs-form bound (8 explicit 4-fold commutators) | ✅ Proved |
 | L5'. `norm_suzuki4_childs_form` | Unconditional Childs Prop pf4_bound_2term | 🔴 Open (= Module 4b-C2) |
 
@@ -355,7 +359,7 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 - `LieTrotter/Suzuki4Module3.lean` (~170 lines) — Module 3
 - `LieTrotter/Suzuki4Module4.lean` (~150 lines) — Module 4a (continuity)
 - `LieTrotter/Suzuki4DerivExplicit.lean` (~979 lines) — Module 4b-A1/A2/A3 + Phase 1-3 polynomial identities + smoothness + bridge
-- `LieTrotter/Suzuki4Phase5.lean` (~360 lines) — Taylor-reduction framework (two paths: w4Residual-based and w4Func-based) + structural decomposition + order-0/1 vanishings proved
+- `LieTrotter/Suzuki4Phase5.lean` (~740 lines) — Taylor-reduction + Leibniz bridges for orders 1-4 + CAPSTONE theorem (conditional closure of S₄ O(t⁵) from 3 s4Func iteratedDeriv identities)
 - `LieTrotter/Suzuki4ChildsForm.lean` (~223 lines) — Childs Prop pf4_bound_2term + conditional reduction
 - `LieTrotter/Suzuki4OrderFive.lean` (~427 lines) — `norm_suzuki4_fifth_order` (alternative-form research target, 1 sorry)
 
