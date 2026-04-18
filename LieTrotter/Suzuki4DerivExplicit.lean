@@ -628,6 +628,55 @@ is the palindromic identity `Σ_{i<j}[dᵢ,dⱼ] = 0` (proved as
 palindromic Suzuki construction without further p-dependence.
 -/
 
+/-!
+### Phase 3 polynomial identities (for order-3 cancellation)
+
+For order-3 of w4Func to vanish, the operator-monomial coefficients of
+`s4'''(0) - H³` must each be 0. From CAS analysis these coefficients
+are all scalar multiples of `60p³ - 48p² + 12p - 1 = -(4p³+q³)`:
+
+| Monomial | Coefficient | As multiple of (4p³+(1-4p)³) |
+|----------|-------------|-------------------------------|
+| ABA | `-30p³ + 24p² - 6p + 1/2` | `(1/2)·(4p³+q³)` |
+| AB² | `-30p³ + 24p² - 6p + 1/2` | `(1/2)·(4p³+q³)` |
+| B²A | `-30p³ + 24p² - 6p + 1/2` | `(1/2)·(4p³+q³)` |
+| A²B | `15p³ - 12p² + 3p - 1/4` | `-(1/4)·(4p³+q³)` |
+| BA² | `15p³ - 12p² + 3p - 1/4` | `-(1/4)·(4p³+q³)` |
+| BAB | `60p³ - 48p² + 12p - 1` | `-(4p³+q³)` |
+
+For Suzuki `p = 1/(4-r), r³=4`, the cubic `4p³ + (1-4p)³ = 0` (proved as
+`suzuki4_cubic_cancel`), so all coefficients vanish, giving
+`s4'''(0) = H³` and hence `w4Func'''(0) = 0` (order-3 cancellation).
+-/
+
+/-- The Suzuki cubic predicate: `4p³ + (1-4p)³ = 0`. Holds for `p = 1/(4-r), r³=4`
+  via `suzuki4_cubic_cancel`. -/
+def IsSuzukiCubic (p : ℝ) : Prop := 4 * p ^ 3 + (1 - 4 * p) ^ 3 = 0
+
+/-- Phase 3 identity for ABA / AB² / B²A monomial coefficients. -/
+lemma suzuki4_phase3_aba (p : ℝ) (h : IsSuzukiCubic p) :
+    -30 * p ^ 3 + 24 * p ^ 2 - 6 * p + 1/2 = 0 := by
+  unfold IsSuzukiCubic at h
+  linear_combination (1/2 : ℝ) * h
+
+/-- Phase 3 identity for A²B / BA² monomial coefficients. -/
+lemma suzuki4_phase3_a2b (p : ℝ) (h : IsSuzukiCubic p) :
+    15 * p ^ 3 - 12 * p ^ 2 + 3 * p - 1/4 = 0 := by
+  unfold IsSuzukiCubic at h
+  linear_combination (-1/4 : ℝ) * h
+
+/-- Phase 3 identity for BAB monomial coefficient (= the cubic itself, negated). -/
+lemma suzuki4_phase3_bab (p : ℝ) (h : IsSuzukiCubic p) :
+    60 * p ^ 3 - 48 * p ^ 2 + 12 * p - 1 = 0 := by
+  unfold IsSuzukiCubic at h
+  linear_combination (-1 : ℝ) * h
+
+/-- Bridge: `suzuki4_cubic_cancel` implies `IsSuzukiCubic`. -/
+lemma isSuzukiCubic_of_suzuki4 {r : ℝ} (hr : r ^ 3 = 4) (hr_ne : 4 - r ≠ 0) :
+    IsSuzukiCubic (1 / (4 - r)) := by
+  unfold IsSuzukiCubic
+  exact suzuki4_cubic_cancel hr hr_ne
+
 /-- **Phase 2 operator-level order-1 cancellation**: the sum of all
   pair-commutators of the Suzuki insertions vanishes.
 
