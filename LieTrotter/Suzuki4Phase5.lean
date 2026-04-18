@@ -679,4 +679,62 @@ lemma iteratedDeriv_w4Func_order4_zero_iff_of_order23
   rw [halg]
   exact sub_eq_zero
 
+/-!
+## Capstone: closing S₄ O(t⁵) via the s4Func iteratedDeriv identities
+
+With the Leibniz bridges above, the four w4Func order-vanishing hypotheses
+reduce to three iteratedDeriv identities for s4Func:
+
+  `s4''(0) = (A+B)²`  (palindromic, uses `s4_pairwise_commutator_sum_zero`)
+  `s4'''(0) = (A+B)³` (uses `suzuki4_phase3_*` + `suzuki4_cubic_cancel`)
+  `s4⁴(0) = (A+B)⁴`   (automatic from lower orders, palindromic)
+
+Combined, they close the S₄ O(t⁵) bound.
+-/
+
+section AntiHermitian3
+
+variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
+
+/-- **Final capstone**: given the three `iteratedDeriv` identities for `s4Func`,
+  close the S₄ O(t⁵) bound.
+
+  The three hypotheses are the residual research work of Module 4b:
+  - `h2`: `iteratedDeriv 2 (s4Func) 0 = (A+B)²` (palindromic identity)
+  - `h3`: `iteratedDeriv 3 (s4Func) 0 = (A+B)³` (Suzuki cubic cancellation)
+  - `h4`: `iteratedDeriv 4 (s4Func) 0 = (A+B)⁴` (higher palindromic)
+
+  Each reduces via iterated Leibniz to operator-level polynomial identities
+  that are already proved:
+  - Palindromic → `s4_pairwise_commutator_sum_zero`
+  - Cubic → `suzuki4_phase3_aba`, `suzuki4_phase3_a2b`, `suzuki4_phase3_bab` +
+    `suzuki4_cubic_cancel`
+-/
+theorem norm_suzuki4_order5_of_s4Func_iteratedDerivs
+    (A B : 𝔸) (hA : star A = -A) (hB : star B = -B) (p : ℝ)
+    {t : ℝ} (ht : 0 < t)
+    (h2 : iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2)
+    (h3 : iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3)
+    (h4 : iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4) :
+    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 := by
+  -- Convert iteratedDeriv vanishings to iteratedDerivWithin vanishings
+  -- via the ContDiff bridge `iteratedDerivWithin_eq_iteratedDeriv`.
+  apply norm_suzuki4_order5_of_w4Func_vanishings A B hA hB p ht.le
+  intro k hk1 hk4
+  -- Transfer: iteratedDerivWithin k (w4Func) (Icc 0 t) 0 = iteratedDeriv k (w4Func) 0
+  rw [iteratedDerivWithin_eq_iteratedDeriv (uniqueDiffOn_Icc ht)
+    ((contDiff_w4Func A B p).contDiffAt (n := k)) (left_mem_Icc.mpr ht.le)]
+  -- Case split on k = 1, 2, 3, 4
+  interval_cases k
+  · -- k = 1: order-1 vanishing of w4Func (already proved)
+    exact iteratedDeriv_w4Func_order1 A B p
+  · -- k = 2: use the Leibniz bridge + h2
+    exact (iteratedDeriv_w4Func_order2_zero_iff A B p).mpr h2
+  · -- k = 3: use Leibniz bridge (conditional on order-2) + h3
+    exact (iteratedDeriv_w4Func_order3_zero_iff_of_order2 A B p h2).mpr h3
+  · -- k = 4: use Leibniz bridge (conditional on orders 2, 3) + h4
+    exact (iteratedDeriv_w4Func_order4_zero_iff_of_order23 A B p h2 h3).mpr h4
+
+end AntiHermitian3
+
 end
