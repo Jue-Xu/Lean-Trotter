@@ -598,6 +598,36 @@ For brevity, we expand each `[dᵢ, dⱼ] = cᵢcⱼ·(XᵢXⱼ - XⱼXᵢ)`. Af
 factoring, the sum collapses to `(s4_sumAB - s4_sumBA)·(A·B - B·A) = 0`.
 -/
 
+/-!
+### Insight: order numbering and Suzuki conditions
+
+The standard Yoshida/Suzuki theory of symmetric (palindromic) integrators
+states that EVEN-order BCH terms automatically vanish. The conditions on
+parameters appear only at ODD orders.
+
+For `w4Func(t) - 1 = e^{-tH}·S₄(t) - 1` to be O(t⁵), we need
+`w4Func^(k)(0) = 0` for k = 1, 2, 3, 4. Equivalently:
+
+| k | Order condition | Where it comes from | Phase |
+|---|-----------------|---------------------|-------|
+| 1 | `Σⱼ dⱼ = H` (free term) | Consistency `4p+q=1` | B1 ✅ |
+| 2 | `s4''(0) = H²`, equivalent to `Σ_{i<j}[dᵢ,dⱼ] = 0` | Palindromic (automatic) | Phase 2 ✅ |
+| 3 | `s4'''(0) = H³`, equivalent to coefficient sums ∝ `4p³+q³` | Suzuki cubic (needs `4p³+q³=0`) | Phase 3 🔴 |
+| 4 | `s4^(4)(0) = H⁴` | Palindromic + cubic (automatic given 1-3) | Phase 4 🔴 |
+
+**Discovery via symbolic CAS:** for `s4'''(0) - H³`, each operator-monomial
+coefficient (ABA, AB², A²B, BAB, BA², B²A) is a scalar multiple of the
+Suzuki cubic polynomial `60p³ - 48p² + 12p - 1` (which equals `-(4p³+q³)·15`).
+So ALL six coefficients vanish iff `suzuki4_cubic_cancel` holds.
+
+The MODULE4B-STRATEGY.md's claimed order-2 identity
+`4·(p/2)² + 4·p² + 2·((1-3p)/2)² + (1-4p)² = 1` is INCORRECT — it
+evaluates to 1.32 for Suzuki p, not 1. The actual order-2 condition
+is the palindromic identity `Σ_{i<j}[dᵢ,dⱼ] = 0` (proved as
+`s4_pairwise_commutator_sum_zero`), which holds STRUCTURALLY for any
+palindromic Suzuki construction without further p-dependence.
+-/
+
 /-- **Phase 2 operator-level order-1 cancellation**: the sum of all
   pair-commutators of the Suzuki insertions vanishes.
 
