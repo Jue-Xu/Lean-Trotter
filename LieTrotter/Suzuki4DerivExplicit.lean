@@ -27,6 +27,8 @@ where (cⱼ, Xⱼ) are the (coefficient, operator) pairs for each S₄ factor.
 import LieTrotter.Suzuki4HasDerivAt
 import LieTrotter.Suzuki4CommutatorScaling
 import LieTrotter.Suzuki4Module2
+import LieTrotter.Suzuki4Module3
+import LieTrotter.Suzuki4Module4
 
 noncomputable section
 
@@ -942,6 +944,35 @@ lemma norm_w4Deriv_eq_norm_residual (A B : 𝔸)
     ‖w4Deriv A B p τ‖ = ‖w4Residual A B p τ‖ := by
   rw [w4Deriv_eq_w4DerivExplicit]
   exact norm_w4DerivExplicit_eq_norm_residual A B hA hB p τ
+
+/-!
+### Final assembly (Phase 6 per strategy doc)
+
+Given the pointwise τ⁴ bound on `w4Residual` (or equivalently `w4Deriv`),
+the S₄ O(t⁵) bound follows directly from Module 3's conditional theorem.
+
+This lemma packages the chain for convenient application.
+-/
+
+/-- **Final assembly**: given a τ⁴ bound on `‖w4Residual τ‖` (= `‖w4Deriv τ‖`
+  by anti-Hermitian isometry), conclude the S₄ O(t⁵) bound with the specified
+  constant `C₅ = C/5`.
+
+  This is the endpoint of the Module 4b chain: once Phase 5 produces the
+  pointwise bound, this lemma closes `norm_suzuki4_fifth_order` and friends. -/
+theorem norm_suzuki4_order5_from_residual_bound (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) (p : ℝ) {t : ℝ} (ht : 0 ≤ t)
+    {C : ℝ} (hC : 0 ≤ C)
+    (hBound : ∀ τ ∈ Set.Icc (0 : ℝ) t, ‖w4Residual A B p τ‖ ≤ C * τ ^ 4) :
+    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C / 5 * t ^ 5 := by
+  -- Convert residual bound to w4Deriv bound via isometry
+  have hDerivBound : ∀ τ ∈ Set.Icc (0 : ℝ) t, ‖w4Deriv A B p τ‖ ≤ C * τ ^ 4 := by
+    intro τ hτ
+    rw [norm_w4Deriv_eq_norm_residual A B hA hB]
+    exact hBound τ hτ
+  -- Apply Module 3's conditional
+  exact norm_suzuki4_order5_via_module3 A B hA hB p ht
+    (continuous_w4Deriv A B p) hC hDerivBound
 
 end AntiHermitianNorm
 
