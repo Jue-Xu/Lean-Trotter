@@ -553,4 +553,68 @@ lemma iteratedDeriv_w4Func_order2_zero_iff (A B : 𝔸) (p : ℝ) :
   rw [iteratedDeriv_w4Func_order2_eq]
   exact sub_eq_zero
 
+/-!
+### Order-3 Leibniz bridge for w4Func
+
+Applying Mathlib's `iteratedDeriv_mul` with n=3:
+  iteratedDeriv 3 w4Func 0 = C(3,0)·1·s4'''(0) + C(3,1)·(-H)·s4''(0)
+    + C(3,2)·H²·s4'(0) + C(3,3)·(-H)³·s4(0)
+    = s4'''(0) - 3H·s4''(0) + 3H²·(A+B) - H³
+    = s4'''(0) - 3H·s4''(0) + 2H³
+
+This is the analog of the order-2 bridge but depends on s4''(0) as well.
+Under the order-2 assumption `s4''(0) = H²`, it simplifies to
+`s4'''(0) - 3H³ + 2H³ = s4'''(0) - H³`.
+-/
+
+/-- **Key Leibniz reduction (order-3)**: unconditional form. -/
+lemma iteratedDeriv_w4Func_order3_eq (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 3 (w4Func A B p) 0 =
+      iteratedDeriv 3 (s4Func A B p) 0
+      - 3 * (A + B) * iteratedDeriv 2 (s4Func A B p) 0
+      + 2 * (A + B) ^ 3 := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  have hfunext : w4Func A B p =
+      (fun τ : ℝ => exp ((-τ) • (A + B))) * s4Func A B p := by
+    funext τ
+    show w4Func A B p τ = _
+    rfl
+  rw [hfunext]
+  rw [iteratedDeriv_mul (contDiffAt_exp_neg_smul (A + B) 0)
+    ((contDiff_s4Func A B p).contDiffAt (n := 3))]
+  simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add,
+    iteratedDeriv_exp_neg_smul_at_zero, iteratedDeriv_s4Func_order0,
+    iteratedDeriv_s4Func_order1,
+    show (3 - 0 : ℕ) = 3 from rfl, show (3 - 1 : ℕ) = 2 from rfl,
+    show (3 - 2 : ℕ) = 1 from rfl, show (3 - 3 : ℕ) = 0 from rfl,
+    pow_zero, pow_one]
+  -- Sum: C(3,0)·1·iDer₃ s4 0 + C(3,1)·(-H)·iDer₂ s4 0 + C(3,2)·H²·(A+B) + C(3,3)·(-H)³·1
+  have h0 : (Nat.choose 3 0 : ℕ) = 1 := rfl
+  have h1 : (Nat.choose 3 1 : ℕ) = 3 := rfl
+  have h2 : (Nat.choose 3 2 : ℕ) = 3 := rfl
+  have h3 : (Nat.choose 3 3 : ℕ) = 1 := rfl
+  rw [h0, h1, h2, h3]
+  simp only [Nat.cast_one, Nat.cast_ofNat, one_mul, mul_one, add_zero]
+  -- Manually unfold (-H)^2 = H^2, (-H)^3 = -H^3
+  have hsq : (-(A + B)) ^ 2 = (A + B) ^ 2 := by noncomm_ring
+  have hcb : (-(A + B)) ^ 3 = -((A + B) ^ 3) := by noncomm_ring
+  rw [hsq, hcb]
+  -- Final noncomm_ring to clean up
+  noncomm_ring
+
+/-- **Corollary**: under order-2 hypothesis `s4''(0) = H²`, order-3 vanishing of
+  w4Func ⟺ `s4'''(0) = H³`. -/
+lemma iteratedDeriv_w4Func_order3_zero_iff_of_order2
+    (A B : 𝔸) (p : ℝ) (h2 : iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2) :
+    iteratedDeriv 3 (w4Func A B p) 0 = 0 ↔
+      iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3 := by
+  rw [iteratedDeriv_w4Func_order3_eq, h2]
+  -- Goal: s4'''(0) - 3·(A+B)·(A+B)² + 2·(A+B)³ = 0 ↔ s4'''(0) = (A+B)³
+  -- Rewrite LHS as s4'''(0) - (A+B)³ via noncomm_ring algebra
+  have halg : iteratedDeriv 3 (s4Func A B p) 0
+      - 3 * (A + B) * (A + B) ^ 2 + 2 * (A + B) ^ 3
+      = iteratedDeriv 3 (s4Func A B p) 0 - (A + B) ^ 3 := by noncomm_ring
+  rw [halg]
+  exact sub_eq_zero
+
 end
