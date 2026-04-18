@@ -333,8 +333,13 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 | L4b-A1. `hasDerivAt_w4Explicit` | HasDerivAt with explicit 12-term derivative | ✅ Proved |
 | L4b-A2. `w4Deriv_eq_w4DerivExplicit` | Extracted derivative equals explicit form (uniqueness) | ✅ Proved |
 | L4b-A3. `w4DerivExplicit_eq_exp_mul_residual` | Factorization `w4DerivExplicit = exp(-τH)·w4Residual` | ✅ Proved |
+| L4b-A3'. `w4Residual_eq_s4Deriv_sub_H_s4` | Cleaner form `w4Residual = s4' - H·s4` | ✅ Proved |
 | L4b-B1. `w4Deriv_at_zero` | Order-0 cancellation `w4Deriv 0 = 0` (uses `suzuki4_free_term`) | ✅ Proved |
-| L4b-B2—B7. (future) | Orders 1-3 cancellations via FTC expansions | 🔴 Open |
+| L4b-P1. `w4Residual_eq_comm_sum` | Commutator form `w4Residual = Σⱼ [Lⱼ,dⱼ]·Rⱼ` | ✅ Proved |
+| L4b-P2. `s4_sumAB_eq_sumBA` + `s4_pairwise_commutator_sum_zero` | Order-1 palindromic identity | ✅ Proved |
+| L4b-P3. `suzuki4_phase3_{aba,a2b,bab}` | Six polynomial identities ∝ Suzuki cubic | ✅ Proved |
+| L4b-smooth. `contDiff_w4Residual` | `w4Residual` is `ContDiff ℝ n` (for Taylor bounds) | ✅ Proved |
+| L4b-bridge. (future) | Connect polynomial identities to operator Taylor coefficients | 🔴 Open |
 | L4b-C1, C2. (future) | Order-4 residual bound + final assembly | 🔴 Open |
 | L5. `norm_suzuki4_childs_via_residual` | Conditional Childs-form bound (8 explicit 4-fold commutators) | ✅ Proved |
 | L5'. `norm_suzuki4_childs_form` | Unconditional Childs Prop pf4_bound_2term | 🔴 Open (= Module 4b-C2) |
