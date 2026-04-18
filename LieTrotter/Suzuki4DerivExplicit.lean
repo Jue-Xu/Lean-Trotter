@@ -506,6 +506,111 @@ lemma continuous_w4Residual (A B : 𝔸) (p : ℝ) :
   exact (continuous_s4DerivExplicit A B p).sub (continuous_const.mul (continuous_s4Func A B p))
 
 /-!
+### Smoothness of s4DerivExplicit and w4Residual
+
+For Taylor-remainder bounds in the Phase 5 residual analysis, we need
+`ContDiff ℝ ⊤ (w4Residual A B p)`. This follows from:
+- `s4Func` is `ContDiff ℝ ⊤` (from Module 4a pattern: analytic exp composed
+  with smooth linear maps, products of smooth are smooth)
+- `s4DerivExplicit` is `ContDiff ℝ ⊤` (same reasoning; also the derivative
+  of s4Func which inherits smoothness)
+- `w4Residual = s4DerivExplicit - H·s4Func` is `ContDiff ℝ ⊤` (sum/product
+  of smooth functions with constants)
+-/
+
+/-- Each exp factor `τ ↦ exp((c·τ)•X)` is smooth (copied from Module 4a). -/
+private lemma contDiff_exp_smul_factor_local (X : 𝔸) (c : ℝ) {n : WithTop ℕ∞} :
+    ContDiff ℝ n (fun τ : ℝ => exp ((c * τ) • X)) := by
+  have heq : (fun τ : ℝ => (c * τ) • X) = (fun τ : ℝ => τ • (c • X)) := by
+    funext τ; rw [mul_comm, mul_smul]
+  have h_lin : ContDiff ℝ n (fun τ : ℝ => (c * τ) • X) := by
+    rw [heq]; exact (contDiff_id (𝕜 := ℝ)).smul contDiff_const
+  have h_exp_cd : ContDiff ℝ n (exp : 𝔸 → 𝔸) := contDiff_iff_contDiffAt.mpr fun y =>
+    (NormedSpace.exp_analytic (𝕂 := ℝ) y).contDiffAt
+  exact h_exp_cd.comp h_lin
+
+/-- `s4Func` is `ContDiff ℝ n` for any `n`. -/
+lemma contDiff_s4Func (A B : 𝔸) (p : ℝ) {n : WithTop ℕ∞} :
+    ContDiff ℝ n (s4Func A B p) := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  unfold s4Func
+  have c1  := contDiff_exp_smul_factor_local A (p/2) (n := n)
+  have c2  := contDiff_exp_smul_factor_local B p (n := n)
+  have c3  := contDiff_exp_smul_factor_local A p (n := n)
+  have c4  := contDiff_exp_smul_factor_local B p (n := n)
+  have c5  := contDiff_exp_smul_factor_local A ((1-3*p)/2) (n := n)
+  have c6  := contDiff_exp_smul_factor_local B (1-4*p) (n := n)
+  have c7  := contDiff_exp_smul_factor_local A ((1-3*p)/2) (n := n)
+  have c8  := contDiff_exp_smul_factor_local B p (n := n)
+  have c9  := contDiff_exp_smul_factor_local A p (n := n)
+  have c10 := contDiff_exp_smul_factor_local B p (n := n)
+  have c11 := contDiff_exp_smul_factor_local A (p/2) (n := n)
+  exact ((((((((((c1.mul c2).mul c3).mul c4).mul c5).mul c6).mul c7).mul c8).mul c9).mul c10).mul c11)
+
+/-- `s4DerivExplicit` is `ContDiff ℝ n` (as a sum of products of smooth exps
+  and constant insertions). -/
+lemma contDiff_s4DerivExplicit (A B : 𝔸) (p : ℝ) {n : WithTop ℕ∞} :
+    ContDiff ℝ n (s4DerivExplicit A B p) := by
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  unfold s4DerivExplicit
+  -- Each of the 11 terms is a product of 12 ContDiff functions (1 dⱼ constant + 11 exp factors)
+  have c1  := contDiff_exp_smul_factor_local A (p/2) (n := n)
+  have c2  := contDiff_exp_smul_factor_local B p (n := n)
+  have c3  := contDiff_exp_smul_factor_local A p (n := n)
+  have c4  := contDiff_exp_smul_factor_local B p (n := n)
+  have c5  := contDiff_exp_smul_factor_local A ((1-3*p)/2) (n := n)
+  have c6  := contDiff_exp_smul_factor_local B (1-4*p) (n := n)
+  have c7  := contDiff_exp_smul_factor_local A ((1-3*p)/2) (n := n)
+  have c8  := contDiff_exp_smul_factor_local B p (n := n)
+  have c9  := contDiff_exp_smul_factor_local A p (n := n)
+  have c10 := contDiff_exp_smul_factor_local B p (n := n)
+  have c11 := contDiff_exp_smul_factor_local A (p/2) (n := n)
+  -- dⱼ are constants, hence ContDiff
+  have hd1  : ContDiff ℝ n (fun _ : ℝ => ((p/2 : ℝ) • A : 𝔸)) := contDiff_const
+  have hd2  : ContDiff ℝ n (fun _ : ℝ => ((p : ℝ) • B : 𝔸)) := contDiff_const
+  have hd3  : ContDiff ℝ n (fun _ : ℝ => ((p : ℝ) • A : 𝔸)) := contDiff_const
+  have hd4  : ContDiff ℝ n (fun _ : ℝ => ((p : ℝ) • B : 𝔸)) := contDiff_const
+  have hd5  : ContDiff ℝ n (fun _ : ℝ => (((1-3*p)/2 : ℝ) • A : 𝔸)) := contDiff_const
+  have hd6  : ContDiff ℝ n (fun _ : ℝ => (((1-4*p) : ℝ) • B : 𝔸)) := contDiff_const
+  have hd7  : ContDiff ℝ n (fun _ : ℝ => (((1-3*p)/2 : ℝ) • A : 𝔸)) := contDiff_const
+  have hd8  : ContDiff ℝ n (fun _ : ℝ => ((p : ℝ) • B : 𝔸)) := contDiff_const
+  have hd9  : ContDiff ℝ n (fun _ : ℝ => ((p : ℝ) • A : 𝔸)) := contDiff_const
+  have hd10 : ContDiff ℝ n (fun _ : ℝ => ((p : ℝ) • B : 𝔸)) := contDiff_const
+  have hd11 : ContDiff ℝ n (fun _ : ℝ => ((p/2 : ℝ) • A : 𝔸)) := contDiff_const
+  -- Build each term, then sum
+  -- Term 1: (d1 * e1) * e2 * ... * e11
+  refine ContDiff.add ?_ ?_
+  · refine ContDiff.add ?_ ?_
+    refine ContDiff.add ?_ ?_
+    refine ContDiff.add ?_ ?_
+    refine ContDiff.add ?_ ?_
+    refine ContDiff.add ?_ ?_
+    refine ContDiff.add ?_ ?_
+    refine ContDiff.add ?_ ?_
+    refine ContDiff.add ?_ ?_
+    refine ContDiff.add ?_ ?_
+    · exact ((((((((((hd1.mul c1).mul c2).mul c3).mul c4).mul c5).mul c6).mul c7).mul c8).mul c9).mul c10).mul c11
+    · exact ((((((((((c1.mul (hd2.mul c2)).mul c3).mul c4).mul c5).mul c6).mul c7).mul c8).mul c9).mul c10).mul c11)
+    · exact ((((((((((c1.mul c2).mul (hd3.mul c3)).mul c4).mul c5).mul c6).mul c7).mul c8).mul c9).mul c10).mul c11)
+    · exact ((((((((((c1.mul c2).mul c3).mul (hd4.mul c4)).mul c5).mul c6).mul c7).mul c8).mul c9).mul c10).mul c11)
+    · exact ((((((((((c1.mul c2).mul c3).mul c4).mul (hd5.mul c5)).mul c6).mul c7).mul c8).mul c9).mul c10).mul c11)
+    · exact ((((((((((c1.mul c2).mul c3).mul c4).mul c5).mul (hd6.mul c6)).mul c7).mul c8).mul c9).mul c10).mul c11)
+    · exact ((((((((((c1.mul c2).mul c3).mul c4).mul c5).mul c6).mul (hd7.mul c7)).mul c8).mul c9).mul c10).mul c11)
+    · exact ((((((((((c1.mul c2).mul c3).mul c4).mul c5).mul c6).mul c7).mul (hd8.mul c8)).mul c9).mul c10).mul c11)
+    · exact ((((((((((c1.mul c2).mul c3).mul c4).mul c5).mul c6).mul c7).mul c8).mul (hd9.mul c9)).mul c10).mul c11)
+    · exact ((((((((((c1.mul c2).mul c3).mul c4).mul c5).mul c6).mul c7).mul c8).mul c9).mul (hd10.mul c10)).mul c11)
+  · exact ((((((((((c1.mul c2).mul c3).mul c4).mul c5).mul c6).mul c7).mul c8).mul c9).mul c10).mul (hd11.mul c11))
+
+/-- `w4Residual` is `ContDiff ℝ n` for any `n`. -/
+lemma contDiff_w4Residual (A B : 𝔸) (p : ℝ) {n : WithTop ℕ∞} :
+    ContDiff ℝ n (w4Residual A B p) := by
+  have heq : w4Residual A B p =
+      (fun τ => s4DerivExplicit A B p τ - (A + B) * s4Func A B p τ) := by
+    funext τ; exact w4Residual_eq_s4Deriv_sub_H_s4 A B p τ
+  rw [heq]
+  exact (contDiff_s4DerivExplicit A B p).sub (contDiff_const.mul (contDiff_s4Func A B p))
+
+/-!
 ## Phase 1 (per MODULE4B-STRATEGY.md): Commutator form
 
 Express `w4Residual` as a sum of 11 commutator terms:
