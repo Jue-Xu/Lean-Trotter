@@ -326,6 +326,50 @@ lemma w4DerivExplicit_at_zero_via_decomp (A B : 𝔸) (p : ℝ) :
   simp [neg_zero, zero_smul, exp_zero]
 
 /-!
+## Base case for Leibniz-rule expansion: `iteratedDeriv` of a single exp factor
+
+For a single exp factor `τ ↦ exp((c·τ)•X)`, the functional identity:
+  `iteratedDeriv k = fun τ => (c•X)^k · exp((c·τ)•X)`
+
+At τ=0: `iteratedDeriv k (fun τ => exp((c·τ)•X)) 0 = (c•X)^k`.
+
+This is the building block for applying Leibniz rule to the 11-factor s4Func.
+-/
+
+/-- **Base case**: iterated derivative of a single exp factor (functional form).
+  Proved by induction on k using `iteratedDeriv_succ'` and `HasDerivAt.deriv`. -/
+lemma iteratedDeriv_exp_smul_mul_fn (X : 𝔸) (c : ℝ) :
+    ∀ k : ℕ, iteratedDeriv k (fun τ : ℝ => exp ((c * τ) • X)) =
+      fun τ : ℝ => (c • X) ^ k * exp ((c * τ) • X) := by
+  intro k
+  induction k with
+  | zero =>
+    funext τ
+    simp [iteratedDeriv_zero]
+  | succ n ih =>
+    funext τ
+    rw [iteratedDeriv_succ, ih]
+    -- Goal: deriv (fun τ => (c•X)^n · exp((c·τ)•X)) τ = (c•X)^(n+1) · exp((c·τ)•X)
+    have h_exp : HasDerivAt (fun u : ℝ => exp ((c * u) • X))
+        ((c • X) * exp ((c * τ) • X)) τ := by
+      have h := hasDerivAt_exp_smul_mul X c τ
+      rwa [← Algebra.smul_mul_assoc] at h
+    have h_prod : HasDerivAt (fun u : ℝ => (c • X) ^ n * exp ((c * u) • X))
+        ((c • X) ^ n * ((c • X) * exp ((c * τ) • X))) τ := by
+      have := (hasDerivAt_const τ ((c • X : 𝔸) ^ n)).mul h_exp
+      simpa using this
+    rw [h_prod.deriv]
+    -- Goal: (c•X)^n · ((c•X) · exp((c·τ)•X)) = (c•X)^(n+1) · exp((c·τ)•X)
+    rw [pow_succ]
+    noncomm_ring
+
+/-- **Base case at τ=0**: iterated derivative of a single exp factor at 0 equals (c•X)^k. -/
+lemma iteratedDeriv_exp_smul_mul_at_zero (X : 𝔸) (c : ℝ) (k : ℕ) :
+    iteratedDeriv k (fun τ : ℝ => exp ((c * τ) • X)) 0 = (c • X) ^ k := by
+  rw [iteratedDeriv_exp_smul_mul_fn]
+  simp
+
+/-!
 ## Future work: Leibniz-rule path for order-n vanishings
 
 **KEY INSIGHT**: Mathlib provides `iteratedDeriv_mul` (a Leibniz-rule
