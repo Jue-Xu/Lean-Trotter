@@ -340,9 +340,12 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 | L4b-P3. `suzuki4_phase3_{aba,a2b,bab}` | Six polynomial identities ∝ Suzuki cubic | ✅ Proved |
 | L4b-smooth. `contDiff_w4Residual` | `w4Residual` is `ContDiff ℝ n` (for Taylor bounds) | ✅ Proved |
 | L4b-Taylor. `exists_norm_w4Residual_t4_bound_of_zero_taylor` | Conditional τ⁴ bound from 4 iteratedDerivWithin vanishings | ✅ Proved |
-| L4b-Taylor-0. `iteratedDerivWithin_w4Residual_order0` | Order-0 trivially vanishes via `w4Residual_at_zero` | ✅ Proved |
-| L4b-bridge. (future) | Connect polynomial identities to operator Taylor coefficients | 🔴 Open |
-| L4b-C1, C2. (future) | Order-1/2/3 iteratedDerivWithin vanishings + final assembly | 🔴 Open |
+| L4b-Taylor-0. `iteratedDerivWithin_w4Residual_order0` | Order-0 of w4Residual trivially vanishes | ✅ Proved |
+| L4b-Taylor'. `exists_norm_w4Func_sub_one_t5_bound_of_zero_taylor` | Alternative Taylor-reduction for w4Func | ✅ Proved |
+| L4b-Taylor-1. `iteratedDerivWithin_w4Func_order1` | Order-1 of w4Func PROVED via `w4Deriv_at_zero` | ✅ Proved |
+| L4b-decomp. `w4DerivExplicit_decomp` | `w4DerivExplicit = -H·w4Func + exp(-τH)·s4DerivExplicit` | ✅ Proved |
+| L4b-bridge. (future) | `deriv (s4DerivExplicit A B p) 0 = H²` (core of order-2 of w4Func) | 🔴 Open |
+| L4b-C1, C2. (future) | w4Func orders 2, 3, 4 vanishings + final assembly | 🔴 Open |
 | L5. `norm_suzuki4_childs_via_residual` | Conditional Childs-form bound (8 explicit 4-fold commutators) | ✅ Proved |
 | L5'. `norm_suzuki4_childs_form` | Unconditional Childs Prop pf4_bound_2term | 🔴 Open (= Module 4b-C2) |
 
@@ -352,7 +355,7 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 - `LieTrotter/Suzuki4Module3.lean` (~170 lines) — Module 3
 - `LieTrotter/Suzuki4Module4.lean` (~150 lines) — Module 4a (continuity)
 - `LieTrotter/Suzuki4DerivExplicit.lean` (~979 lines) — Module 4b-A1/A2/A3 + Phase 1-3 polynomial identities + smoothness + bridge
-- `LieTrotter/Suzuki4Phase5.lean` (~140 lines) — Taylor-reduction framework (conditional on 4 iteratedDerivWithin vanishings)
+- `LieTrotter/Suzuki4Phase5.lean` (~360 lines) — Taylor-reduction framework (two paths: w4Residual-based and w4Func-based) + structural decomposition + order-0/1 vanishings proved
 - `LieTrotter/Suzuki4ChildsForm.lean` (~223 lines) — Childs Prop pf4_bound_2term + conditional reduction
 - `LieTrotter/Suzuki4OrderFive.lean` (~427 lines) — `norm_suzuki4_fifth_order` (alternative-form research target, 1 sorry)
 
