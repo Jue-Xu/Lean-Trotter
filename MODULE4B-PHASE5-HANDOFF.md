@@ -1,37 +1,32 @@
 # Module 4b Phase 5 Handoff
 
-## Status as of last commit (`44754e7`)
+## Status as of last commit (`fb05d9c`)
 
 **Sorry count: 2** (`norm_suzuki4_fifth_order`, `norm_suzuki4_childs_form` — both endpoint research targets, unchanged).
 
-**Phase 5 Taylor-reduction framework delivered**:
+**Phase 5 framework fully delivered, with CAPSTONE theorem**:
 - `Suzuki4DerivExplicit.lean`: 979 lines, 0 sorry
-- `Suzuki4Phase5.lean`: 180 lines, 0 sorry (NEW)
+- `Suzuki4Phase5.lean`: 740 lines, 0 sorry
 
-The chain to close the remaining sorries is now **Taylor-reduced**:
+The chain to close the remaining sorries has been **fully Leibniz-reduced** to 3 concrete identities:
 
 ```
-Phase 5 framework (delivered):
-  Orders 1, 2, 3 iteratedDeriv vanishings at τ=0   ← NEW TARGET
-       ↓ (exists_norm_w4Residual_t4_bound_of_iteratedDeriv_zero — PROVED)
-  ‖w4Residual(τ)‖ ≤ C·τ⁴ on [0, t]
-       ↓ (norm_suzuki4_order5_from_residual_bound — PROVED)
-  ‖S₄(t) - exp(tH)‖ ≤ C/5·t⁵
-       ↓ (Module 3 + Childs Form conditionals — PROVED)
-  Closes norm_suzuki4_fifth_order ∧ norm_suzuki4_childs_form
+CAPSTONE: norm_suzuki4_order5_of_s4Func_iteratedDerivs (✅ PROVED)
+       ↑
+  s4 iteratedDeriv identities (REMAINING WORK):
+    iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2
+    iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3
+    iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4
+       ↓ (Leibniz bridges — ALL PROVED)
+  w4Func order-2, 3, 4 vanishings (via iteratedDeriv_w4Func_order{2,3,4}_zero_iff_*)
+       ↓ (w4Func Taylor reduction — PROVED)
+  ‖w4Func(t) - 1‖ ≤ C · t⁵
+       ↓ (Module 2 isometry — PROVED)
+  ‖S₄(t) - exp(tH)‖ ≤ C · t⁵
+       (closes norm_suzuki4_fifth_order ∧ norm_suzuki4_childs_form with ∃ C)
 ```
 
-The remaining work is now three concrete claims:
-```
-iteratedDeriv 1 (w4Residual A B p) 0 = 0   (palindromic, uses s4_pairwise_commutator_sum_zero)
-iteratedDeriv 2 (w4Residual A B p) 0 = 0   (palindromic of higher order)
-iteratedDeriv 3 (w4Residual A B p) 0 = 0   (uses suzuki4_phase3_{aba,a2b,bab})
-```
-
-Each requires Step 1-3 of the plan below (explicit HasDerivAt for `w4DerivExplicit`
-or `s4DerivExplicit` with product-rule expansion + evaluation at τ=0).
-
-## What's already proved (15+ commits)
+## What's proved (cumulative)
 
 | Component | Lemma | Status |
 |---|---|---|
@@ -47,141 +42,88 @@ or `s4DerivExplicit` with product-rule expansion + evaluation at τ=0).
 | Phase 3 order-3 polynomials | `suzuki4_phase3_{aba,a2b,bab}` | ✅ |
 | Smoothness | `contDiff_w4Residual` | ✅ |
 | Bridge norm equality | `norm_w4Deriv_eq_norm_residual` | ✅ |
-| Final assembly | `norm_suzuki4_order5_from_residual_bound` | ✅ |
+| Residual-bound reduction | `norm_suzuki4_order5_from_residual_bound` | ✅ |
+| **Phase 5 Taylor reduction** (w4Residual) | `exists_norm_w4Residual_t4_bound_of_zero_taylor` | ✅ |
+| **Phase 5 Taylor reduction** (w4Func) | `exists_norm_w4Func_sub_one_t5_bound_of_zero_taylor` | ✅ |
+| **Leibniz base case** | `iteratedDeriv_exp_smul_mul_at_zero` | ✅ |
+| **Order-2 w4Func bridge** | `iteratedDeriv_w4Func_order2_zero_iff` | ✅ |
+| **Order-3 w4Func bridge** | `iteratedDeriv_w4Func_order3_zero_iff_of_order2` | ✅ |
+| **Order-4 w4Func bridge** | `iteratedDeriv_w4Func_order4_zero_iff_of_order23` | ✅ |
+| **CAPSTONE** | `norm_suzuki4_order5_of_s4Func_iteratedDerivs` | ✅ |
 
-## Phase 5 plan (estimated ~600 lines, multi-session)
+## Remaining concrete work
 
-### Step 1: Compute s4DerivExplicit'(0) explicitly (~200 lines)
+Prove the three identities, all at the `iteratedDeriv` level:
 
-**Goal**: Prove `s4DerivExplicit'(0) = Σⱼ dⱼ² + 2·Σ_{i<j} dᵢdⱼ`.
+### Identity h2: `iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2`
 
-**Approach**: Each of the 11 terms `Tⱼ = Lⱼ·dⱼ·Rⱼ` of `s4DerivExplicit`
-is a product of 12 factors (1 constant `dⱼ` + 11 exp factors). Differentiate
-via product rule (only the 11 exp factors contribute non-zero derivatives).
-At τ=0, each exp evaluates to 1 and each derivative gives the corresponding
-`dₖ`.
+**Approach**: Apply Mathlib's `iteratedDeriv_mul` recursively on the 11-factor s4Func:
+- Split `s4Func = e₁ · (e₂·e₃·…·e₁₁)`
+- Leibniz n=2: `iDer₂(f·g) = f⁰·g² + 2f'·g' + f''·g⁰`
+- For the 10-factor remaining product, apply Leibniz recursively
+- Base case: `iteratedDeriv k (exp((c·τ)•X)) 0 = (c•X)^k` (PROVED)
 
-For each j, `Tⱼ'(0) = Σ_{k<j} dₖ·dⱼ + dⱼ² + Σ_{k>j} dⱼ·dₖ`.
+Full expansion gives `Σⱼ dⱼ² + 2·Σ_{i<j} dᵢ·dⱼ`. Combined with `(A+B)² = (Σⱼ dⱼ)²`
+(via `suzuki4_free_term`) and `s4_pairwise_commutator_sum_zero`, equals `(A+B)²`.
 
-Summing: `s4DerivExplicit'(0) = Σⱼ dⱼ² + 2·Σ_{i<j} dᵢ·dⱼ`.
+Estimated effort: ~300-400 lines (recursive Leibniz application + algebraic simplification).
 
-For Lean implementation, use `HasDerivAt.mul` chain on the 11-factor products,
-similar to `hasDerivAt_w4Explicit` but applied to s4DerivExplicit. The result
-is a HasDerivAt with explicit derivative form, which evaluated at τ=0 gives
-the desired expression.
+### Identity h3: `iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3`
 
-**Caveat**: Each term `Tⱼ` has different position for the `dⱼ` insertion, so
-11 separate HasDerivAt proofs are needed. Each ~15-20 lines.
+Same approach as h2, at order 3. The sum expansion has terms of the form
+`dᵢdⱼdₖ` with multinomial coefficients. Uses Phase 3 polynomial identities
+(`suzuki4_phase3_{aba,a2b,bab}`) + `suzuki4_cubic_cancel`.
 
-### Step 2: Show s4DerivExplicit'(0) = H², hence w4Residual'(0) = 0 (~50 lines)
+Estimated effort: ~400-500 lines.
 
-**Goal**: Conclude `w4Residual'(0) = 0` (= order-2 of w4Func, automatic
-from palindromic).
+### Identity h4: `iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4`
 
-**Approach**:
-- `H² = (A+B)² = (Σⱼ dⱼ)²` by `suzuki4_free_term`
-- Expand `(Σⱼ dⱼ)² = Σⱼ dⱼ² + Σ_{i<j}(dᵢdⱼ + dⱼdᵢ)` (non-commutative)
-- Then `s4DerivExplicit'(0) - H² = Σ_{i<j} (dᵢdⱼ - dⱼdᵢ) = Σ_{i<j} [dᵢ, dⱼ]`
-- Apply `s4_pairwise_commutator_sum_zero` (Phase 2) to conclude this = 0
-- So `w4Residual'(0) = s4DerivExplicit'(0) - H² = 0`
+Higher palindromic. Automatic from lower orders in theory, but Lean formalization
+still requires the combinatorial expansion.
 
-### Step 3: Compute s4DerivExplicit''(0) explicitly (~250 lines)
+Estimated effort: ~300-400 lines.
 
-**Goal**: Compute the third derivative of s4Func at 0 and show it equals H³
-modulo `4p³+q³ = 0`.
+## Implementation plan for future sessions
 
-**Approach**: Differentiate s4DerivExplicit (sum of 11 terms) once more.
-Each term gives 11×(11-1) = 110 sub-terms (or 121 counting position-pairs).
-At τ=0, each sub-term is a product of 3 d's.
+1. **Define a helper**: `prod_exps : List (𝔸 × ℝ) → (ℝ → 𝔸)` that takes a list of
+   `(X, c)` pairs and returns the product function `τ ↦ ∏ exp((cᵢ·τ)•Xᵢ)`.
 
-Result: `s4'''(0) = Σⱼ dⱼ³ + 3·Σ_{i<j}(dᵢ²dⱼ + dᵢdⱼ²) + 6·Σ_{i<j<k} dᵢdⱼdₖ`
-(this is the standard 3rd-derivative formula for products of unit-valued
-exp factors).
+2. **Prove by induction**: `iteratedDeriv k (prod_exps L) 0 = Σ_(multi-indices) ...`.
+   The formula is a multinomial expansion in the dᵢ's.
 
-By similar expansion of H³ = (Σⱼ dⱼ)³, the difference s4'''(0) - H³ has
-each operator-monomial coefficient (ABA, AB², A²B, BAB, BA², B²A) equal
-to a scalar multiple of `4p³+q³`. Apply Phase 3 polynomial identities
-(`suzuki4_phase3_{aba,a2b,bab}`) plus `suzuki4_cubic_cancel` to vanish
-each coefficient.
+3. **Instantiate for s4Func**: show `s4Func A B p = prod_exps [(A, p/2), (B, p), ..., (A, p/2)]`.
 
-### Step 4: τ⁴ pointwise bound (~100 lines)
+4. **Apply to orders 2, 3, 4**: use the multinomial formula + known algebraic
+   identities.
 
-**Goal**: `‖w4Residual(τ)‖ ≤ C·τ⁴` for some C involving 4-fold commutator
-norms.
+## Key insight: the CAPSTONE is USABLE NOW
 
-**Approach**: With `w4Residual^(k)(0) = 0` for k=0,1,2,3 (from Steps 1-3
-plus order-0 from B1), apply Taylor's theorem with integral remainder:
+Even without the remaining identities, the capstone `norm_suzuki4_order5_of_s4Func_iteratedDerivs`
+is usable as a hypothesis-gated closure. Any consumer who has the three identities
+can call it directly. Future research can approach the identities independently.
 
-```
-w4Residual(τ) = ∫₀^τ (τ-s)³/3! · w4Residual^(4)(s) ds
-```
-
-Bound:
-```
-‖w4Residual(τ)‖ ≤ τ⁴/24 · sup_{s∈[0,τ]} ‖w4Residual^(4)(s)‖
-```
-
-The 4th derivative is ContDiff (from `contDiff_w4Residual ⊤`), so bounded
-on `[0, t]`. The bound constant involves 4-fold commutator-norm products.
-
-Mathlib lemmas to use:
-- `intervalIntegral.norm_integral_le_of_norm_le`
-- `iteratedDeriv` and Taylor remainder theorems (e.g., from `Mathlib.Analysis.Calculus.Taylor`)
-
-### Step 5: Close the sorries (~30 lines)
-
-Apply `norm_suzuki4_order5_from_residual_bound` with the C from Step 4
-to close `norm_suzuki4_fifth_order`. Similarly for `norm_suzuki4_childs_form`
-(potentially requiring additional work to match Childs's specific 8-term
-coefficient structure — Phase D1, optional).
-
-## Key files and lemmas to import
-
-```lean
-import LieTrotter.Suzuki4DerivExplicit  -- All Phase 1-3 + bridge lemmas
-import LieTrotter.Suzuki4Module3         -- Module 3 conditional
-import LieTrotter.Suzuki4ChildsForm      -- Childs-form conditional
-import Mathlib.Analysis.Calculus.Taylor  -- Taylor's theorem with remainder
-```
-
-Key lemmas already proved:
-- `s4_pairwise_commutator_sum_zero` — order-1 palindromic
-- `suzuki4_phase3_aba`, `suzuki4_phase3_a2b`, `suzuki4_phase3_bab` — order-3 ∝ cubic
-- `suzuki4_cubic_cancel` — `4p³+q³=0`
-- `contDiff_w4Residual` — smoothness for Taylor
-- `norm_suzuki4_order5_from_residual_bound` — final assembly
+The closed sorries `norm_suzuki4_fifth_order` and `norm_suzuki4_childs_form` would
+require either:
+(a) the three identities proved, OR
+(b) specific constants matching the existential C.
 
 ## Pitfalls to avoid
 
-1. **`fun_prop` on s4DerivExplicit**: doesn't work for ContDiff on the 11-term
-   sum directly. Use explicit `ContDiff.add` chain (see `contDiff_s4DerivExplicit`
-   for the pattern).
+1. **`fun_prop` on s4DerivExplicit**: doesn't work on the 11-term sum directly.
+   Use explicit `ContDiff.add` chain (see `contDiff_s4DerivExplicit`).
 
-2. **`linarith` doesn't work on 𝔸-valued equations**. Use
-   `linear_combination (norm := module)` for ℝ-module identities, or
-   `noncomm_ring` for non-commutative ring identities.
+2. **`linarith` doesn't work on 𝔸-valued equations**. Use `noncomm_ring` for
+   non-commutative ring identities, `module` for smul-module identities.
 
-3. **Pi.mul vs lambda functions in HasDerivAt.mul**: the chain produces
-   `Pi.mul` form which doesn't directly unify with explicit lambdas. Use
-   `funext + show + rfl` to bridge (see `hasDerivAt_s4Explicit` for the
-   pattern in `Suzuki4DerivExplicit.lean`).
+3. **`linear_combination` requires CommSemiring**. Doesn't work on 𝔸; use
+   `sub_eq_zero` or explicit `noncomm_ring` manipulation.
 
-4. **MODULE4B-STRATEGY.md's claimed order-2 polynomial identity is wrong** —
-   it stated `4·(p/2)² + 4·p² + 2·((1-3p)/2)² + (1-4p)² = 1`, which evaluates
-   to 1.32 (not 1) for Suzuki p. The actual order-2 condition is automatic
-   from palindromic structure (no separate p-identity beyond Phase 2's
-   `s4_pairwise_commutator_sum_zero`).
+4. **Nat-cast coercions with Nat.choose**: `(Nat.choose n k : 𝔸)` requires
+   explicit handling. Use `rfl` for the Nat value (`Nat.choose 2 1 = 2`) then
+   `Nat.cast_ofNat` to simplify.
 
-## Estimated effort
-
-| Step | Lines | Difficulty |
-|---|---|---|
-| 1. s4DerivExplicit'(0) explicit | ~200 | Medium (mechanical product rules) |
-| 2. = H² via suzuki4_free_term + Phase 2 | ~50 | Easy |
-| 3. s4DerivExplicit''(0) and = H³ | ~250 | Hard (combinatorial expansion) |
-| 4. τ⁴ Taylor bound | ~100 | Medium (Mathlib Taylor API) |
-| 5. Close sorries via assembly | ~30 | Trivial |
-| **Total** | **~630** | |
+5. **Pi.mul vs lambda functions**: `iteratedDeriv_fun_mul` expects pointwise product;
+   use `show (fun x => f x * g x) = (fun x => f x) * (fun x => g x)` if needed.
 
 ## What's been validated by external CAS (sympy)
 
@@ -193,3 +135,17 @@ Key lemmas already proved:
 These CAS results give us confidence the polynomial identities (Phase 2/3)
 are the COMPLETE list of conditions. No additional polynomial cancellations
 beyond palindromic + cubic are needed.
+
+## Files
+
+```
+LieTrotter/
+├── Suzuki4HasDerivAt.lean      (Module 1, 136 lines, 0 sorry)
+├── Suzuki4Module2.lean         (Module 2, 167 lines, 0 sorry)
+├── Suzuki4Module3.lean         (Module 3, 184 lines, 0 sorry)
+├── Suzuki4Module4.lean         (Module 4a, 150 lines, 0 sorry)
+├── Suzuki4DerivExplicit.lean   (Module 4b A1-A3 + Phase 1-3, 979 lines, 0 sorry)
+├── Suzuki4Phase5.lean          (Phase 5 framework + Leibniz bridges + CAPSTONE, 740 lines, 0 sorry)
+├── Suzuki4ChildsForm.lean      (Childs form, 223 lines, 1 sorry)
+└── Suzuki4OrderFive.lean       (Main fifth-order, 427 lines, 1 sorry)
+```
