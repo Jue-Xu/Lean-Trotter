@@ -339,8 +339,10 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 | L4b-P2. `s4_sumAB_eq_sumBA` + `s4_pairwise_commutator_sum_zero` | Order-1 palindromic identity | ✅ Proved |
 | L4b-P3. `suzuki4_phase3_{aba,a2b,bab}` | Six polynomial identities ∝ Suzuki cubic | ✅ Proved |
 | L4b-smooth. `contDiff_w4Residual` | `w4Residual` is `ContDiff ℝ n` (for Taylor bounds) | ✅ Proved |
+| L4b-Taylor. `exists_norm_w4Residual_t4_bound_of_zero_taylor` | Conditional τ⁴ bound from 4 iteratedDerivWithin vanishings | ✅ Proved |
+| L4b-Taylor-0. `iteratedDerivWithin_w4Residual_order0` | Order-0 trivially vanishes via `w4Residual_at_zero` | ✅ Proved |
 | L4b-bridge. (future) | Connect polynomial identities to operator Taylor coefficients | 🔴 Open |
-| L4b-C1, C2. (future) | Order-4 residual bound + final assembly | 🔴 Open |
+| L4b-C1, C2. (future) | Order-1/2/3 iteratedDerivWithin vanishings + final assembly | 🔴 Open |
 | L5. `norm_suzuki4_childs_via_residual` | Conditional Childs-form bound (8 explicit 4-fold commutators) | ✅ Proved |
 | L5'. `norm_suzuki4_childs_form` | Unconditional Childs Prop pf4_bound_2term | 🔴 Open (= Module 4b-C2) |
 
@@ -349,10 +351,12 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 - `LieTrotter/Suzuki4Module2.lean` (~167 lines) — Module 2
 - `LieTrotter/Suzuki4Module3.lean` (~170 lines) — Module 3
 - `LieTrotter/Suzuki4Module4.lean` (~150 lines) — Module 4a (continuity)
-- `LieTrotter/Suzuki4ChildsForm.lean` (~210 lines) — Childs Prop pf4_bound_2term + conditional reduction
+- `LieTrotter/Suzuki4DerivExplicit.lean` (~979 lines) — Module 4b-A1/A2/A3 + Phase 1-3 polynomial identities + smoothness + bridge
+- `LieTrotter/Suzuki4Phase5.lean` (~140 lines) — Taylor-reduction framework (conditional on 4 iteratedDerivWithin vanishings)
+- `LieTrotter/Suzuki4ChildsForm.lean` (~223 lines) — Childs Prop pf4_bound_2term + conditional reduction
 - `LieTrotter/Suzuki4OrderFive.lean` (~427 lines) — `norm_suzuki4_fifth_order` (alternative-form research target, 1 sorry)
 
-**Current architecture (Modules 1-3 + 4a + 4b partial sorry-free):**
+**Current architecture (Modules 1-3 + 4a + 4b partial + Phase 5 framework sorry-free):**
 
 ```
 Module 1 (HasDerivAt for 12-factor w₄) ✅
@@ -365,10 +369,26 @@ Module 4a (continuous_w4Deriv ✓)
        ↓
 Module 4b-A1/A2/A3 (explicit derivative + factorization + order-0 ✓)
        ↓
-Module 4b-B2-C2 (orders 1-4 order-condition analysis 🔴)
+Module 4b-Phase5-framework (Taylor-remainder reduction ✓)
        ↓
-norm_suzuki4_order5_via_module3 (conditional on residual bound only)
+Orders 1/2/3 iteratedDerivWithin vanishings (remaining 🔴)
+       ↓
+norm_suzuki4_order5_of_vanishings (conditional close of outer sorries)
 ```
+
+**Phase 5 Taylor-reduction framework (NEW, ✅ done):**
+The file `Suzuki4Phase5.lean` provides the final conditional reduction: given
+`contDiff_w4Residual` (already proved) and the four `iteratedDerivWithin k`
+vanishings at τ=0 for k=0,1,2,3, Mathlib's `exists_taylor_mean_remainder_bound`
+produces the `‖w4Residual τ‖ ≤ C · τ⁴` bound. Combined with
+`norm_suzuki4_order5_from_residual_bound` (already proved), this conditionally
+closes the outer sorries.
+
+**What remains (multi-session):**
+- Orders 1, 2, 3: prove `iteratedDerivWithin k (w4Residual A B p) (Icc 0 t) 0 = 0`.
+  Each requires an explicit HasDerivAt computation at τ=0 (Steps 1-3 of the
+  MODULE4B-PHASE5-HANDOFF plan). Order-0 is already proved trivially via
+  `w4Residual_at_zero`.
 
 **Module 4a (continuity, ✅ done):** `continuous_w4Deriv` proved via:
 - `w4Func A B p` is `ContDiff ℝ ⊤` (composition of analytic exp with smooth linear maps; products of smooth functions are smooth).
@@ -512,8 +532,9 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/Suzuki4Module3.lean` | 0 (Module 3 — FTC-2 reduction proved) |
 | `LieTrotter/Suzuki4Module4.lean` | 0 (Module 4a — continuity proved) |
 | `LieTrotter/Suzuki4DerivExplicit.lean` | 0 (Module 4b-A1/A2/A3/B1 — 4 sub-tasks proved) |
-| `LieTrotter/Suzuki4ChildsForm.lean` | 1 (unconditional Childs Prop pf4_bound_2term — Module 4b-C2) |
-| `LieTrotter/Suzuki4OrderFive.lean` | 1 (alternative-form unconditional bound — Module 4b-C2) |
+| `LieTrotter/Suzuki4Phase5.lean` | 0 (Phase 5 Taylor-remainder framework — conditional reduction proved) |
+| `LieTrotter/Suzuki4ChildsForm.lean` | 1 (unconditional Childs Prop pf4_bound_2term — requires orders 1-3 vanishings) |
+| `LieTrotter/Suzuki4OrderFive.lean` | 1 (alternative-form unconditional bound — requires orders 1-3 vanishings) |
 | **Total** | **2** |
 
 ## Design Decisions

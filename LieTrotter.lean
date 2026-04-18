@@ -49,3 +49,4 @@ import LieTrotter.Suzuki4Module3
 import LieTrotter.Suzuki4Module4
 import LieTrotter.Suzuki4ChildsForm
 import LieTrotter.Suzuki4DerivExplicit
+import LieTrotter.Suzuki4Phase5
