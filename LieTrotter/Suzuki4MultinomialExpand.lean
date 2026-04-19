@@ -444,4 +444,29 @@ lemma iteratedDeriv_prodExpList_order3 (L : List (𝔸 × ℝ)) :
     simp only [h3mul_ring, mul_add, add_mul, mul_sub, sub_mul, mul_assoc]
     abel
 
+/-!
+## h3 conditional bridge
+
+Given `sumTripleCorr (s4DList A B p) = 0` (the Phase 3 operator-level identity),
+h3 follows immediately from the order-3 multinomial formula.
+
+**Unconditional proof of the bridge**: unfolds the 11-element sumTripleCorr,
+which produces a sum of 10 cons-contributions. Each involves products of dⱼ's
+and `commSingleList X c (suffix)` terms. Expanded in the basis of 3-fold
+operator monomials {ABA, AB², A²B, BAB, BA², B²A}, the coefficients are
+multiples of `4p³ + q³` (all 6 of them), so the sum vanishes for Suzuki p
+via `suzuki4_phase3_{aba,a2b,bab}` + `suzuki4_cubic_cancel`.
+
+Estimated effort: ~300-500 lines for the full unfold and coefficient matching.
+Deferred to future session.
+-/
+
+/-- **h3 conditional on `sumTripleCorr_s4DList = 0`**:
+  `iteratedDeriv 3 (s4Func A B p) 0 = (A + B)^3`. -/
+theorem iteratedDeriv_s4Func_order3_eq_cb_of_bridge (A B : 𝔸) (p : ℝ)
+    (hTriple : sumTripleCorr (s4DList A B p) = 0) :
+    iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3 := by
+  rw [s4Func_eq_prodExpList, iteratedDeriv_prodExpList_order3,
+    sumDList_s4DList, hTriple, add_zero]
+
 end
