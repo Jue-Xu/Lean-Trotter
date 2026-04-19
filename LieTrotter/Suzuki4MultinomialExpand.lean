@@ -284,6 +284,29 @@ close via `ring` over ℝ. Requires careful rewriting choreography.
 lines — see theorem statement below.
 -/
 
+/-!
+## Deferred: `sumCommList (s4DList A B p) = 0`
+
+The sumCommList unfolds to 10 nested terms, each of the form
+`(cᵢ • Xᵢ) * sumOthers - sumOthers * (cᵢ • Xᵢ)`. Even with the cancellation
+helpers (`smul_mul_smul_same/diff`, `sub_self`), the automated simp-set cannot
+cleanly reduce the result to the form of `s4_pairwise_commutator_sum_zero`
+because:
+1. Same-type (A-A) and (B-B) terms appear with ordering-sensitive scalars
+   (`p * c₁` vs `c₁ * p`) that don't syntactically cancel via `sub_self`
+   without `mul_comm` (which can't be in simp set — non-terminating).
+2. The reverse-simp rewrites (`← add_smul`, etc.) create non-canonical terms
+   including stray `(c • X) * 0 - 0 * (c • X)` from trailing nil's.
+
+**Path forward**: prove a custom "commutator expansion" lemma that directly
+reduces `(c • X) * L - L * (c • X) = Σⱼ c·cⱼ • [X, Xⱼ]` for a list L, then
+apply to each step of the sumCommList induction. This requires helper
+machinery but avoids the simp pitfalls. Approximately ~100-200 additional lines.
+
+**Conditional h2 is in place** (`iteratedDeriv_s4Func_order2_eq_sq_of_bridge`,
+takes `sumCommList_s4DList = 0` as hypothesis).
+-/
+
 /-- **h2 conditional on `sumCommList_s4DList = 0`**:
   `iteratedDeriv 2 (s4Func A B p) 0 = (A + B)^2`. -/
 theorem iteratedDeriv_s4Func_order2_eq_sq_of_bridge
