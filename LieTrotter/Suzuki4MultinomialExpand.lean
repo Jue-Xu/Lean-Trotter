@@ -494,4 +494,42 @@ theorem iteratedDeriv_s4Func_order3_eq_cb_via_w4Func (A B : 𝔸) (p : ℝ)
   have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
   exact (iteratedDeriv_w4Func_order3_zero_iff_of_order2 A B p h2).mp hW4
 
+/-- **h4 via w4Func bridge**: `iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4`,
+  given `iteratedDeriv 4 (w4Func A B p) 0 = 0` and h3. -/
+theorem iteratedDeriv_s4Func_order4_eq_q_via_w4Func (A B : 𝔸) (p : ℝ)
+    (h3 : iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3)
+    (hW4 : iteratedDeriv 4 (w4Func A B p) 0 = 0) :
+    iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4 := by
+  have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
+  exact (iteratedDeriv_w4Func_order4_zero_iff_of_order23 A B p h2 h3).mp hW4
+
+/-!
+## Final packaged theorem: S₄ O(t⁵) given w4Func vanishings (with h2 FREE)
+
+Using our proved h2, the remaining hypotheses for the CAPSTONE theorem reduce
+to `iteratedDeriv k (w4Func A B p) 0 = 0` for k=3 and k=4 (order-1 and order-2
+being automatic from `w4Deriv_at_zero` and h2 respectively).
+-/
+
+section AntiHermitian_h3_h4
+
+variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
+
+/-- **S₄ O(t⁵) unconditional on h2**: given order-3 and order-4 vanishings of w4Func,
+  conclude the S₄ O(t⁵) bound. The order-2 identity (h2) is filled in from
+  our proved `iteratedDeriv_s4Func_order2_eq_sq`.
+
+  This is a strict strengthening of the CAPSTONE: h2 is no longer a hypothesis. -/
+theorem norm_suzuki4_order5_with_h2_and_w4Func_vanishings (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) (p : ℝ) {t : ℝ} (ht : 0 < t)
+    (hW3 : iteratedDeriv 3 (w4Func A B p) 0 = 0)
+    (hW4 : iteratedDeriv 4 (w4Func A B p) 0 = 0) :
+    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 := by
+  have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
+  have h3 := iteratedDeriv_s4Func_order3_eq_cb_via_w4Func A B p hW3
+  have h4 := iteratedDeriv_s4Func_order4_eq_q_via_w4Func A B p h3 hW4
+  exact norm_suzuki4_order5_of_s4Func_iteratedDerivs A B hA hB p ht h2 h3 h4
+
+end AntiHermitian_h3_h4
+
 end
