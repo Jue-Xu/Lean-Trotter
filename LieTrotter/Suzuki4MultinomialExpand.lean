@@ -469,4 +469,29 @@ theorem iteratedDeriv_s4Func_order3_eq_cb_of_bridge (A B : 𝔸) (p : ℝ)
   rw [s4Func_eq_prodExpList, iteratedDeriv_prodExpList_order3,
     sumDList_s4DList, hTriple, add_zero]
 
+/-!
+## Alternative: h3 conditional on `IsSuzukiCubic p`
+
+Using the order-3 Leibniz bridge `iteratedDeriv_w4Func_order3_zero_iff_of_order2`
+from Suzuki4Phase5.lean, we can express h3 via w4Func:
+
+  Under h2 (PROVED!), order-3 vanishing of w4Func ⟺ h3.
+
+So h3 equals `iteratedDeriv 3 (w4Func A B p) 0 = 0`.
+
+Proving this directly via the w4Func side also requires operator-level
+Phase 3 analysis (different bookkeeping but same algebraic content).
+-/
+
+/-- **h3 via w4Func bridge**: `iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3`,
+  given `iteratedDeriv 3 (w4Func A B p) 0 = 0`.
+
+  This uses the Phase 5 bridge `iteratedDeriv_w4Func_order3_zero_iff_of_order2`
+  together with our proved h2 (`iteratedDeriv_s4Func_order2_eq_sq`). -/
+theorem iteratedDeriv_s4Func_order3_eq_cb_via_w4Func (A B : 𝔸) (p : ℝ)
+    (hW4 : iteratedDeriv 3 (w4Func A B p) 0 = 0) :
+    iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3 := by
+  have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
+  exact (iteratedDeriv_w4Func_order3_zero_iff_of_order2 A B p h2).mp hW4
+
 end
