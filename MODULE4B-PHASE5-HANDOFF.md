@@ -159,7 +159,11 @@ strategy is needed, e.g.:
 | **h4 order-4 multinomial** | `iteratedDeriv_prodExpList_order4` | ✅ |
 | **h4 sumQuadCorr definition** | `sumQuadCorr` + cons/nil simp lemmas | ✅ |
 | **h4 conditional bridge** | `iteratedDeriv_s4Func_order4_eq_q_of_bridge` | ✅ |
+| **h4 BCH bridge** | `sumQuadCorr_s4DList_eq_zero_of_bch` | ✅ |
+| **h4 via BCH bridge + IsSuzukiCubic** | `iteratedDeriv_s4Func_order4_eq_q_of_bch` | ✅ |
+| **Superstrengthened CAPSTONE** | `norm_suzuki4_order5_via_bch` | ✅ |
 | **h4 factored form** | `sumQuadCorr_s4DList = 0` under Suzuki | 🔴 Open (see h4 section) |
+| **BCH identity** | `sumQuadCorr = 2·(H·sumTripleCorr+sumTripleCorr·H)` for palindromic s4DList | 🔴 Open (timeout issue) |
 
 ## Remaining concrete work
 

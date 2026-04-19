@@ -690,6 +690,32 @@ theorem iteratedDeriv_s4Func_order4_eq_q_of_bridge (A B : 𝔸) (p : ℝ)
   rw [s4Func_eq_prodExpList, iteratedDeriv_prodExpList_order4,
     sumDList_s4DList, hQuad, add_zero]
 
+/-- **BCH-style h4 bridge**: given the BCH-derived identity
+  `sumQuadCorr = 2·(H·sumTripleCorr + sumTripleCorr·H)` for palindromic s4DList,
+  together with `IsSuzukiCubic p`, conclude `sumQuadCorr = 0`.
+
+  The BCH identity holds for palindromic integrators via Yoshida's theorem
+  (even-order BCH terms vanish given the odd-order conditions). Proving
+  it directly in Lean is blocked by module tactic timeouts on the quartic
+  expansion — see MODULE4B-PHASE5-HANDOFF.md. -/
+theorem sumQuadCorr_s4DList_eq_zero_of_bch (A B : 𝔸) (p : ℝ) (h : IsSuzukiCubic p)
+    (hBCH : sumQuadCorr (s4DList A B p) =
+      (2 : ℝ) • ((A + B) * sumTripleCorr (s4DList A B p)
+                 + sumTripleCorr (s4DList A B p) * (A + B))) :
+    sumQuadCorr (s4DList A B p) = 0 := by
+  rw [hBCH, sumTripleCorr_s4DList_eq_zero A B p h]
+  simp
+
+/-- **h4 via BCH bridge + IsSuzukiCubic**: concatenation of
+  `sumQuadCorr_s4DList_eq_zero_of_bch` and `iteratedDeriv_s4Func_order4_eq_q_of_bridge`. -/
+theorem iteratedDeriv_s4Func_order4_eq_q_of_bch (A B : 𝔸) (p : ℝ) (h : IsSuzukiCubic p)
+    (hBCH : sumQuadCorr (s4DList A B p) =
+      (2 : ℝ) • ((A + B) * sumTripleCorr (s4DList A B p)
+                 + sumTripleCorr (s4DList A B p) * (A + B))) :
+    iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4 :=
+  iteratedDeriv_s4Func_order4_eq_q_of_bridge A B p
+    (sumQuadCorr_s4DList_eq_zero_of_bch A B p h hBCH)
+
 /-!
 ## Final packaged theorem: S₄ O(t⁵) given w4Func vanishings (with h2 FREE)
 
@@ -730,6 +756,27 @@ theorem norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing (A B : 𝔸)
   have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
   have h3 := iteratedDeriv_s4Func_order3_eq_cb A B p hcubic
   have h4 := iteratedDeriv_s4Func_order4_eq_q_via_w4Func A B p h3 hW4
+  exact norm_suzuki4_order5_of_s4Func_iteratedDerivs A B hA hB p ht h2 h3 h4
+
+/-- **S₄ O(t⁵) via BCH bridge**: given `IsSuzukiCubic p` and the BCH-derived
+  algebraic identity (for palindromic s4DList), the S₄ O(t⁵) bound is
+  fully unconditional on w4Func derivative hypotheses.
+
+  The BCH identity `sumQuadCorr = 2·(H·sumTripleCorr + sumTripleCorr·H)`
+  is a pure operator algebra fact that holds for palindromic s4DList. Once
+  this identity is formally proved, this theorem gives the S₄ O(t⁵) bound
+  with only `IsSuzukiCubic p` as a hypothesis — no derivative-vanishing
+  hypotheses needed. -/
+theorem norm_suzuki4_order5_via_bch (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) (p : ℝ) (hcubic : IsSuzukiCubic p)
+    (hBCH : sumQuadCorr (s4DList A B p) =
+      (2 : ℝ) • ((A + B) * sumTripleCorr (s4DList A B p)
+                 + sumTripleCorr (s4DList A B p) * (A + B)))
+    {t : ℝ} (ht : 0 < t) :
+    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 := by
+  have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
+  have h3 := iteratedDeriv_s4Func_order3_eq_cb A B p hcubic
+  have h4 := iteratedDeriv_s4Func_order4_eq_q_of_bch A B p hcubic hBCH
   exact norm_suzuki4_order5_of_s4Func_iteratedDerivs A B hA hB p ht h2 h3 h4
 
 end AntiHermitian_h3_h4
