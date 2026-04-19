@@ -241,30 +241,56 @@ lemma s4Func_eq_prodExpList (A B : 𝔸) (p : ℝ) :
   noncomm_ring
 
 /-!
+## Helpers for `sumCommList` reductions
+
+Products `(c • X) * (c' • X)` and `(c • X) * (c' • Y)` normalize via
+`Algebra.smul_mul_assoc` + `Algebra.mul_smul_comm` + `smul_smul` to
+`(c * c') • (X * X)` and `(c * c') • (X * Y)` respectively.
+-/
+
+/-- `(c • X) * (c' • X) = (c*c') • (X * X)`. -/
+lemma smul_mul_smul_same (X : 𝔸) (c c' : ℝ) :
+    (c • X) * (c' • X) = (c * c') • (X * X) := by
+  rw [Algebra.smul_mul_assoc, Algebra.mul_smul_comm, smul_smul]
+
+/-- `(c • X) * (c' • Y) = (c*c') • (X * Y)`. -/
+lemma smul_mul_smul_diff (X Y : 𝔸) (c c' : ℝ) :
+    (c • X) * (c' • Y) = (c * c') • (X * Y) := by
+  rw [Algebra.smul_mul_assoc, Algebra.mul_smul_comm, smul_smul]
+
+/-!
 ## Remaining bridge: `sumCommList (s4DList A B p) = 0`
 
-This is the one remaining gap for closing h2. The unfold of `sumCommList`
-on the 11-element `s4DList` produces a sum of 10 expressions of the form
-`(cᵢ • Xᵢ) * sumOthers - sumOthers * (cᵢ • Xᵢ)`. Distributing these gives
-55 commutator-like terms; the 25 same-type (A-A, B-B) pairs vanish
-trivially (Xᵢ · Xᵢ - Xᵢ · Xᵢ = 0), and the remaining 30 AB/BA pairs sum
-to 0 by `s4_pairwise_commutator_sum_zero`.
+The unfold of `sumCommList` on `s4DList` produces 10 nested terms. After
+distributing via `mul_add`, `sub_mul`, `smul_mul_smul_same`/`_diff`, and
+`sub_self` (to cancel same-type A-A and B-B pairs), the result is a linear
+combination of `(A*B - B*A)` with scalar coefficients that match
+`s4_pairwise_commutator_sum_zero`.
 
-**Obstacle**: Current proof attempts via `linear_combination` over
-`s4_pairwise_commutator_sum_zero` fail because the same-type cancellations
-aren't automatically closed by `module`. A cleaner route:
-1. Prove `(c • X) * (c' • X) - (c' • X) * (c • X) = 0` (same-operator
-   commutator) as a helper.
-2. Apply to each same-type pair in the expansion.
-3. Match remaining AB/BA terms against `s4_pairwise_commutator_sum_zero`.
+**Obstacle in current Lean**: `linear_combination (norm := module)` applied
+against `s4_pairwise_commutator_sum_zero` fails with `1 = 0` residual —
+linear_combination selects the wrong scalar multiplier. Several approaches
+tried but none closed:
+- `linear_combination h` (default ring norm): fails on non-commutative 𝔸
+- `linear_combination (norm := module) h`: module doesn't detect single-basis
+  structure after cascaded smul-simp
+- `linear_combination (norm := abel)` similar issue
 
-**h2 final assembly** (pending the bridge):
-```
-theorem iteratedDeriv_s4Func_order2_eq_sq (A B : 𝔸) (p : ℝ) :
+**Path forward**: Factor `(A*B - B*A)` out explicitly via `← add_smul` /
+`← neg_smul` simp rewrites to reduce to a pure scalar identity in ℝ, then
+close via `ring` over ℝ. Requires careful rewriting choreography.
+
+**Conditional h2**: assuming `sumCommList_s4DList = 0`, h2 follows in three
+lines — see theorem statement below.
+-/
+
+/-- **h2 conditional on `sumCommList_s4DList = 0`**:
+  `iteratedDeriv 2 (s4Func A B p) 0 = (A + B)^2`. -/
+theorem iteratedDeriv_s4Func_order2_eq_sq_of_bridge
+    (A B : 𝔸) (p : ℝ)
+    (hBridge : sumCommList (s4DList A B p) = 0) :
     iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2 := by
   rw [s4Func_eq_prodExpList, iteratedDeriv_prodExpList_order2,
-    sumDList_s4DList, sumCommList_s4DList, add_zero]
-```
--/
+    sumDList_s4DList, hBridge, add_zero]
 
 end
