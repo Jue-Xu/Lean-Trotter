@@ -263,6 +263,12 @@ lemma smul_mul_smul_mul_smul (X Y Z : 𝔸) (c c' c'' : ℝ) :
     (c • X) * (c' • Y) * (c'' • Z) = (c * c' * c'') • (X * Y * Z) := by
   rw [smul_mul_smul_diff, Algebra.smul_mul_assoc, Algebra.mul_smul_comm, smul_smul]
 
+/-- `(c • X) * (c' • Y) * (c'' • Z) * (c''' • W) = (c*c'*c''*c''') • (X * Y * Z * W)`.
+  Quartic smul-mul (for h4 order-4 expansion). -/
+lemma smul_mul_smul_mul_smul_mul_smul (X Y Z W : 𝔸) (c c' c'' c''' : ℝ) :
+    (c • X) * (c' • Y) * (c'' • Z) * (c''' • W) = (c * c' * c'' * c''') • (X * Y * Z * W) := by
+  rw [smul_mul_smul_mul_smul, Algebra.smul_mul_assoc, Algebra.mul_smul_comm, smul_smul]
+
 /-!
 ## Remaining bridge: `sumCommList (s4DList A B p) = 0`
 
@@ -450,20 +456,76 @@ lemma iteratedDeriv_prodExpList_order3 (L : List (𝔸 × ℝ)) :
     abel
 
 /-!
+## Order-4 residual: `sumQuadCorr`
+
+The order-4 Leibniz formula for `iteratedDeriv 4 (prodExpList L) 0` gives a
+quartic expansion. Defining `sumQuadCorr L` as the residual after subtracting
+`(sumDList L)^4` gives a recurrence that combines sumTripleCorr, sumCommList,
+and a non-commutative "deficit" term (the difference between the multinomial-
+style expansion `d⁴ + 4d³s + 6d²s² + 4ds³ + s⁴` and the full non-commutative
+expansion `(d+s)⁴`).
+-/
+
+/-- Sum of quartic corrections for `iteratedDeriv 4 (prodExpList L) 0`:
+  `iteratedDeriv 4 (prodExpList L) 0 = (sumDList L)^4 + sumQuadCorr L`. -/
+noncomputable def sumQuadCorr : List (𝔸 × ℝ) → 𝔸
+  | [] => 0
+  | (X, c) :: L => sumQuadCorr L
+      + (4 : 𝔸) * (c • X) * sumTripleCorr L
+      + (6 : 𝔸) * (c • X)^2 * sumCommList L
+      + ((sumDList L)^4 + (4 : 𝔸) * (c • X) * (sumDList L)^3
+         + (6 : 𝔸) * (c • X)^2 * (sumDList L)^2
+         + (4 : 𝔸) * (c • X)^3 * sumDList L + (c • X)^4
+         - ((c • X) + sumDList L)^4)
+
+@[simp] lemma sumQuadCorr_nil : sumQuadCorr ([] : List (𝔸 × ℝ)) = 0 := rfl
+
+@[simp] lemma sumQuadCorr_cons (X : 𝔸) (c : ℝ) (L : List (𝔸 × ℝ)) :
+    sumQuadCorr ((X, c) :: L) = sumQuadCorr L
+      + (4 : 𝔸) * (c • X) * sumTripleCorr L
+      + (6 : 𝔸) * (c • X)^2 * sumCommList L
+      + ((sumDList L)^4 + (4 : 𝔸) * (c • X) * (sumDList L)^3
+         + (6 : 𝔸) * (c • X)^2 * (sumDList L)^2
+         + (4 : 𝔸) * (c • X)^3 * sumDList L + (c • X)^4
+         - ((c • X) + sumDList L)^4) :=
+  rfl
+
+/-- **Order-4 multinomial formula** for prodExpList at τ=0. -/
+lemma iteratedDeriv_prodExpList_order4 (L : List (𝔸 × ℝ)) :
+    iteratedDeriv 4 (prodExpList L) 0 = (sumDList L) ^ 4 + sumQuadCorr L := by
+  induction L with
+  | nil =>
+    show iteratedDeriv 4 (fun _ : ℝ => (1 : 𝔸)) 0 = 0 ^ 4 + 0
+    rw [iteratedDeriv_succ, iteratedDeriv_succ, iteratedDeriv_succ, iteratedDeriv_one]
+    simp
+  | cons p L ih =>
+    obtain ⟨X, c⟩ := p
+    show iteratedDeriv 4 (fun τ => exp ((c * τ) • X) * prodExpList L τ) 0 = _
+    rw [iteratedDeriv_fun_mul (n := 4) (contDiffAt_exp_smul_mul X c 0)
+      (contDiffAt_prodExpList L 0)]
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add,
+      iteratedDeriv_exp_smul_mul_at_zero,
+      show (4 - 0 : ℕ) = 4 from rfl, show (4 - 1 : ℕ) = 3 from rfl,
+      show (4 - 2 : ℕ) = 2 from rfl, show (4 - 3 : ℕ) = 1 from rfl,
+      show (4 - 4 : ℕ) = 0 from rfl,
+      pow_zero, pow_one, mul_one]
+    rw [iteratedDeriv_prodExpList_order0, iteratedDeriv_prodExpList_order1,
+        iteratedDeriv_prodExpList_order2, iteratedDeriv_prodExpList_order3, ih]
+    have h0 : (Nat.choose 4 0 : ℕ) = 1 := rfl
+    have h1 : (Nat.choose 4 1 : ℕ) = 4 := rfl
+    have h2 : (Nat.choose 4 2 : ℕ) = 6 := rfl
+    have h3 : (Nat.choose 4 3 : ℕ) = 4 := rfl
+    have h4 : (Nat.choose 4 4 : ℕ) = 1 := rfl
+    rw [h0, h1, h2, h3, h4]
+    simp only [Nat.cast_one, Nat.cast_ofNat, one_mul, mul_one]
+    rw [sumQuadCorr_cons, sumDList_cons]
+    noncomm_ring
+
+/-!
 ## h3 conditional bridge
 
 Given `sumTripleCorr (s4DList A B p) = 0` (the Phase 3 operator-level identity),
 h3 follows immediately from the order-3 multinomial formula.
-
-**Unconditional proof of the bridge**: unfolds the 11-element sumTripleCorr,
-which produces a sum of 10 cons-contributions. Each involves products of dⱼ's
-and `commSingleList X c (suffix)` terms. Expanded in the basis of 3-fold
-operator monomials {ABA, AB², A²B, BAB, BA², B²A}, the coefficients are
-multiples of `4p³ + q³` (all 6 of them), so the sum vanishes for Suzuki p
-via `suzuki4_phase3_{aba,a2b,bab}` + `suzuki4_cubic_cancel`.
-
-Estimated effort: ~300-500 lines for the full unfold and coefficient matching.
-Deferred to future session.
 -/
 
 /-- **h3 conditional on `sumTripleCorr_s4DList = 0`**:
@@ -600,6 +662,33 @@ theorem iteratedDeriv_w4Func_order3_eq_zero (A B : 𝔸) (p : ℝ) (h : IsSuzuki
     iteratedDeriv 3 (w4Func A B p) 0 = 0 :=
   (iteratedDeriv_s4Func_order3_iff_w4Func_zero A B p).mp
     (iteratedDeriv_s4Func_order3_eq_cb A B p h)
+
+/-!
+## h4 conditional bridge
+
+Given `sumQuadCorr (s4DList A B p) = 0` (the order-4 operator identity), h4
+follows from the order-4 multinomial formula.
+
+Proving `sumQuadCorr_s4DList = 0` requires either:
+(a) A CAS-computed factored form `sumQuadCorr_s4DList = (4p³+q³) • <combo>`
+    (~1000 lines Lean; 16 quartic monomials × 11 cons steps), OR
+(b) A BCH-level identity `sumQuadCorr = 2·(H·sumTripleCorr + sumTripleCorr·H)`
+    for palindromic lists (which uses Yoshida's theorem that even-order BCH
+    terms vanish given odd-order conditions).
+
+Path (b) is the cleaner route but requires formalizing Yoshida's theorem.
+For the 2-element non-palindromic test `[(A,p),(B,q)]`, the identity (b)
+FAILS (sumQuadCorr ≠ 2·(H·sumTripleCorr+sumTripleCorr·H)), so the identity
+is SPECIFIC to palindromic s4DList.
+-/
+
+/-- **h4 conditional on `sumQuadCorr (s4DList A B p) = 0`**:
+  `iteratedDeriv 4 (s4Func A B p) 0 = (A + B)^4`. -/
+theorem iteratedDeriv_s4Func_order4_eq_q_of_bridge (A B : 𝔸) (p : ℝ)
+    (hQuad : sumQuadCorr (s4DList A B p) = 0) :
+    iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4 := by
+  rw [s4Func_eq_prodExpList, iteratedDeriv_prodExpList_order4,
+    sumDList_s4DList, hQuad, add_zero]
 
 /-!
 ## Final packaged theorem: S₄ O(t⁵) given w4Func vanishings (with h2 FREE)

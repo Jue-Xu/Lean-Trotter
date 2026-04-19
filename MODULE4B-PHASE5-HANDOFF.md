@@ -83,26 +83,48 @@ The proved path for h2 generalizes to h3, h4 with additional combinatorial work:
 
 ## h4 extension (remaining work)
 
-For h4, a similar factored form should exist:
+### Infrastructure delivered
+
+- `smul_mul_smul_mul_smul_mul_smul` — quartic smul-mul helper
+- `sumQuadCorr` definition — order-4 residual with Leibniz recurrence
+- `iteratedDeriv_prodExpList_order4` — proved via noncomm_ring
+- `iteratedDeriv_s4Func_order4_eq_q_of_bridge` — conditional bridge
+
+### Remaining: prove `sumQuadCorr (s4DList A B p) = 0` under Suzuki
+
+**Route (a): factored form** (analogous to h3):
+The direct brute-force attempt `sumQuadCorr_s4DList_eq_zero` with
+`linear_combination (norm := module) h` doesn't close — module times out
+on the quartic expansion (11 cons steps × 16 quartic monomials, plus the
+subtracted `(d+s)^4` for each step).
+
+**Route (b): BCH-derived identity** (cleaner):
+For palindromic integrators, BCH gives
 ```
-sumQuadCorr (s4DList A B p) = (palindromic + cubic expressions) • <operator combo>
+log(S_4(τ)) = τ(A+B) + R_3·τ³ + R_5·τ^5 + ...  (only odd powers!)
 ```
+Taking `iDer_4` at τ=0:
+```
+sumQuadCorr (s4DList A B p) = 12·(H·R_3 + R_3·H)
+                            = 2·(H·sumTripleCorr + sumTripleCorr·H)
+```
+where `R_3 = sumTripleCorr / 6` and `H = A+B`.
 
-Yoshida's theorem for symmetric integrators says even-order BCH terms automatically
-vanish given the lower-order conditions. So h4 should follow from h2 + h3 + palindromic
-structure, potentially without additional polynomial conditions.
+This identity `sumQuadCorr_s4DList = 2·((A+B)·sumTripleCorr + sumTripleCorr·(A+B))`
+holds unconditionally (as a pure operator algebra fact for palindromic s4DList),
+and under IsSuzukiCubic (where sumTripleCorr_s4DList = 0) gives h4.
 
-**Required infrastructure**:
-1. Define `sumQuadCorr` (order-4 residual; structurally similar to sumTripleCorr
-   but with 4th-order Leibniz cross terms).
-2. Prove `iteratedDeriv_prodExpList_order4`.
-3. Show `sumQuadCorr (s4DList A B p) = <scalar polynomial in p> • <operator combo>`
-   where the scalar vanishes under Suzuki conditions.
+**Note**: this identity is SPECIFIC to palindromic s4DList — for general
+non-palindromic lists it fails (verified on 2-element test `[(A,p),(B,q)]`).
 
-**Estimated**: ~300-500 lines for h4, following the same tactic template
-(`mul_sub, sub_mul, ← mul_assoc, smul_mul_smul_mul_smul_mul_smul, module`).
-Note that `smul_mul_smul_mul_smul_mul_smul` (quartic product helper) needs
-to be added to the helper suite.
+**Status**: Route (b) attempted with full simp expansion + module, but module
+times out (200K and 2M heartbeat settings both fail). A more efficient proof
+strategy is needed, e.g.:
+- Manual cons-by-cons induction maintaining the BCH invariant
+- Symbolic pre-computation to identify the right linear_combination multiplier
+- Structured proof leveraging palindromic symmetry directly
+
+**Estimated effort**: ~500-1000 lines for a working h4 proof via Route (b).
 
 ## What's proved (cumulative)
 
@@ -133,6 +155,11 @@ to be added to the helper suite.
 | **h3 under IsSuzukiCubic** | `iteratedDeriv_s4Func_order3_eq_cb` | ✅ |
 | **w4Func order-3 vanishing** | `iteratedDeriv_w4Func_order3_eq_zero` | ✅ |
 | **Strengthened CAPSTONE (h2+h3 free)** | `norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing` | ✅ |
+| **h4 quartic smul helper** | `smul_mul_smul_mul_smul_mul_smul` | ✅ |
+| **h4 order-4 multinomial** | `iteratedDeriv_prodExpList_order4` | ✅ |
+| **h4 sumQuadCorr definition** | `sumQuadCorr` + cons/nil simp lemmas | ✅ |
+| **h4 conditional bridge** | `iteratedDeriv_s4Func_order4_eq_q_of_bridge` | ✅ |
+| **h4 factored form** | `sumQuadCorr_s4DList = 0` under Suzuki | 🔴 Open (see h4 section) |
 
 ## Remaining concrete work
 

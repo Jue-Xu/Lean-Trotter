@@ -369,7 +369,9 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 | L4b-h3-factored. `sumTripleCorr_s4DList_eq_factored` | `sumTripleCorr = (4p³+(1-4p)³) • <op combo>` (operator algebra identity) | ✅ Proved |
 | L4b-h3. `iteratedDeriv_s4Func_order3_eq_cb` | **h3: iteratedDeriv 3 s4Func 0 = (A+B)³** (given `IsSuzukiCubic p`) | ✅ Proved |
 | L4b-w4-order3. `iteratedDeriv_w4Func_order3_eq_zero` | `iteratedDeriv 3 (w4Func A B p) 0 = 0` (given `IsSuzukiCubic p`) | ✅ Proved |
-| L4b-h4. (future) | `iteratedDeriv 4 (s4Func A B p) 0 = (A+B)^4` | 🔴 Open |
+| L4b-h4-infra. `iteratedDeriv_prodExpList_order4` + `sumQuadCorr` def | h4 infrastructure (order-4 multinomial formula, quartic smul helpers) | ✅ Proved |
+| L4b-h4-bridge. `iteratedDeriv_s4Func_order4_eq_q_of_bridge` | h4 conditional on `sumQuadCorr_s4DList = 0` | ✅ Proved |
+| L4b-h4. (future) | `sumQuadCorr (s4DList A B p) = 0` under Suzuki (unconditional h4) | 🔴 Open |
 | L5. `norm_suzuki4_childs_via_residual` | Conditional Childs-form bound (8 explicit 4-fold commutators) | ✅ Proved |
 | L5'. `norm_suzuki4_childs_form` | Unconditional Childs Prop pf4_bound_2term | 🔴 Open (= Module 4b-C2) |
 
