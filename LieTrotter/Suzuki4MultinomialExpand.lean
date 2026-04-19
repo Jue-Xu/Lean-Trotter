@@ -357,4 +357,91 @@ theorem iteratedDeriv_s4Func_order2_eq_sq (A B : 𝔸) (p : ℝ) :
   rw [s4Func_eq_prodExpList, iteratedDeriv_prodExpList_order2,
     sumDList_s4DList, sumCommList_s4DList, add_zero]
 
+/-!
+## Order-3 multinomial framework (h3 infrastructure)
+
+The order-3 formula for prodExpList has form:
+  `iteratedDeriv 3 (prodExpList L) 0 = (sumDList L)^3 + sumTripleCorr L`
+
+where `sumTripleCorr L` captures all non-commutative corrections to the
+naive cube. The recurrence (from order-3 Leibniz on (X,c)::L):
+
+  `sumTripleCorr ((X,c)::L) = sumTripleCorr L + 3·(c•X)·sumCommList L
+    + 2·(c•X)·[c•X, sumDList L] + [c•X, sumDList L]·(c•X)
+    + 2·[c•X, sumDList L]·sumDList L + sumDList L·[c•X, sumDList L]`
+
+This reduces to the scalar identity `4p³ + q³ = 0` (Phase 3) when applied
+to s4DList with Suzuki `p`.
+-/
+
+/-- Commutator of `d = c•X` with `sumDList L`, in anticipation of the order-3
+  correction formula. -/
+noncomputable def commSingleList (X : 𝔸) (c : ℝ) (L : List (𝔸 × ℝ)) : 𝔸 :=
+  (c • X) * sumDList L - sumDList L * (c • X)
+
+/-- Sum of cubic corrections, captures non-commutative pieces beyond `(Σ dⱼ)³`. -/
+noncomputable def sumTripleCorr : List (𝔸 × ℝ) → 𝔸
+  | [] => 0
+  | (X, c) :: L => sumTripleCorr L + 3 • ((c • X) * sumCommList L)
+      + (2 • ((c • X) * commSingleList X c L) + commSingleList X c L * (c • X))
+      + (2 • (commSingleList X c L * sumDList L) + sumDList L * commSingleList X c L)
+
+@[simp] lemma sumTripleCorr_nil : sumTripleCorr ([] : List (𝔸 × ℝ)) = 0 := rfl
+
+@[simp] lemma sumTripleCorr_cons (X : 𝔸) (c : ℝ) (L : List (𝔸 × ℝ)) :
+    sumTripleCorr ((X, c) :: L) = sumTripleCorr L + 3 • ((c • X) * sumCommList L)
+      + (2 • ((c • X) * commSingleList X c L) + commSingleList X c L * (c • X))
+      + (2 • (commSingleList X c L * sumDList L) + sumDList L * commSingleList X c L) :=
+  rfl
+
+/-- **Order-3 multinomial formula** for prodExpList at τ=0. -/
+lemma iteratedDeriv_prodExpList_order3 (L : List (𝔸 × ℝ)) :
+    iteratedDeriv 3 (prodExpList L) 0 = (sumDList L) ^ 3 + sumTripleCorr L := by
+  induction L with
+  | nil =>
+    show iteratedDeriv 3 (fun _ : ℝ => (1 : 𝔸)) 0 = 0 ^ 3 + 0
+    rw [iteratedDeriv_succ, iteratedDeriv_succ, iteratedDeriv_one]
+    simp
+  | cons p L ih =>
+    obtain ⟨X, c⟩ := p
+    -- Apply iteratedDeriv_fun_mul at n=3
+    show iteratedDeriv 3 (fun τ => exp ((c * τ) • X) * prodExpList L τ) 0 = _
+    rw [iteratedDeriv_fun_mul (n := 3) (contDiffAt_exp_smul_mul X c 0)
+      (contDiffAt_prodExpList L 0)]
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add,
+      iteratedDeriv_exp_smul_mul_at_zero,
+      show (3 - 0 : ℕ) = 3 from rfl, show (3 - 1 : ℕ) = 2 from rfl,
+      show (3 - 2 : ℕ) = 1 from rfl, show (3 - 3 : ℕ) = 0 from rfl,
+      pow_zero, pow_one, mul_one]
+    rw [iteratedDeriv_prodExpList_order0, iteratedDeriv_prodExpList_order1, ih]
+    rw [iteratedDeriv_prodExpList_order2]
+    -- Nat.choose casts for n=3
+    have h0 : (Nat.choose 3 0 : ℕ) = 1 := rfl
+    have h1 : (Nat.choose 3 1 : ℕ) = 3 := rfl
+    have h2 : (Nat.choose 3 2 : ℕ) = 3 := rfl
+    have h3 : (Nat.choose 3 3 : ℕ) = 1 := rfl
+    rw [h0, h1, h2, h3]
+    simp only [Nat.cast_one, Nat.cast_ofNat, one_mul, mul_one]
+    -- Goal: a ring identity. Use `show` to name everything and close with abel.
+    show (sumDList L)^3 + sumTripleCorr L +
+         (3 : 𝔸) * (c • X) * ((sumDList L)^2 + sumCommList L) +
+         (3 : 𝔸) * (c • X)^2 * sumDList L + (c • X)^3 =
+      (c • X + sumDList L)^3 +
+      (sumTripleCorr L + 3 • ((c • X) * sumCommList L) +
+       (2 • ((c • X) * commSingleList X c L) + commSingleList X c L * (c • X)) +
+       (2 • (commSingleList X c L * sumDList L) + sumDList L * commSingleList X c L))
+    -- Unfold commSingleList and powers; reduce to an identity in +, *, •
+    unfold commSingleList
+    -- Convert `3 * y` and `3 • y` to explicit sums
+    have h3mul_nat : ∀ (y : 𝔸), (3 : ℕ) • y = y + y + y := fun y => by
+      show _ = _; module
+    have h2mul_nat : ∀ (y : 𝔸), (2 : ℕ) • y = y + y := fun y => by
+      show _ = _; module
+    simp only [h3mul_nat, h2mul_nat, pow_two, pow_three]
+    -- Convert `(3 : 𝔸) * y` to `y + y + y`
+    have h3mul_ring : ∀ (y : 𝔸), (3 : 𝔸) * y = y + y + y := fun y => by
+      rw [show (3 : 𝔸) = 1 + 1 + 1 from by norm_num]; noncomm_ring
+    simp only [h3mul_ring, mul_add, add_mul, mul_sub, sub_mul, mul_assoc]
+    abel
+
 end
