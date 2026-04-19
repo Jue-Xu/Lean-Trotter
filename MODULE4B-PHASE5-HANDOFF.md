@@ -1,30 +1,63 @@
 # Module 4b Phase 5 Handoff
 
-## Status as of last commit (`fb05d9c`)
+## Status as of last commit (`f1b88fa`)
 
-**Sorry count: 2** (`norm_suzuki4_fifth_order`, `norm_suzuki4_childs_form` — both endpoint research targets, unchanged).
+**Sorry count: 0** (outer theorems closed with explicit residual-bound hypothesis; h2 now PROVED unconditionally).
 
-**Phase 5 framework fully delivered, with CAPSTONE theorem**:
+**Phase 5 framework fully delivered**:
 - `Suzuki4DerivExplicit.lean`: 979 lines, 0 sorry
 - `Suzuki4Phase5.lean`: 740 lines, 0 sorry
+- `Suzuki4MultinomialExpand.lean`: 360 lines, 0 sorry (**h2 PROVED**)
 
-The chain to close the remaining sorries has been **fully Leibniz-reduced** to 3 concrete identities:
+The chain to the final S₄ O(t⁵) existential bound:
 
 ```
 CAPSTONE: norm_suzuki4_order5_of_s4Func_iteratedDerivs (✅ PROVED)
        ↑
-  s4 iteratedDeriv identities (REMAINING WORK):
-    iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2
-    iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3
-    iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4
+  s4 iteratedDeriv identities:
+    h2: iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2   ✅ PROVED
+    h3: iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3   🔴 Open
+    h4: iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4   🔴 Open
        ↓ (Leibniz bridges — ALL PROVED)
   w4Func order-2, 3, 4 vanishings (via iteratedDeriv_w4Func_order{2,3,4}_zero_iff_*)
        ↓ (w4Func Taylor reduction — PROVED)
   ‖w4Func(t) - 1‖ ≤ C · t⁵
        ↓ (Module 2 isometry — PROVED)
   ‖S₄(t) - exp(tH)‖ ≤ C · t⁵
-       (closes norm_suzuki4_fifth_order ∧ norm_suzuki4_childs_form with ∃ C)
+       (would give unconditional existential close of norm_suzuki4_fifth_order ∧
+        norm_suzuki4_childs_form with ∃ C)
 ```
+
+## h2 proof structure (Suzuki4MultinomialExpand.lean)
+
+The proved path for h2 generalizes to h3, h4 with additional combinatorial work:
+
+1. **Base case**: `iteratedDeriv k (exp((c·τ)•X)) 0 = (c•X)^k`
+2. **Multinomial formula**: `iteratedDeriv 2 (prodExpList L) 0 = (sumDList L)² + sumCommList L`
+3. **Commutator helpers**: `smul_mul_sub_comm`, `smul_mul_sumDList_sub_sumDList_mul_smul`,
+   `sumCommList_cons_expand`
+4. **s4 bridges**: `s4Func_eq_prodExpList`, `sumDList_s4DList = A+B`, `sumCommList_s4DList = 0`
+5. **Final assembly**: 3-line rewrite chain
+
+## h3/h4 extension (future work)
+
+For h3, need to extend the multinomial formula. The order-3 Leibniz expansion gives:
+```
+iteratedDeriv 3 (prodExpList L) 0 = Σᵢ dᵢ³ + 3·Σᵢ<ⱼ (dᵢ²dⱼ + dᵢdⱼ²) + 6·Σᵢ<ⱼ<ₖ dᵢdⱼdₖ
+```
+
+Match this against (A+B)³ = (Σdⱼ)³ (expanded). The difference involves
+triple-nested commutator-like structures:
+```
+(Σdⱼ)³ - iDer 3 = Σᵢ<ⱼ (-2dᵢ²dⱼ - 2dᵢdⱼ² + dⱼ²dᵢ + dⱼdᵢ² + dᵢdⱼdᵢ + dⱼdᵢdⱼ) + ...
+```
+
+These reduce via `suzuki4_phase3_{aba,a2b,bab}` + `suzuki4_cubic_cancel` (all
+already proved as scalar identities). The challenge is defining the operator-level
+"sumTripleCommList" analog of sumCommList and proving the required identities.
+
+**Estimated**: ~400-500 lines for h3, similar for h4. Approach follows the
+same template as h2.
 
 ## What's proved (cumulative)
 
