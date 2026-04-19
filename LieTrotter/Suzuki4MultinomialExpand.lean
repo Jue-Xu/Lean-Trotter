@@ -533,25 +533,73 @@ theorem iteratedDeriv_s4Func_order3_iff_w4Func_zero (A B : 𝔸) (p : ℝ) :
   exact (iteratedDeriv_w4Func_order3_zero_iff_of_order2 A B p h2).symm
 
 /-!
-## Operator-level order-3 identity (stated as hypothesis for now)
+## Operator-level order-3 identity: `sumTripleCorr_s4DList = 0` UNCONDITIONALLY
 
-The full unconditional proof of h3 requires the operator-level identity
-  `sumTripleCorr (s4DList A B p) = 0` (for Suzuki p with `4p³ + q³ = 0`)
+Closed via a factored-form lemma: the full cons-expansion of sumTripleCorr
+over the 11-element s4DList equals `(4p³+(1-4p)³) • <fixed operator combo>`.
+Under `IsSuzukiCubic p` (where the scalar vanishes), the whole expression is 0.
 
-This reduces via cons-by-cons expansion to the Phase 3 polynomial identities:
-- `suzuki4_phase3_aba`: `-30p³ + 24p² - 6p + 1/2 = 0`
-- `suzuki4_phase3_a2b`: `15p³ - 12p² + 3p - 1/4 = 0`
-- `suzuki4_phase3_bab`: `60p³ - 48p² + 12p - 1 = 0`
+The factored identity is proved as a pure operator algebra identity via
+the tactic chain:
+```
+unfold; simp [sumTripleCorr_cons, ..., commSingleList, zero-collapsing];
+simp [mul_sub, sub_mul, mul_add, add_mul, smul_sub, smul_add];  -- distribute
+simp [← mul_assoc];  -- normalize to left-associated products
+simp [smul_mul_smul_mul_smul];  -- collapse triple smul products
+module  -- close via module-level scalar matching on the 8 cubic monomial basis
+```
 
-all equivalent to `4p³ + (1-4p)³ = 0` (the Suzuki cubic).
-
-Given sumTripleCorr's complex recurrence (3 structural terms per cons),
-unfolding for the 11-element s4DList produces ~500 operator-monomial terms.
-Coefficient-matching against the 6 Phase 3 monomials (ABA, AB², A²B, BAB, BA², B²A)
-requires careful accounting.
-
-**Unconditional Suzuki-specific bridge** (future work, needs the expansion).
+This is equivalent to the cons-by-cons Phase 3 polynomial identities
+(`suzuki4_phase3_{aba,a2b,bab}`), but packaged as a single operator identity
+that `module` can verify by matching polynomial coefficients on each cubic
+monomial.
 -/
+
+/-- **Factored form of sumTripleCorr_s4DList**: the cubic residual is the
+  product of the Suzuki cubic scalar `(4p³ + (1-4p)³)` and a fixed operator
+  combination of the 6 "mixed" cubic monomials (palindromic `A³` and `B³`
+  coefficients automatically vanish by structure).
+
+  Proved as a pure operator algebra identity (unconditional on `p`). The
+  right-hand scalar is `4p³ + (1-4p)³`; for Suzuki parameter (where the
+  cubic vanishes), `sumTripleCorr_s4DList = 0` follows immediately. -/
+lemma sumTripleCorr_s4DList_eq_factored (A B : 𝔸) (p : ℝ) :
+    sumTripleCorr (s4DList A B p) =
+    (4 * p^3 + (1 - 4*p)^3) • (
+      (1/2 : ℝ) • (A * B * A) + (1/2 : ℝ) • (A * B * B) + (1/2 : ℝ) • (B * B * A)
+      - (1/4 : ℝ) • (A * A * B) - (1/4 : ℝ) • (B * A * A) - (B * A * B)
+    ) := by
+  unfold s4DList
+  simp only [sumTripleCorr_cons, sumTripleCorr_nil,
+             sumCommList_cons, sumCommList_nil,
+             sumDList_cons, sumDList_nil,
+             commSingleList,
+             add_zero, zero_add, mul_zero, zero_mul, sub_self,
+             smul_zero]
+  simp only [mul_sub, sub_mul, mul_add, add_mul, smul_sub, smul_add]
+  simp only [← mul_assoc]
+  simp only [smul_mul_smul_mul_smul]
+  module
+
+/-- **sumTripleCorr_s4DList = 0 (UNCONDITIONAL on `IsSuzukiCubic p`)**:
+  closes h3 via the bridge `iteratedDeriv_s4Func_order3_eq_cb_of_bridge`. -/
+lemma sumTripleCorr_s4DList_eq_zero (A B : 𝔸) (p : ℝ) (h : IsSuzukiCubic p) :
+    sumTripleCorr (s4DList A B p) = 0 := by
+  rw [sumTripleCorr_s4DList_eq_factored]
+  unfold IsSuzukiCubic at h
+  rw [h, zero_smul]
+
+/-- **h3 UNCONDITIONAL (given `IsSuzukiCubic p`)**:
+  `iteratedDeriv 3 (s4Func A B p) 0 = (A + B)^3`. -/
+theorem iteratedDeriv_s4Func_order3_eq_cb (A B : 𝔸) (p : ℝ) (h : IsSuzukiCubic p) :
+    iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3 :=
+  iteratedDeriv_s4Func_order3_eq_cb_of_bridge A B p (sumTripleCorr_s4DList_eq_zero A B p h)
+
+/-- **Order-3 vanishing of w4Func UNCONDITIONALLY** via proved h3. -/
+theorem iteratedDeriv_w4Func_order3_eq_zero (A B : 𝔸) (p : ℝ) (h : IsSuzukiCubic p) :
+    iteratedDeriv 3 (w4Func A B p) 0 = 0 :=
+  (iteratedDeriv_s4Func_order3_iff_w4Func_zero A B p).mp
+    (iteratedDeriv_s4Func_order3_eq_cb A B p h)
 
 /-!
 ## Final packaged theorem: S₄ O(t⁵) given w4Func vanishings (with h2 FREE)
@@ -577,6 +625,21 @@ theorem norm_suzuki4_order5_with_h2_and_w4Func_vanishings (A B : 𝔸)
     ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 := by
   have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
   have h3 := iteratedDeriv_s4Func_order3_eq_cb_via_w4Func A B p hW3
+  have h4 := iteratedDeriv_s4Func_order4_eq_q_via_w4Func A B p h3 hW4
+  exact norm_suzuki4_order5_of_s4Func_iteratedDerivs A B hA hB p ht h2 h3 h4
+
+/-- **S₄ O(t⁵) with h2 AND h3 FREE**: given `IsSuzukiCubic p` and only the
+  order-4 w4Func vanishing, conclude the S₄ O(t⁵) bound.
+
+  h2 is supplied from proved `iteratedDeriv_s4Func_order2_eq_sq`; h3 is
+  supplied from proved `iteratedDeriv_s4Func_order3_eq_cb` (which needs
+  `IsSuzukiCubic p`). Only h4 remains as a hypothesis. -/
+theorem norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) (p : ℝ) (hcubic : IsSuzukiCubic p)
+    {t : ℝ} (ht : 0 < t) (hW4 : iteratedDeriv 4 (w4Func A B p) 0 = 0) :
+    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 := by
+  have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
+  have h3 := iteratedDeriv_s4Func_order3_eq_cb A B p hcubic
   have h4 := iteratedDeriv_s4Func_order4_eq_q_via_w4Func A B p h3 hW4
   exact norm_suzuki4_order5_of_s4Func_iteratedDerivs A B hA hB p ht h2 h3 h4
 

@@ -1,13 +1,13 @@
 # Module 4b Phase 5 Handoff
 
-## Status as of last commit (`f1b88fa`)
+## Status (current)
 
-**Sorry count: 0** (outer theorems closed with explicit residual-bound hypothesis; h2 now PROVED unconditionally).
+**Sorry count: 0** (outer theorems closed with explicit residual-bound hypothesis; h2 AND h3 now PROVED unconditionally given `IsSuzukiCubic p`).
 
 **Phase 5 framework fully delivered**:
 - `Suzuki4DerivExplicit.lean`: 979 lines, 0 sorry
 - `Suzuki4Phase5.lean`: 740 lines, 0 sorry
-- `Suzuki4MultinomialExpand.lean`: 360 lines, 0 sorry (**h2 PROVED**)
+- `Suzuki4MultinomialExpand.lean`: ~640 lines, 0 sorry (**h2 + h3 PROVED**)
 
 The chain to the final S₄ O(t⁵) existential bound:
 
@@ -15,8 +15,8 @@ The chain to the final S₄ O(t⁵) existential bound:
 CAPSTONE: norm_suzuki4_order5_of_s4Func_iteratedDerivs (✅ PROVED)
        ↑
   s4 iteratedDeriv identities:
-    h2: iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2   ✅ PROVED
-    h3: iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3   🔴 Open
+    h2: iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2   ✅ PROVED UNCONDITIONALLY
+    h3: iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3   ✅ PROVED (given IsSuzukiCubic p)
     h4: iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4   🔴 Open
        ↓ (Leibniz bridges — ALL PROVED)
   w4Func order-2, 3, 4 vanishings (via iteratedDeriv_w4Func_order{2,3,4}_zero_iff_*)
@@ -27,6 +27,48 @@ CAPSTONE: norm_suzuki4_order5_of_s4Func_iteratedDerivs (✅ PROVED)
        (would give unconditional existential close of norm_suzuki4_fifth_order ∧
         norm_suzuki4_childs_form with ∃ C)
 ```
+
+## h3 proof technique (NEW)
+
+The key breakthrough: factor `sumTripleCorr (s4DList A B p)` as
+
+```
+sumTripleCorr (s4DList A B p) =
+  (4*p^3 + (1-4*p)^3) • [(1/2)(ABA + AB² + B²A) - (1/4)(A²B + BA²) - BAB]
+```
+
+as a **pure operator algebra identity** (no `IsSuzukiCubic` hypothesis needed
+for the factoring itself). Proven by:
+
+```lean
+lemma sumTripleCorr_s4DList_eq_factored (A B : 𝔸) (p : ℝ) :
+    sumTripleCorr (s4DList A B p) = (4 * p^3 + (1 - 4*p)^3) • <op combo> := by
+  unfold s4DList
+  simp only [sumTripleCorr_cons, sumTripleCorr_nil,
+             sumCommList_cons, sumCommList_nil,
+             sumDList_cons, sumDList_nil, commSingleList,
+             add_zero, zero_add, mul_zero, zero_mul, sub_self, smul_zero]
+  simp only [mul_sub, sub_mul, mul_add, add_mul, smul_sub, smul_add]
+  simp only [← mul_assoc]
+  simp only [smul_mul_smul_mul_smul]
+  module
+```
+
+The tactic chain:
+1. Unfold `s4DList` and all sumTripleCorr/sumCommList/sumDList conses.
+2. Distribute subtractions/additions via `mul_sub, sub_mul, mul_add, add_mul`.
+3. Distribute nsmul via `smul_sub, smul_add`.
+4. Normalize to left-associated products (`← mul_assoc`).
+5. Collapse cubic `(c•X)(c'•Y)(c''•Z) = (c*c'*c'')•(X*Y*Z)` via
+   `smul_mul_smul_mul_smul`.
+6. Close with `module`, which matches polynomial coefficients on each of the
+   8 cubic monomials (AAA, AAB, ABA, ABB, BAA, BAB, BBA, BBB) — palindromic
+   structure forces AAA and BBB to vanish identically; the 6 mixed monomials
+   each carry a coefficient proportional to `4p³+(1-4p)³`.
+
+Applied as `sumTripleCorr_s4DList_eq_zero` (given `IsSuzukiCubic p`), and
+lifted to `iteratedDeriv_s4Func_order3_eq_cb` (h3) and
+`iteratedDeriv_w4Func_order3_eq_zero` (w4Func-side order-3 vanishing).
 
 ## h2 proof structure (Suzuki4MultinomialExpand.lean)
 
@@ -39,25 +81,28 @@ The proved path for h2 generalizes to h3, h4 with additional combinatorial work:
 4. **s4 bridges**: `s4Func_eq_prodExpList`, `sumDList_s4DList = A+B`, `sumCommList_s4DList = 0`
 5. **Final assembly**: 3-line rewrite chain
 
-## h3/h4 extension (future work)
+## h4 extension (remaining work)
 
-For h3, need to extend the multinomial formula. The order-3 Leibniz expansion gives:
+For h4, a similar factored form should exist:
 ```
-iteratedDeriv 3 (prodExpList L) 0 = Σᵢ dᵢ³ + 3·Σᵢ<ⱼ (dᵢ²dⱼ + dᵢdⱼ²) + 6·Σᵢ<ⱼ<ₖ dᵢdⱼdₖ
-```
-
-Match this against (A+B)³ = (Σdⱼ)³ (expanded). The difference involves
-triple-nested commutator-like structures:
-```
-(Σdⱼ)³ - iDer 3 = Σᵢ<ⱼ (-2dᵢ²dⱼ - 2dᵢdⱼ² + dⱼ²dᵢ + dⱼdᵢ² + dᵢdⱼdᵢ + dⱼdᵢdⱼ) + ...
+sumQuadCorr (s4DList A B p) = (palindromic + cubic expressions) • <operator combo>
 ```
 
-These reduce via `suzuki4_phase3_{aba,a2b,bab}` + `suzuki4_cubic_cancel` (all
-already proved as scalar identities). The challenge is defining the operator-level
-"sumTripleCommList" analog of sumCommList and proving the required identities.
+Yoshida's theorem for symmetric integrators says even-order BCH terms automatically
+vanish given the lower-order conditions. So h4 should follow from h2 + h3 + palindromic
+structure, potentially without additional polynomial conditions.
 
-**Estimated**: ~400-500 lines for h3, similar for h4. Approach follows the
-same template as h2.
+**Required infrastructure**:
+1. Define `sumQuadCorr` (order-4 residual; structurally similar to sumTripleCorr
+   but with 4th-order Leibniz cross terms).
+2. Prove `iteratedDeriv_prodExpList_order4`.
+3. Show `sumQuadCorr (s4DList A B p) = <scalar polynomial in p> • <operator combo>`
+   where the scalar vanishes under Suzuki conditions.
+
+**Estimated**: ~300-500 lines for h4, following the same tactic template
+(`mul_sub, sub_mul, ← mul_assoc, smul_mul_smul_mul_smul_mul_smul, module`).
+Note that `smul_mul_smul_mul_smul_mul_smul` (quartic product helper) needs
+to be added to the helper suite.
 
 ## What's proved (cumulative)
 
@@ -83,6 +128,11 @@ same template as h2.
 | **Order-3 w4Func bridge** | `iteratedDeriv_w4Func_order3_zero_iff_of_order2` | ✅ |
 | **Order-4 w4Func bridge** | `iteratedDeriv_w4Func_order4_zero_iff_of_order23` | ✅ |
 | **CAPSTONE** | `norm_suzuki4_order5_of_s4Func_iteratedDerivs` | ✅ |
+| **h2 multinomial proof** | `iteratedDeriv_s4Func_order2_eq_sq` | ✅ UNCONDITIONAL |
+| **h3 factored form** | `sumTripleCorr_s4DList_eq_factored` | ✅ (operator algebra identity) |
+| **h3 under IsSuzukiCubic** | `iteratedDeriv_s4Func_order3_eq_cb` | ✅ |
+| **w4Func order-3 vanishing** | `iteratedDeriv_w4Func_order3_eq_zero` | ✅ |
+| **Strengthened CAPSTONE (h2+h3 free)** | `norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing` | ✅ |
 
 ## Remaining concrete work
 

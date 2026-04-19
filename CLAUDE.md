@@ -9,6 +9,14 @@ bound unconditionally from the Suzuki order conditions is the remaining
 research target — see `Suzuki4Phase5.lean` for the architectural reduction
 to three concrete `iteratedDeriv` identities on `s4Func` at τ=0.
 
+**h2 and h3 now PROVED UNCONDITIONALLY** (h3 requires `IsSuzukiCubic p`):
+- `iteratedDeriv_s4Func_order2_eq_sq` (h2, free)
+- `iteratedDeriv_s4Func_order3_eq_cb` (h3, given `IsSuzukiCubic p`)
+
+Only **h4** remains: `iteratedDeriv 4 (s4Func A B p) 0 = (A + B)^4`.
+Strengthened CAPSTONE `norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing`
+takes just `IsSuzukiCubic p` and w4Func order-4 vanishing to close the S₄ O(t⁵) bound.
+
 ## Goal
 
 Prove the Lie–Trotter product formula in Lean 4 using Mathlib:
@@ -357,8 +365,11 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 | L4b-br-4. `iteratedDeriv_w4Func_order4_eq` / `_zero_iff_of_order23` | Order-4 bridge (conditional on orders 2, 3) | ✅ Proved |
 | L4b-CAPSTONE. `norm_suzuki4_order5_of_s4Func_iteratedDerivs` | Close S₄ O(t⁵) given 3 s4Func identities | ✅ Proved |
 | L4b-multinomial. `iteratedDeriv_prodExpList_order{0,1,2}` | Multinomial formulas for iteratedDeriv of exp products | ✅ Proved |
-| L4b-h2. `iteratedDeriv_s4Func_order2_eq_sq` | **h2: iteratedDeriv 2 s4Func 0 = (A+B)²** | ✅ Proved |
-| L4b-h3, h4. (future) | `iteratedDeriv k (s4Func A B p) 0 = (A+B)^k` for k=3,4 | 🔴 Open |
+| L4b-h2. `iteratedDeriv_s4Func_order2_eq_sq` | **h2: iteratedDeriv 2 s4Func 0 = (A+B)²** | ✅ Proved UNCONDITIONAL |
+| L4b-h3-factored. `sumTripleCorr_s4DList_eq_factored` | `sumTripleCorr = (4p³+(1-4p)³) • <op combo>` (operator algebra identity) | ✅ Proved |
+| L4b-h3. `iteratedDeriv_s4Func_order3_eq_cb` | **h3: iteratedDeriv 3 s4Func 0 = (A+B)³** (given `IsSuzukiCubic p`) | ✅ Proved |
+| L4b-w4-order3. `iteratedDeriv_w4Func_order3_eq_zero` | `iteratedDeriv 3 (w4Func A B p) 0 = 0` (given `IsSuzukiCubic p`) | ✅ Proved |
+| L4b-h4. (future) | `iteratedDeriv 4 (s4Func A B p) 0 = (A+B)^4` | 🔴 Open |
 | L5. `norm_suzuki4_childs_via_residual` | Conditional Childs-form bound (8 explicit 4-fold commutators) | ✅ Proved |
 | L5'. `norm_suzuki4_childs_form` | Unconditional Childs Prop pf4_bound_2term | 🔴 Open (= Module 4b-C2) |
 
@@ -369,7 +380,7 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 - `LieTrotter/Suzuki4Module4.lean` (~150 lines) — Module 4a (continuity)
 - `LieTrotter/Suzuki4DerivExplicit.lean` (~979 lines) — Module 4b-A1/A2/A3 + Phase 1-3 polynomial identities + smoothness + bridge
 - `LieTrotter/Suzuki4Phase5.lean` (~740 lines) — Taylor-reduction + Leibniz bridges for orders 1-4 + CAPSTONE theorem (conditional closure of S₄ O(t⁵) from 3 s4Func iteratedDeriv identities)
-- `LieTrotter/Suzuki4MultinomialExpand.lean` (~360 lines) — prodExpList + multinomial formulas + **h2 UNCONDITIONALLY PROVED**
+- `LieTrotter/Suzuki4MultinomialExpand.lean` (~640 lines) — prodExpList + multinomial formulas + **h2 UNCONDITIONALLY + h3 under IsSuzukiCubic PROVED**
 - `LieTrotter/Suzuki4ChildsForm.lean` (~223 lines) — Childs Prop pf4_bound_2term + conditional reduction
 - `LieTrotter/Suzuki4OrderFive.lean` (~427 lines) — `norm_suzuki4_fifth_order` (alternative-form research target, 1 sorry)
 
