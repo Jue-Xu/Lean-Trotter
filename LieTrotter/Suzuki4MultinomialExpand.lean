@@ -258,6 +258,11 @@ lemma smul_mul_smul_diff (X Y : 𝔸) (c c' : ℝ) :
     (c • X) * (c' • Y) = (c * c') • (X * Y) := by
   rw [Algebra.smul_mul_assoc, Algebra.mul_smul_comm, smul_smul]
 
+/-- `(c • X) * (c' • Y) * (c'' • Z) = (c*c'*c'') • (X * Y * Z)`. Cubic smul-mul. -/
+lemma smul_mul_smul_mul_smul (X Y Z : 𝔸) (c c' c'' : ℝ) :
+    (c • X) * (c' • Y) * (c'' • Z) = (c * c' * c'') • (X * Y * Z) := by
+  rw [smul_mul_smul_diff, Algebra.smul_mul_assoc, Algebra.mul_smul_comm, smul_smul]
+
 /-!
 ## Remaining bridge: `sumCommList (s4DList A B p) = 0`
 
