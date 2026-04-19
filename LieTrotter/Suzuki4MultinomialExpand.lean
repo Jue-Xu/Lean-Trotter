@@ -285,35 +285,76 @@ lines — see theorem statement below.
 -/
 
 /-!
-## Deferred: `sumCommList (s4DList A B p) = 0`
+## Commutator-expansion helpers
 
-The sumCommList unfolds to 10 nested terms, each of the form
-`(cᵢ • Xᵢ) * sumOthers - sumOthers * (cᵢ • Xᵢ)`. Even with the cancellation
-helpers (`smul_mul_smul_same/diff`, `sub_self`), the automated simp-set cannot
-cleanly reduce the result to the form of `s4_pairwise_commutator_sum_zero`
-because:
-1. Same-type (A-A) and (B-B) terms appear with ordering-sensitive scalars
-   (`p * c₁` vs `c₁ * p`) that don't syntactically cancel via `sub_self`
-   without `mul_comm` (which can't be in simp set — non-terminating).
-2. The reverse-simp rewrites (`← add_smul`, etc.) create non-canonical terms
-   including stray `(c • X) * 0 - 0 * (c • X)` from trailing nil's.
-
-**Path forward**: prove a custom "commutator expansion" lemma that directly
-reduces `(c • X) * L - L * (c • X) = Σⱼ c·cⱼ • [X, Xⱼ]` for a list L, then
-apply to each step of the sumCommList induction. This requires helper
-machinery but avoids the simp pitfalls. Approximately ~100-200 additional lines.
-
-**Conditional h2 is in place** (`iteratedDeriv_s4Func_order2_eq_sq_of_bridge`,
-takes `sumCommList_s4DList = 0` as hypothesis).
+Direct scalar-multiplied commutator identities that avoid the simp pitfalls
+of cascaded `smul_mul_assoc`/`mul_smul_comm` rewrites.
 -/
 
-/-- **h2 conditional on `sumCommList_s4DList = 0`**:
-  `iteratedDeriv 2 (s4Func A B p) 0 = (A + B)^2`. -/
-theorem iteratedDeriv_s4Func_order2_eq_sq_of_bridge
-    (A B : 𝔸) (p : ℝ)
-    (hBridge : sumCommList (s4DList A B p) = 0) :
+/-- `(c • X) * (c' • Y) - (c' • Y) * (c • X) = (c * c') • (X * Y - Y * X)`. -/
+lemma smul_mul_sub_comm (X Y : 𝔸) (c c' : ℝ) :
+    (c • X) * (c' • Y) - (c' • Y) * (c • X) = (c * c') • (X * Y - Y * X) := by
+  rw [smul_mul_smul_diff, smul_mul_smul_diff]
+  rw [show c' * c = c * c' from by ring]
+  rw [← smul_sub]
+
+/-- Commutator of `(c • X)` with `sumDList L` expands as a folded sum:
+  `(c • X) * sumDList L - sumDList L * (c • X) = Σⱼ (c * cⱼ) • (X * Xⱼ - Xⱼ * X)`. -/
+lemma smul_mul_sumDList_sub_sumDList_mul_smul (X : 𝔸) (c : ℝ) (L : List (𝔸 × ℝ)) :
+    (c • X) * sumDList L - sumDList L * (c • X) =
+      L.foldr (fun (p : 𝔸 × ℝ) acc => (c * p.2) • (X * p.1 - p.1 * X) + acc) 0 := by
+  induction L with
+  | nil =>
+    show (c • X) * 0 - 0 * (c • X) = 0
+    rw [mul_zero, zero_mul, sub_zero]
+  | cons p L ih =>
+    obtain ⟨Y, c'⟩ := p
+    show (c • X) * (c' • Y + sumDList L) - (c' • Y + sumDList L) * (c • X) =
+      (c * c') • (X * Y - Y * X) +
+        L.foldr (fun p acc => (c * p.2) • (X * p.1 - p.1 * X) + acc) 0
+    rw [mul_add, add_mul]
+    rw [show (c • X * (c' • Y) + c • X * sumDList L - (c' • Y * (c • X) + sumDList L * (c • X))) =
+        ((c • X * (c' • Y) - c' • Y * (c • X)) +
+         (c • X * sumDList L - sumDList L * (c • X))) from by abel]
+    rw [smul_mul_sub_comm, ih]
+
+/-- **Explicit form of sumCommList**: for each cons step, the commutator-sum
+  helper gives us an explicit expansion. -/
+lemma sumCommList_cons_expand (X : 𝔸) (c : ℝ) (L : List (𝔸 × ℝ)) :
+    sumCommList ((X, c) :: L) = sumCommList L +
+      L.foldr (fun (p : 𝔸 × ℝ) acc => (c * p.2) • (X * p.1 - p.1 * X) + acc) 0 := by
+  rw [sumCommList_cons]
+  rw [show (c • X) * sumDList L - sumDList L * (c • X) =
+      L.foldr (fun p acc => (c * p.2) • (X * p.1 - p.1 * X) + acc) 0 from
+    smul_mul_sumDList_sub_sumDList_mul_smul X c L]
+
+/-- `sumCommList (s4DList A B p) = 0`. -/
+lemma sumCommList_s4DList (A B : 𝔸) (p : ℝ) :
+    sumCommList (s4DList A B p) = 0 := by
+  unfold s4DList
+  -- Unfold cons-by-cons using sumCommList_cons_expand, simplifying the folded
+  -- inner sums at each step. At each cons (X, c), the expansion contributes
+  -- Σⱼ (c * cⱼ) • (X * Xⱼ - Xⱼ * X) for the tail.
+  simp only [sumCommList_cons_expand, sumCommList_nil, List.foldr,
+    zero_add, add_zero]
+  -- Goal: sum of 10 nested foldr contributions = 0. Each contribution is a
+  -- smul of (X * Y - Y * X) where X, Y ∈ {A, B}.
+  -- For X = Y: X*X - X*X = 0, so term vanishes.
+  -- For X ≠ Y: (c * c') • (A * B - B * A) or (c * c') • (B * A - A * B).
+  -- Rearrange as (scalar) • (A * B - B * A). Compare to s4_pairwise_commutator_sum_zero.
+  have h := s4_pairwise_commutator_sum_zero A B p
+  -- Negate B*A - A*B to -(A*B - B*A)
+  have hneg : ∀ (c : ℝ), c • (B * A - A * B) = -(c • (A * B - B * A)) := fun c => by
+    rw [← smul_neg]; congr 1; noncomm_ring
+  -- Apply simp to fold same-type pairs to 0 and convert B*A - A*B to -(A*B - B*A)
+  simp only [sub_self, smul_zero, add_zero, zero_add, hneg]
+  -- Goal should now match h after additive reordering.
+  linear_combination (norm := module) h
+
+/-- **h2 PROVED UNCONDITIONALLY**: `iteratedDeriv 2 (s4Func A B p) 0 = (A + B)^2`. -/
+theorem iteratedDeriv_s4Func_order2_eq_sq (A B : 𝔸) (p : ℝ) :
     iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2 := by
   rw [s4Func_eq_prodExpList, iteratedDeriv_prodExpList_order2,
-    sumDList_s4DList, hBridge, add_zero]
+    sumDList_s4DList, sumCommList_s4DList, add_zero]
 
 end
