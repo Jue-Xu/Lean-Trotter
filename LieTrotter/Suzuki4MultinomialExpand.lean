@@ -503,6 +503,51 @@ theorem iteratedDeriv_s4Func_order4_eq_q_via_w4Func (A B : 𝔸) (p : ℝ)
   have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
   exact (iteratedDeriv_w4Func_order4_zero_iff_of_order23 A B p h2 h3).mp hW4
 
+/-- **Order-2 vanishing of w4Func UNCONDITIONALLY** via proved h2. -/
+theorem iteratedDeriv_w4Func_order2_eq_zero (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 2 (w4Func A B p) 0 = 0 := by
+  have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
+  exact (iteratedDeriv_w4Func_order2_zero_iff A B p).mpr h2
+
+/-!
+## Equivalences for h3 via the w4Func bridge
+
+Given proved h2, the three forms of "h3" are equivalent:
+  (a) `iteratedDeriv 3 (s4Func A B p) 0 = (A + B)^3`
+  (b) `iteratedDeriv 3 (w4Func A B p) 0 = 0`
+  (c) `sumTripleCorr (s4DList A B p) = 0`
+
+Any of these proved gives the others. Similarly for h4.
+-/
+
+/-- Equivalence (a) ↔ (b) for h3 via proved h2. -/
+theorem iteratedDeriv_s4Func_order3_iff_w4Func_zero (A B : 𝔸) (p : ℝ) :
+    iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3 ↔
+      iteratedDeriv 3 (w4Func A B p) 0 = 0 := by
+  have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
+  exact (iteratedDeriv_w4Func_order3_zero_iff_of_order2 A B p h2).symm
+
+/-!
+## Operator-level order-3 identity (stated as hypothesis for now)
+
+The full unconditional proof of h3 requires the operator-level identity
+  `sumTripleCorr (s4DList A B p) = 0` (for Suzuki p with `4p³ + q³ = 0`)
+
+This reduces via cons-by-cons expansion to the Phase 3 polynomial identities:
+- `suzuki4_phase3_aba`: `-30p³ + 24p² - 6p + 1/2 = 0`
+- `suzuki4_phase3_a2b`: `15p³ - 12p² + 3p - 1/4 = 0`
+- `suzuki4_phase3_bab`: `60p³ - 48p² + 12p - 1 = 0`
+
+all equivalent to `4p³ + (1-4p)³ = 0` (the Suzuki cubic).
+
+Given sumTripleCorr's complex recurrence (3 structural terms per cons),
+unfolding for the 11-element s4DList produces ~500 operator-monomial terms.
+Coefficient-matching against the 6 Phase 3 monomials (ABA, AB², A²B, BAB, BA², B²A)
+requires careful accounting.
+
+**Unconditional Suzuki-specific bridge** (future work, needs the expansion).
+-/
+
 /-!
 ## Final packaged theorem: S₄ O(t⁵) given w4Func vanishings (with h2 FREE)
 
