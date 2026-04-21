@@ -51,3 +51,4 @@ import LieTrotter.Suzuki4ChildsForm
 import LieTrotter.Suzuki4DerivExplicit
 import LieTrotter.Suzuki4Phase5
 import LieTrotter.Suzuki4MultinomialExpand
+import LieTrotter.Suzuki4StrangBlocks
