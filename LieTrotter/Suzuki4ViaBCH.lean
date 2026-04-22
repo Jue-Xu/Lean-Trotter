@@ -51,6 +51,8 @@ Once Lean-BCH compiles fully, replacing the `axiom` declarations with
 -/
 
 import LieTrotter.Suzuki4StrangBlocks
+import LieTrotter.Suzuki4MultinomialExpand
+import LieTrotter.Suzuki4ChildsForm
 
 noncomputable section
 
@@ -228,5 +230,126 @@ Step 3 requires a multi-exp BCH composition estimate, which is the main
 missing piece on the Trotter side. It can likely be derived from the
 existing `CommutatorScaling.lean` infrastructure plus `norm_exp_le`.
 -/
+
+/-!
+## Shortcut path: BCH-implied h4 ⟹ unconditional Childs-form bound
+
+The full composition bound in the roadmap above is substantial; a shorter
+route to the S₄ O(t⁵) result is to axiomatize the single BCH consequence
+we actually need for the existing CAPSTONE: the order-4 vanishing of
+`iteratedDeriv (s4Func A B p) at 0`.
+
+Mathematical justification for the axiom:
+
+For Suzuki palindromic p, the BCH log of `s4Func(τ)` has only odd τ-powers:
+  `log(s4Func(τ)) = τ·H + τ³·R₃ + τ⁵·R₅ + O(τ⁷)`
+Under `IsSuzukiCubic p` (which is the defining Suzuki order-4 condition),
+`R₃ = 0`. Hence `s4Func(τ) = exp(τ·H + τ⁵·R₅ + O(τ⁷))`. Taylor expansion
+of `exp` gives `τ⁴` coefficient of `s4Func(τ)` equal to `H⁴/24`, so
+`iteratedDeriv 4 (s4Func A B p) 0 = 4!·(H⁴/24) = H⁴ = (A+B)⁴`.
+
+This is exactly the h4 identity. Once Lean-BCH exposes the BCH expansion
+for palindromic compositions, this axiom is replaced by a theorem.
+-/
+
+/-- **[AXIOMATIZED from BCH expansion]** For Suzuki palindromic `p`, the
+  4th iterated derivative of `s4Func` at `τ = 0` equals `(A+B)^4`.
+
+  Derivation: BCH gives `s4Func(τ) = exp(τH + O(τ⁵))` under `IsSuzukiCubic`,
+  whose 4th derivative at 0 equals `H^4 = (A+B)^4`. -/
+axiom bch_iteratedDeriv_s4Func_order4
+    (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
+    iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4
+
+/-- **w4Func order-4 vanishing from BCH** (given Suzuki):
+  `iteratedDeriv 4 (w4Func A B p) 0 = 0`.
+
+  Combines the BCH h4 axiom with the Phase 5 bridge
+  `iteratedDeriv_w4Func_order4_zero_iff_of_order23` and our proved
+  h2, h3 (where h3 needs IsSuzukiCubic). -/
+theorem bch_iteratedDeriv_w4Func_order4_eq_zero
+    (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
+    iteratedDeriv 4 (w4Func A B p) 0 = 0 := by
+  have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
+  have h3 := iteratedDeriv_s4Func_order3_eq_cb A B p hcubic
+  have h4 := bch_iteratedDeriv_s4Func_order4 A B p hcubic
+  exact (iteratedDeriv_w4Func_order4_zero_iff_of_order23 A B p h2 h3).mpr h4
+
+/-!
+## Unconditional S₄ O(t⁵) via BCH axiom
+
+With `bch_iteratedDeriv_s4Func_order4` in hand, the strengthened CAPSTONE
+from `Suzuki4MultinomialExpand.lean` closes without any derivative-level
+hypotheses — only `IsSuzukiCubic p` and the anti-Hermitian structure.
+-/
+
+section AntiHermitian
+
+variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
+
+/-- **S₄ O(t⁵) from BCH**: unconditional modulo the axiomatized BCH h4. -/
+theorem norm_suzuki4_order5_via_bch_axiom (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) (p : ℝ) (hcubic : IsSuzukiCubic p)
+    {t : ℝ} (ht : 0 < t) :
+    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 :=
+  norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing
+    A B hA hB p hcubic ht (bch_iteratedDeriv_w4Func_order4_eq_zero A B p hcubic)
+
+/-!
+## Childs-form bound via axiomatized pointwise residual
+
+Childs's 4th-order Trotter error bound (Prop pf4_bound_2term, 2021) has
+the explicit form:
+```
+  ‖S₄(t) - exp(tH)‖ ≤ t⁵ · Σ αᵢ · ‖Cᵢ‖   (8 four-fold commutators)
+```
+with specific coefficients `α₁...α₈ ∈ [0.0047, 0.0284]`.
+
+The existing `norm_suzuki4_childs_form` closes this GIVEN the Childs-form
+pointwise residual `‖w4Deriv τ‖ ≤ 5·childsBoundSum·τ⁴`. From BCH, this
+residual is known — its coefficients are the 4-fold commutator expansion
+of the BCH quintic term `R₅` in `log(s4Func)`, matched to Childs's
+explicit Duhamel bookkeeping.
+
+We axiomatize this residual directly here and derive the Childs bound.
+Replacing the axiom with a derivation from a fully-formalized Lean-BCH
+quintic BCH expansion is follow-up work.
+-/
+
+/-- **[AXIOMATIZED from BCH expansion]** Childs's pointwise residual bound
+  on `‖w4Deriv‖`.
+
+  Derivation: Under `IsSuzukiCubic`, BCH gives
+  `s4Func(τ) = exp(τH + τ⁵·R₅ + O(τ⁷))` where `R₅` is a specific linear
+  combination of 4-fold nested commutators. Computing `w4Deriv = (d/dτ)
+  (exp(-τH) · s4Func)` at general `τ` and bounding by triangle inequality
+  yields the Childs pointwise residual. The coefficients `0.0047…0.0284`
+  arise from Childs's balanced factoring of the 12-factor Duhamel
+  representation of `R₅`. -/
+axiom bch_childs_pointwise_residual
+    (A B : 𝔸) (hA : star A = -A) (hB : star B = -B) (t : ℝ) (ht : 0 ≤ t) :
+    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
+    ∀ τ ∈ Set.Icc (0 : ℝ) t,
+      ‖w4Deriv A B p τ‖ ≤ (5 * childsBoundSum A B) * τ ^ 4
+
+/-- **Childs's 4th-order Trotter error bound via BCH**:
+  `‖S₄(t) - exp(tH)‖ ≤ t⁵ · childsBoundSum(A, B)` for Suzuki
+  `p = 1/(4 - 4^{1/3})`, derived from the axiomatized BCH pointwise
+  residual. This is Childs et al. (2021) Proposition pf4_bound_2term.
+
+  The axiom `bch_childs_pointwise_residual` is the "input from BCH"
+  — it states the pointwise bound on `w4Deriv` that BCH theoretically
+  provides. The theorem below is unconditional on derivative hypotheses
+  (the existing `norm_suzuki4_childs_form` takes the residual as a
+  hypothesis; here we supply it from the axiom). -/
+theorem norm_suzuki4_childs_form_via_bch (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
+    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
+    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ t ^ 5 * childsBoundSum A B := by
+  simp only
+  exact norm_suzuki4_childs_form A B hA hB ht
+    (bch_childs_pointwise_residual A B hA hB t ht)
+
+end AntiHermitian
 
 end
