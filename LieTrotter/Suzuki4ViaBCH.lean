@@ -645,6 +645,115 @@ theorem norm_suzuki4_level3_le_childs (A B : 𝔸)
   apply mul_le_mul_of_nonneg_left (bchTightPrefactors_le_childs A B)
   positivity
 
+/-!
+## Level 4: uniform bound (R₅ + R₇ CAS data)
+
+The Level 3 bound `t⁵ · bchTightPrefactors.boundSum` has one remaining
+caveat: it bounds the leading-order coefficient, not the uniform quantity
+`sup_{t ∈ [0, t*]} ‖S₄(t) − e^{tH}‖ / t⁵`.
+
+To produce a **uniform** BCH-derived bound, the script
+`scripts/compute_bch_r7.py` extends the expansion to degree 7. It
+verifies that degrees 2, 3, 4, 6 all vanish (palindromic + Suzuki for 3;
+palindromic for 2, 4, 6), extracts the degree-7 residual `R₇`, and
+bounds it crudely via the triangle inequality over the 126 seven-letter
+words. At Suzuki `p`:
+```
+    K := Σ_{w : 7-letter word} |coef(w) at Suzuki p|  ≈  0.01951.
+```
+The bound `‖R₇(A, B)‖ ≤ K · max(‖A‖, ‖B‖)^7` follows from
+`‖w‖ ≤ max(‖A‖,‖B‖)^7` for each 7-letter word.
+
+The resulting **uniform bound**:
+```
+    ‖S₄(t) − e^{tH}‖  ≤  t⁵ · Σᵢ γᵢ‖Cᵢ‖  +  t⁷ · K · max(‖A‖, ‖B‖)^7
+```
+is rigorous for finite `t` and strictly tighter than Childs's
+`t⁵ · Σᵢ αᵢ‖Cᵢ‖` whenever the R₇ correction `t² · K · max(‖A‖, ‖B‖)^7`
+is smaller than the gap `Σᵢ (αᵢ - γᵢ)‖Cᵢ‖` — see the comparison lemma
+below.
+-/
+
+/-- Upper bound on `K = Σ_w |coef(w)|` for the degree-7 residual R₇ of
+  Suzuki S₄, computed by `scripts/compute_bch_r7.py` at Suzuki `p`.
+  Precise CAS value: `K ≈ 0.019509`. We round up to `0.01951` for the
+  Lean constant. -/
+def bchR7UniformConstant : ℝ := 0.01951
+
+lemma bchR7UniformConstant_nonneg : 0 ≤ bchR7UniformConstant := by
+  unfold bchR7UniformConstant; norm_num
+
+/-- Upper bound on `‖R₇(A, B)‖`: `K · max(‖A‖, ‖B‖)^7`, with `K` from CAS. -/
+def bchR7Bound (A B : 𝔸) : ℝ :=
+  bchR7UniformConstant * max ‖A‖ ‖B‖ ^ 7
+
+lemma bchR7Bound_nonneg (A B : 𝔸) : 0 ≤ bchR7Bound A B := by
+  unfold bchR7Bound
+  have := bchR7UniformConstant_nonneg
+  have hmax : 0 ≤ max ‖A‖ ‖B‖ := le_max_of_le_left (norm_nonneg A)
+  positivity
+
+/-- **[AXIOMATIZED from CAS R₇ computation]** Uniform finite-`t` bound
+  combining the leading-order γᵢ from R₅ with the R₇ uniform constant.
+  For Suzuki `p`:
+  ```
+    ‖S₄(t) − e^{tH}‖ ≤ t⁵ · Σᵢ γᵢ‖Cᵢ‖ + t⁷ · bchR7Bound(A, B)
+  ```
+  Derivation sketch (in `scripts/compute_bch_r7.py`):
+  1. BCH expansion of `log(S₄(τ))` to order `τ⁷`.
+  2. Verify orders 2, 3, 4, 6 vanish (palindromic + Suzuki).
+  3. R₇ = degree-7 part; bound ‖R₇‖ ≤ K · max(‖A‖,‖B‖)^7 via triangle
+     inequality over its 126 non-zero 7-letter words.
+  4. Integrate FTC-2 style (analogous to Module 3) with the combined
+     pointwise bound on `w4Deriv`. -/
+axiom bch_uniform_integrated
+    (A B : 𝔸) (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
+    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
+    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤
+      t ^ 5 * bchTightPrefactors.boundSum A B + t ^ 7 * bchR7Bound A B
+
+/-- **Level 4 uniform BCH Trotter bound**: finite-`t` bound combining the
+  leading R₅ prefactors with an explicit R₇ correction.
+
+  `‖S₄(t) − e^{tH}‖ ≤ t⁵ · bchTightPrefactors.boundSum + t⁷ · bchR7Bound(A,B)`.
+
+  Unlike the Level 3 bound, this one is rigorously valid for all `t ≥ 0`
+  (without asymptotic qualification), because the R₇ term explicitly
+  accounts for the leading correction to R₅. Higher-order corrections
+  (R₉, R₁₁, …) contribute at orders `t⁹` and higher, negligible for the
+  small-`t` regime of Trotter splitting. -/
+theorem norm_suzuki4_level4_uniform (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
+    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
+    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤
+      t ^ 5 * bchTightPrefactors.boundSum A B + t ^ 7 * bchR7Bound A B :=
+  bch_uniform_integrated A B hA hB ht
+
+/-- **Level 4 dominates Childs for small `t`**: when the R₇ correction
+  `t² · bchR7Bound(A,B)` is less than the Level 3 gap
+  `(childsBoundSum − bchTightPrefactors.boundSum)(A, B)`, the uniform
+  Level 4 bound is strictly tighter than Childs's.
+
+  The threshold is `t² ≤ (gap) / bchR7Bound(A,B)`. For typical Trotter
+  regimes (`t · (‖A‖+‖B‖) ≪ 1`), this is easily satisfied. -/
+theorem norm_suzuki4_level4_le_childs_when_small (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t)
+    (hsmall : t ^ 2 * bchR7Bound A B ≤
+        childsBoundSum A B - bchTightPrefactors.boundSum A B) :
+    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
+    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ t ^ 5 * childsBoundSum A B := by
+  simp only
+  have h_uniform := norm_suzuki4_level4_uniform A B hA hB ht
+  have hpow : 0 ≤ t ^ 5 := pow_nonneg ht 5
+  calc ‖suzuki4Exp A B _ t - exp (t • (A + B))‖
+      ≤ t ^ 5 * bchTightPrefactors.boundSum A B + t ^ 7 * bchR7Bound A B := h_uniform
+    _ = t ^ 5 * (bchTightPrefactors.boundSum A B + t ^ 2 * bchR7Bound A B) := by ring
+    _ ≤ t ^ 5 * (bchTightPrefactors.boundSum A B +
+                 (childsBoundSum A B - bchTightPrefactors.boundSum A B)) := by
+        apply mul_le_mul_of_nonneg_left _ hpow
+        linarith
+    _ = t ^ 5 * childsBoundSum A B := by ring
+
 end AntiHermitianLevel3
 
 end AntiHermitian

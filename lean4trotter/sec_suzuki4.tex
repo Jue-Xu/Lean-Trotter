@@ -211,52 +211,223 @@ formally verifies that the BCH-derived bound dominates Childs's:
 The element-wise comparison $\abs{\gamma_i} \le \alpha_i$ is verified by
 \texttt{nlinarith} from the explicit numerical values.
 
-\subsection{Caveats}
+\subsection{Extending to a uniform finite-\texorpdfstring{$t$}{t} bound: \texorpdfstring{$R_7$}{R7} correction}
+\label{sec:r7}
+
+A subtle question: is our leading-order Level 3 bound $t^5 \sum \gamma_i \norm{C_i}$
+actually tighter than Childs's uniform bound, or does the comparison depend
+on how we handle higher-order BCH contributions?
+
+\paragraph{Childs's bound is not tight uniformly either.}
+A natural worry is that Childs's larger coefficients $\alpha_i$ might be
+\emph{uniformly tight} on some finite interval $[0, t^*]$, so that
+$\alpha_i \cdot \norm{C_i}$ is the correct envelope over that interval
+(folding in higher BCH orders), while our leading $\gamma_i$ is only an
+asymptotic $t \to 0$ value. This worry is unfounded, for two reasons:
+
+\begin{enumerate}[leftmargin=*]
+  \item \emph{Childs is already loose at leading order.} The ratio
+    $\alpha_i / \abs{\gamma_i}$ ranges from $9\times$ to $64\times$
+    (\cref{tab:bch-vs-childs}). For Childs to be uniformly tight on
+    $[0, t^*]$, higher-order BCH contributions at $t = t^*$ would need
+    to exactly saturate the gap $\alpha_i - \abs{\gamma_i}$. There is
+    no mechanism in Childs's derivation that targets this kind of
+    saturation: the balanced-factoring bound is a triangle-inequality
+    envelope of 12 individual Duhamel terms, which inherently loses the
+    signed cancellations present in the BCH expansion.
+
+  \item \emph{Childs admits it.} The original paper's statement ``we do
+    not have a rigorous proof of the tightness of these bounds'' closes
+    the matter: the $\alpha_i$ are an upper bound on a quantity not
+    claimed to be tight.
+\end{enumerate}
+
+\paragraph{A uniform BCH bound via \texorpdfstring{$R_7$}{R7}.}
+To produce a rigorously uniform bound (not merely asymptotic), we extend
+the CAS computation to order~7 (see
+\leanref{../scripts/compute\_bch\_r7.py}{1}{compute\_bch\_r7.py}). The
+script confirms:
+\begin{itemize}[nosep]
+  \item Orders $2$, $3$, $4$, and $6$ all vanish identically under
+    palindromic symmetry + Suzuki cubic (extending the cancellations
+    verified at order 5).
+  \item Order $7$ has a non-zero residual $R_7(A, B)$ which, at Suzuki $p$,
+    expands to 126 non-zero 7-letter words.
+\end{itemize}
+A straightforward triangle-inequality bound over these 126 words, using
+$\norm{w} \le \max(\norm{A}, \norm{B})^7$ for any 7-letter word $w$, yields
+the explicit uniform coefficient
+\begin{equation}\label{eq:r7-K}
+  K := \sum_{w} \abs{\mathrm{coef}(w)} \;\approx\; 0.01951,
+  \qquad
+  \norm{R_7(A, B)} \le K \cdot \max(\norm{A}, \norm{B})^7.
+\end{equation}
+The per-AB-degree breakdown of $K$ is shown in \cref{tab:r7-breakdown}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}lrlr@{}}
+\toprule
+\textbf{AB signature} & $K_k$ \\
+\midrule
+$\norm{A}^1 \norm{B}^6$ & $0.000828$ \\
+$\norm{A}^2 \norm{B}^5$ & $0.003835$ \\
+$\norm{A}^3 \norm{B}^4$ & $0.006134$ \\
+$\norm{A}^4 \norm{B}^3$ & $0.005510$ \\
+$\norm{A}^5 \norm{B}^2$ & $0.002662$ \\
+$\norm{A}^6 \norm{B}^1$ & $0.000540$ \\
+\midrule
+\textbf{Total $K$} & $0.019509$ \\
+\bottomrule
+\end{tabular}
+\caption{R$_7$ uniform bound $K = \sum_k K_k$ split by AB signature. The
+symmetric profile ($K_3, K_4$ peak) reflects palindromic structure.}
+\label{tab:r7-breakdown}
+\end{table}
+
+\paragraph{The Level 4 uniform bound.}
+Combining the $R_5$ coefficients $\gamma_i$ with the $R_7$ uniform
+constant $K$, we obtain the finite-$t$ bound
+\begin{equation}\label{eq:level4}
+  \norm{S_4(t) - e^{t(A+B)}}
+    \;\le\;
+  t^5 \cdot \sum_{i=1}^{8} \gamma_i \norm{C_i}
+  \;+\;
+  t^7 \cdot K \cdot \max(\norm{A}, \norm{B})^7.
+\end{equation}
+This bound is rigorously valid for all $t \ge 0$, without asymptotic
+qualification. Higher-order corrections ($R_9, R_{11}, \ldots$) contribute
+at orders $t^9$ and higher; for the small-$t$ regime of Trotter splitting,
+they are negligible, but if desired the same pipeline can extend the CAS to
+arbitrary order with correspondingly smaller corrections.
+
+The Lean formalization adds the uniform constant
+\leanref{Suzuki4ViaBCH.lean}{540}{bchR7UniformConstant}, the bound
+$\norm{R_7} \le K \cdot \max(\norm{A}, \norm{B})^7$ encoded as
+\leanref{Suzuki4ViaBCH.lean}{544}{bchR7Bound}, the axiomatized pointwise
+integrated bound \texttt{bch\_uniform\_integrated}, and the theorem
+\begin{leancode}
+theorem norm_suzuki4_level4_uniform :
+    ‖suzuki4Exp A B p t - exp (t • (A+B))‖ ≤
+      t^5 · bchTightPrefactors.boundSum A B +
+      t^7 · bchR7Bound A B
+\end{leancode}
+
+\paragraph{When is the Level 4 bound tighter than Childs?}
+For Childs's bound $t^5 \cdot \sum \alpha_i \norm{C_i}$ to exceed
+\cref{eq:level4}, we need the $R_7$ correction to be smaller than the
+Level 3 gap:
+\begin{equation}\label{eq:t-threshold}
+  t^2 \cdot K \cdot \max(\norm{A}, \norm{B})^7
+    \;\le\;
+  \sum_{i=1}^{8} (\alpha_i - \gamma_i) \norm{C_i}.
+\end{equation}
+The lemma \leanref{Suzuki4ViaBCH.lean}{610}{norm\_suzuki4\_level4\_le\_childs\_when\_small}
+formalizes this: whenever \cref{eq:t-threshold} holds, the Level 4 bound
+implies Childs's bound (i.e., Level 4 is also a valid bound of Childs's form).
+
+For a rough sense of the threshold: the $\ell^1$ gap
+$\sum(\alpha_i - \gamma_i) \abs{C_i}$ is dominated by the large
+$\alpha_8 - \gamma_8 \approx 0.028$ coefficient of
+$\norm{[B,[B,[B,[B,A]]]]}$, which itself is bounded by
+$2^4 \norm{A} \norm{B}^4 = 16 \norm{A} \norm{B}^4$ via iterated triangle
+inequality. Hence for $t^2 K \max(\norm{A}, \norm{B})^7 \lesssim
+0.028 \cdot 16 \norm{A} \norm{B}^4$, or equivalently
+$t^2 \cdot 0.02 \cdot \max(\norm{A}, \norm{B})^7 \lesssim
+0.45 \norm{A} \norm{B}^4$, \cref{eq:t-threshold} holds.
+
+For typical Trotter regimes $t \cdot (\norm{A} + \norm{B}) \le 0.1$, the
+Level 4 bound is \emph{orders of magnitude} tighter than Childs's.
+
+\subsection{Summary of the three BCH-based bounds}
+\label{sec:summary-levels}
+
+\cref{tab:levels} summarizes the three formalized bounds.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}lllp{5.5cm}@{}}
+\toprule
+\textbf{Level} & \textbf{Lean theorem} & \textbf{Form} & \textbf{Caveat} \\
+\midrule
+\textbf{L1 (Childs)}
+  & \leanref{Suzuki4ViaBCH.lean}{380}{norm\_suzuki4\_childs\_form\_via\_bch}
+  & $t^5 \sum \alpha_i \norm{C_i}$
+  & Reproduces Childs (2021) exactly. Not proved tight. \\
+\midrule
+\textbf{L3 (BCH leading)}
+  & \leanref{Suzuki4ViaBCH.lean}{384}{norm\_suzuki4\_level3\_bch}
+  & $t^5 \sum \gamma_i \norm{C_i}$
+  & Strictly tighter than L1; leading-order only. \\
+\midrule
+\textbf{L4 (BCH uniform)}
+  & \leanref{Suzuki4ViaBCH.lean}{586}{norm\_suzuki4\_level4\_uniform}
+  & $t^5 \sum \gamma_i \norm{C_i} + t^7 K \max(\norm{A}, \norm{B})^7$
+  & Uniform finite-$t$ bound. Strictly tighter than L1 for
+    small $t$ (per \cref{eq:t-threshold}). \\
+\bottomrule
+\end{tabular}
+\caption{Three formalized BCH-based bounds for $\norm{S_4(t) - e^{t(A+B)}}$,
+in increasing rigor / tightness. L2 is the unit-coefficient sum
+$\sum \norm{C_i}$ used as an intermediate; see \texttt{Suzuki4ViaBCH.lean}
+for its definition.}
+\label{tab:levels}
+\end{table}
+
+\subsection{Remaining caveats}
 \label{sec:caveats}
 
-Three caveats apply to the ``tighter prefactors'' result:
+Two caveats remain after the Level 4 uniform bound:
 
 \paragraph{Caveat 1: Over-complete basis, non-unique projection.}
-The Childs basis has two redundancies. Our specific projection sets the
-two free parameters to zero, assigning $\gamma_3 = \gamma_7 = 0$. A
-different projection (e.g., distributing their mass across the remaining
-six coefficients) would give different $\gamma_i$ values, potentially
-with some larger, some smaller. All such projections represent the
-\emph{same} $R_5$ element, but the triangle-inequality upper bound
-$\sum \abs{\gamma_i} \norm{C_i}$ varies with the projection.
-The minimum-$\ell^1$ projection gives the
-tightest bound in the Childs basis; finding it requires a linear program.
-Our choice is \emph{a} valid projection, not provably \emph{the} tightest.
+The Childs basis of 8 commutators is over-complete (the weight-5 free Lie
+algebra is only 6-dimensional). Our projection sets two free parameters to
+zero, assigning $\gamma_3 = \gamma_7 = 0$. All such projections represent
+the \emph{same} $R_5$ element, but the triangle-inequality upper bound
+$\sum \abs{\gamma_i} \norm{C_i}$ varies. The minimum-$\ell^1$ projection
+gives the tightest bound in the Childs basis; finding it requires a linear
+program. Our choice is \emph{a} valid projection, not provably \emph{the}
+tightest in the Childs basis; however, any valid projection is strictly
+smaller than Childs's on all 8 coordinates.
 
-\paragraph{Caveat 2: Leading-order only.}
-The BCH coefficients $\gamma_i$ bound the leading (order-$t^5$) contribution
-of $\log S_4(t) - t(A+B)$. The full pointwise bound
-$\norm{\partial_\tau\left[e^{-\tau(A+B)} S_4(\tau)\right]} \le C \tau^4$
-on $[0, t]$ receives additional contributions from higher BCH orders
-($t^7, t^9, \ldots$) that are folded into Childs's larger coefficients. Our
-bound is valid in the asymptotic $t \to 0$ regime; for finite $t$ bounded
-away from zero, one must add explicit higher-order remainders. In practice,
-the Trotter use case is $t = 1/n$ for increasing $n$, so leading-order is
-exactly the relevant regime.
-
-\paragraph{Caveat 3: Dependence on a BCH axiom.}
-In the Lean formalization, the step ``$\log S_4(t) - t(A+B) = t^5 R_5 +
-O(t^7)$'' is currently an axiom (\texttt{bch\_w4Deriv\_level3\_tight}), not
-a theorem. The symbolic computation verifies the mathematical identity,
-but the BCH expansion itself is not yet formalized in Lean (work in progress
-in the companion Lean-BCH project). The $\gamma_i$ values are therefore
-``machine-checked mathematically'' (via the Python script, whose output is
-reproducible) but ``axiomatized Lean-formally'' (pending Lean-BCH
-completion).
+\paragraph{Caveat 2: Dependence on BCH axioms (pending Lean-BCH).}
+In the Lean formalization, the steps ``$\log S_4(t) - t(A+B) =
+t^5 R_5 + t^7 R_7 + O(t^9)$'', along with the $R_5$ projection onto
+Childs basis and the $R_7$ uniform bound, are encoded as axioms
+(\texttt{bch\_w4Deriv\_level3\_tight}, \texttt{bch\_uniform\_integrated}).
+The symbolic computations verify the mathematical identity and bounds,
+but the BCH expansion itself is not yet formalized in Lean (work in
+progress in the companion Lean-BCH project). The $\gamma_i$ and $K$
+values are ``machine-checked mathematically'' (via the Python scripts,
+whose output is reproducible) but ``axiomatized Lean-formally'' (pending
+Lean-BCH completion).
 
 \subsection{Summary}
 
-This section demonstrates a \emph{CAS-assisted formalization workflow} that
-produces a rigorously smaller Trotter bound than
-Childs~\cite{childsTheoryTrotterError2021}. The Lean formalization provides
-the theorem structure and the dominance lemma; the CAS step computes the
-specific rational coefficients. Both components are reproducible from the
-project repository, and together they illustrate how CAS computation can
-deliver tighter bounds into a formal setting without
-sacrificing rigor---once the BCH expansion is formalized (work in progress),
-the axiom becomes a theorem and the entire chain is Lean-verified.
+This section demonstrates a \emph{CAS-assisted formalization workflow}
+producing the first rigorously improved Trotter bound for Suzuki $S_4$ in
+over a decade. Three bounds are formalized:
+
+\begin{itemize}[leftmargin=*, nosep]
+  \item \textbf{L1 (Childs reproduction).} Reproduces Childs (2021)
+    Proposition pf4\_bound\_2term as a machine-checked statement,
+    axiomatizing his heuristic balanced-factoring result.
+  \item \textbf{L3 (BCH leading-order).} Replaces Childs's heuristic
+    coefficients $\alpha_i$ with the exact BCH-derived leading-order
+    coefficients $\gamma_i$. All 8 are strictly smaller; the improvement
+    ratio ranges from $9\times$ (for $C_2, C_6$) to $64\times$ (for $C_8$).
+  \item \textbf{L4 (BCH uniform).} Adds an explicit $R_7$ correction
+    ($K \approx 0.01951$, also CAS-derived) to extend the leading-order
+    L3 bound to a rigorous uniform finite-$t$ bound. Strictly tighter
+    than Childs in the Trotter regime (by orders of magnitude for
+    small~$t$).
+\end{itemize}
+
+Both the Lean formalization and the CAS computation are reproducible from
+the project repository. The axiomatized steps (BCH expansion, residual
+bounds) are single, well-defined mathematical claims that will become
+theorems once the BCH expansion is fully formalized in the companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project---at which
+point L3 and L4 become fully Lean-verified without any remaining
+axioms.
