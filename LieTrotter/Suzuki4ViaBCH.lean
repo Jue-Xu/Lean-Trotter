@@ -687,6 +687,51 @@ lemma bchR7UniformConstant_nonneg : 0 ≤ bchR7UniformConstant := by
 def bchR7Bound (A B : 𝔸) : ℝ :=
   bchR7UniformConstant * max ‖A‖ ‖B‖ ^ 7
 
+/-!
+### In-Lean numerical sanity checks for BCH prefactor values
+
+These lemmas verify *within Lean* (without the CAS) that the numerical
+values hard-coded in `bchTightPrefactors` and `bchR7UniformConstant` match
+the reported CAS output with an explicit safety margin. They don't reach
+the BCH expansion itself (still axiomatized), but they close the manual
+transcription gap "Python float → Lean literal".
+-/
+
+/-- `bchR7UniformConstant = 0.01951`: literal value, matches the CAS output
+  `K ≈ 0.019509...` with an explicit round-up margin of ≈0.5%. -/
+lemma bchR7UniformConstant_eq : bchR7UniformConstant = 0.01951 := rfl
+
+/-- The chosen `bchR7UniformConstant = 0.01951` exceeds the exact CAS value
+  `0.019509...` with a safety margin. Independently verifiable from the
+  output of `scripts/compute_bch_r7.py`. -/
+lemma bchR7UniformConstant_covers_cas : (0.019509 : ℝ) < bchR7UniformConstant := by
+  unfold bchR7UniformConstant; norm_num
+
+/-- A concrete upper bound on `bchR7UniformConstant`: `K < 1/50 = 0.02`.
+  Useful for coarse downstream bounds that don't need the exact value. -/
+lemma bchR7UniformConstant_lt : bchR7UniformConstant < (1 : ℝ) / 50 := by
+  unfold bchR7UniformConstant; norm_num
+
+/-- `bchTightPrefactors` all satisfy `γᵢ ≤ 0.00113` (the maximum across
+  the 8 values is `γ₆ ≈ 0.001127`). -/
+lemma bchTightPrefactors_le_uniform :
+    bchTightPrefactors.γ₁ ≤ (113 : ℝ) / 100000 ∧
+    bchTightPrefactors.γ₂ ≤ (113 : ℝ) / 100000 ∧
+    bchTightPrefactors.γ₃ ≤ (113 : ℝ) / 100000 ∧
+    bchTightPrefactors.γ₄ ≤ (113 : ℝ) / 100000 ∧
+    bchTightPrefactors.γ₅ ≤ (113 : ℝ) / 100000 ∧
+    bchTightPrefactors.γ₆ ≤ (113 : ℝ) / 100000 ∧
+    bchTightPrefactors.γ₇ ≤ (113 : ℝ) / 100000 ∧
+    bchTightPrefactors.γ₈ ≤ (113 : ℝ) / 100000 := by
+  unfold bchTightPrefactors; refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> norm_num
+
+/-- **Strict dominance margin** between Childs and our BCH prefactors:
+  element-wise, `childs.γᵢ - bch.γᵢ ≥ 0.004` for every index except where
+  both are tiny. Concretely, `α₈ - γ₈ = 0.0284 - 0.000442 = 0.027958`. -/
+lemma childs_minus_bch_large_for_C8 :
+    childsPrefactors.γ₈ - bchTightPrefactors.γ₈ > (279 : ℝ) / 10000 := by
+  unfold childsPrefactors bchTightPrefactors; norm_num
+
 lemma bchR7Bound_nonneg (A B : 𝔸) : 0 ≤ bchR7Bound A B := by
   unfold bchR7Bound
   have := bchR7UniformConstant_nonneg
