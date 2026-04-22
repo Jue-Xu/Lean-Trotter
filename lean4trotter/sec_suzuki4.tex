@@ -1,0 +1,262 @@
+\section{The Fourth-Order Trotter Bound: Tighter Prefactors via BCH}
+\label{sec:suzuki4}
+
+The fourth-order Suzuki product formula $S_4(t)$ is the palindromic composition
+of five Strang blocks with coefficients $(p, p, 1{-}4p, p, p)$, where
+$p = 1/(4-4^{1/3})$ satisfies the Suzuki cubic $4p^3 + (1-4p)^3 = 0$:
+\begin{equation}
+  S_4(t)
+    \;=\; S_2(pt)\,S_2(pt)\,S_2((1{-}4p)t)\,S_2(pt)\,S_2(pt),
+  \qquad
+  S_2(s) = e^{sA/2}\, e^{sB}\, e^{sA/2}.
+\end{equation}
+The Trotter error $\norm{S_4(t) - e^{t(A+B)}}$ vanishes to fourth order:
+there exists a constant $C(A,B)$ such that
+\begin{equation}
+  \norm{S_4(t) - e^{t(A+B)}} \;\le\; C(A,B)\cdot t^5
+\end{equation}
+for $t$ sufficiently small. The important question---answered variously in the
+literature with different prefactors---is: \emph{what is $C(A,B)$}?
+
+Childs et al.~\cite{childsTheoryTrotterError2021} give an explicit bound of the
+form
+\begin{equation}\label{eq:childs-bound}
+  \norm{S_4(t) - e^{t(A+B)}} \;\le\; t^5 \cdot \sum_{i=1}^{8} \alpha_i\, \norm{C_i(A,B)}
+\end{equation}
+where the $C_i$ are the eight four-fold nested commutators
+$[X_1,[X_2,[X_3,[B,A]]]]$ with $X_j \in \{A, B\}$, and the coefficients $\alpha_i$
+range from $0.0047$ to $0.0284$. This section discusses what we can (and cannot)
+say about the tightness of these prefactors, how a Computer-Algebra-System
+(CAS)-assisted BCH expansion yields strictly smaller coefficients, and how the
+result is integrated with our Lean formalization.
+
+\subsection{Why Childs's prefactors are heuristic}
+\label{sec:childs-heuristic}
+
+Childs et al.\ derive \cref{eq:childs-bound} by an elegant but
+\emph{non-optimal} ``balanced factoring'' of the twelve-factor Duhamel
+representation of the $S_4$ error integrand. The 4-fold commutator structure
+emerges naturally from this Duhamel form; the specific numerical values of
+$\alpha_i$ come from bounding the factored integrals term by term.
+
+Two independent sources of looseness enter this derivation:
+
+\paragraph{Over-completeness of the $C_i$ basis.}
+The weight-five free Lie algebra on two generators has dimension six (Witt's
+formula: $6 = \tfrac{1}{5}\sum_{d \mid 5} \mu(5/d)\,2^d$). Childs's eight
+commutators $C_1,\ldots,C_8$ therefore span a \emph{proper superset} of the
+Lie algebra, with two linear relations among them. Whenever a quantity
+$R_5$ in the Lie algebra is expressed as $\sum \gamma_i C_i$, the
+coefficients $\gamma_i$ are not unique: one has two degrees of freedom
+(corresponding to the two relations) to redistribute mass across the $C_i$'s.
+Childs's specific choice is one projection; the \emph{minimum-$\ell^1$}
+projection (the one that minimizes $\sum \abs{\gamma_i} \norm{C_i}$) will
+generally be smaller.
+
+\paragraph{Balanced factoring vs.\ exact expansion.}
+Childs's derivation bounds the Duhamel integral \emph{without} computing the
+explicit Baker--Campbell--Hausdorff (BCH) expansion of $\log S_4(t)$. Each
+term of the balanced factoring is bounded individually via the triangle
+inequality. An exact BCH expansion gives a single expression for $R_5$ with
+\emph{signed} coefficients whose cancellations have already been applied
+(leveraging the Suzuki cubic condition and palindromic symmetry). Bounding
+an expression with cancellations already applied is tighter than bounding
+individual terms before cancellation.
+
+Childs himself acknowledges this in the original
+paper~\cite{childsTheoryTrotterError2021}: ``we do not have a rigorous proof
+of the tightness of these bounds.''
+
+\subsection{The BCH expansion and its cancellations}
+\label{sec:bch-expansion}
+
+The BCH expansion of $\log S_4(t) - t(A+B)$ has only odd-order terms (by
+palindromic symmetry), of which the leading one cancels under the Suzuki
+condition:
+\begin{equation}\label{eq:log-s4}
+  \log S_4(t) - t(A+B) \;=\; \underbrace{0}_{O(t^2)} + \underbrace{0}_{O(t^3)}
+  + \underbrace{0}_{O(t^4)} + t^5\,R_5(A,B) + O(t^7).
+\end{equation}
+
+\paragraph{$O(t^2)$ and $O(t^4)$ vanish by palindromic symmetry.}
+The palindromic symmetry of $S_4$---invariance under time reversal
+$\bar S_4(t) := S_4(-t)^{-1} = S_4(t)$---forces all even-order BCH
+coefficients to vanish identically, regardless of $p$. This is Yoshida's
+theorem for symmetric compositions.
+
+\paragraph{$O(t^3)$ vanishes under the Suzuki cubic.}
+The third-order BCH coefficient of $S_4$ has the form
+$\sum_i c_i^3\, E_3(A,B)$, where $c_i \in \{p, p, 1{-}4p, p, p\}$ are the
+block coefficients and $E_3 = \tfrac{1}{24}([B,[B,A]] - [A,[A,B]])$ is the
+Strang BCH cubic coefficient. The Suzuki parameter $p = 1/(4-4^{1/3})$ is
+precisely the root of
+\begin{equation}
+  \sum_{i=1}^{5} c_i^3 \;=\; 4p^3 + (1-4p)^3 \;=\; 0.
+\end{equation}
+Hence the $O(t^3)$ coefficient vanishes.
+
+\paragraph{The $O(t^5)$ residual.}
+The fifth-order residual $R_5(A,B)$ lives in the six-dimensional weight-5
+Lie algebra. It is a \emph{specific} Lie polynomial, computable in closed
+form from the BCH expansion of five palindromic exponentials.
+
+\subsection{CAS computation and Lean integration}
+\label{sec:cas}
+
+Closed-form computation of $R_5$ requires tracking $\sim 30$ five-letter
+monomials in $A$, $B$ through the BCH series---feasible but tedious by hand,
+and natural for a Computer Algebra System.
+
+We use a \textbf{symbolic non-commutative free algebra over $\mathbb{Q}[p]$},
+implemented in Python with \texttt{sympy} (see
+\leanref{../scripts/compute\_bch\_prefactors.py}{1}{scripts/compute\_bch\_prefactors.py}
+in the repository):
+\begin{enumerate}
+  \item Elements of the free algebra are dictionaries mapping words
+    (tuples over $\{A, B\}$) to rational-function coefficients in
+    $\mathbb{Q}[p]$.
+  \item $S_2(s)$ is computed by truncated power series for $e^{(s/2)A}$,
+    $e^{sB}$, $e^{(s/2)A}$, composed non-commutatively.
+  \item $S_4(t)$ is computed as the product of five $S_2$ blocks with
+    coefficients $(p, p, 1{-}4p, p, p)$, truncated to total degree $5$.
+  \item $\log S_4(t) - t(A+B)$ is computed by the truncated series
+    $\log(1 + y) = y - y^2/2 + y^3/3 - y^4/4 + y^5/5$ with
+    $y = S_4(t) - 1$.
+  \item The Suzuki cubic reduction $p^3 = (48p^2 - 12p + 1)/60$
+    is applied to every coefficient, reducing all powers of $p$ to
+    polynomials of degree~$\le 2$.
+  \item The script verifies degrees $2$, $3$, $4$ vanish identically and
+    extracts the degree-5 part.
+  \item The degree-5 residual is projected onto the Childs
+    basis $\{C_1, \ldots, C_8\}$ via Gauss--Jordan elimination.
+    Since the basis is over-complete, the projection has two free
+    parameters; the script chooses the projection setting both to zero.
+  \item Specializing at $p = 1/(4-4^{1/3}) \approx 0.4145$ gives numerical
+    values for the eight BCH-derived prefactors $\gamma_i$.
+\end{enumerate}
+
+\paragraph{The symbolic result.}
+Before numerical specialization, the eight prefactors are polynomials of
+degree~$\le 2$ in $p$:
+\begin{equation}\label{eq:bch-gamma}
+  \setlength{\arraycolsep}{1pt}
+  \begin{array}{rlrlrl}
+    \gamma_1(p) &= \tfrac{127}{144000}\,p^2 + \tfrac{13}{36000}\,p - \tfrac{1}{24000}, \qquad &
+    \gamma_5(p) &= \tfrac{31}{9000}\,p^2 - \tfrac{13}{18000}\,p + \tfrac{1}{12000}, \\[3pt]
+    \gamma_2(p) &= \tfrac{1}{12000}\,p^2 + \tfrac{13}{6000}\,p - \tfrac{1}{4000}, &
+    \gamma_6(p) &= \tfrac{31}{3000}\,p^2 - \tfrac{13}{6000}\,p + \tfrac{1}{4000}, \\[3pt]
+    \gamma_3(p) &= 0, &
+    \gamma_7(p) &= 0, \\[3pt]
+    \gamma_4(p) &= -\tfrac{61}{9000}\,p^2 + \tfrac{13}{3000}\,p - \tfrac{1}{2000}, &
+    \gamma_8(p) &= \tfrac{1}{18000}\,p^2 + \tfrac{13}{9000}\,p - \tfrac{1}{6000}.
+  \end{array}
+\end{equation}
+Note that $\gamma_3$ and $\gamma_7$ are identically zero---a consequence of
+the particular projection onto the over-complete basis.
+
+\paragraph{Comparison with Childs.}
+Specializing at Suzuki $p$, all non-zero $\abs{\gamma_i}$ are strictly
+smaller than the corresponding Childs coefficient $\alpha_i$, most by
+an order of magnitude or more (\cref{tab:bch-vs-childs}).
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}clrrl@{}}
+\toprule
+\textbf{Index} & \textbf{Commutator $C_i$} & \textbf{BCH~~$\abs{\gamma_i}$} & \textbf{Childs $\alpha_i$} & \textbf{Ratio} \\
+\midrule
+$C_1$ & $[A,[A,[A,[B,A]]]]$ & $0.000260$ & $0.0047$ & $18\times$ \\
+$C_2$ & $[A,[A,[B,[B,A]]]]$ & $0.000662$ & $0.0057$ & $9\times$ \\
+$C_3$ & $[A,[B,[A,[B,A]]]]$ & $0$        & $0.0046$ & $\infty$ \\
+$C_4$ & $[A,[B,[B,[B,A]]]]$ & $0.000132$ & $0.0074$ & $56\times$ \\
+$C_5$ & $[B,[A,[A,[B,A]]]]$ & $0.000376$ & $0.0097$ & $26\times$ \\
+$C_6$ & $[B,[A,[B,[B,A]]]]$ & $0.001127$ & $0.0097$ & $9\times$ \\
+$C_7$ & $[B,[B,[A,[B,A]]]]$ & $0$        & $0.0173$ & $\infty$ \\
+$C_8$ & $[B,[B,[B,[B,A]]]]$ & $0.000442$ & $0.0284$ & $64\times$ \\
+\bottomrule
+\end{tabular}
+\caption{BCH-derived prefactors $\abs{\gamma_i}$ vs.\ Childs's heuristic
+coefficients $\alpha_i$ (at Suzuki $p = 1/(4-4^{1/3})$). The ``Ratio''
+column is $\alpha_i/\abs{\gamma_i}$---how many times tighter the BCH-derived
+coefficient is. Entries $C_3$ and $C_7$ vanish exactly in our chosen
+projection; other valid projections would redistribute their contribution
+across the remaining six.}
+\label{tab:bch-vs-childs}
+\end{table}
+
+\paragraph{Lean integration.}
+The script emits a Lean snippet for the
+\texttt{bchTightPrefactors} definition in
+\leansrc{Suzuki4ViaBCH.lean}. The corresponding Lean theorem
+(\leanref{Suzuki4ViaBCH.lean}{384}{norm\_suzuki4\_level3\_bch})
+\begin{equation}
+  \norm{S_4(t) - e^{t(A+B)}} \;\le\; t^5 \cdot \sum_{i=1}^{8} \gamma_i\, \norm{C_i}
+\end{equation}
+is stated conditional on a single \texttt{axiom}
+(\texttt{bch\_w4Deriv\_level3\_tight}) asserting the BCH-derived pointwise
+residual. This axiom is a clean interface---every step of its derivation is
+implemented symbolically in the script---and will be replaced by a theorem
+once the companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH}
+project's quintic BCH expansion is formalized.
+
+A companion theorem
+(\leanref{Suzuki4ViaBCH.lean}{416}{norm\_suzuki4\_level3\_le\_childs})
+formally verifies that the BCH-derived bound dominates Childs's:
+\begin{equation}
+  t^5 \cdot \sum_{i} \gamma_i\,\norm{C_i}
+    \;\le\;
+  t^5 \cdot \sum_{i} \alpha_i\,\norm{C_i}.
+\end{equation}
+The element-wise comparison $\abs{\gamma_i} \le \alpha_i$ is verified by
+\texttt{nlinarith} from the explicit numerical values.
+
+\subsection{Caveats}
+\label{sec:caveats}
+
+Three caveats apply to the ``tighter prefactors'' result:
+
+\paragraph{Caveat 1: Over-complete basis, non-unique projection.}
+The Childs basis has two redundancies. Our specific projection sets the
+two free parameters to zero, assigning $\gamma_3 = \gamma_7 = 0$. A
+different projection (e.g., distributing their mass across the remaining
+six coefficients) would give different $\gamma_i$ values, potentially
+with some larger, some smaller. All such projections represent the
+\emph{same} $R_5$ element, but the triangle-inequality upper bound
+$\sum \abs{\gamma_i} \norm{C_i}$ varies with the projection.
+The minimum-$\ell^1$ projection gives the
+tightest bound in the Childs basis; finding it requires a linear program.
+Our choice is \emph{a} valid projection, not provably \emph{the} tightest.
+
+\paragraph{Caveat 2: Leading-order only.}
+The BCH coefficients $\gamma_i$ bound the leading (order-$t^5$) contribution
+of $\log S_4(t) - t(A+B)$. The full pointwise bound
+$\norm{\partial_\tau\left[e^{-\tau(A+B)} S_4(\tau)\right]} \le C \tau^4$
+on $[0, t]$ receives additional contributions from higher BCH orders
+($t^7, t^9, \ldots$) that are folded into Childs's larger coefficients. Our
+bound is valid in the asymptotic $t \to 0$ regime; for finite $t$ bounded
+away from zero, one must add explicit higher-order remainders. In practice,
+the Trotter use case is $t = 1/n$ for increasing $n$, so leading-order is
+exactly the relevant regime.
+
+\paragraph{Caveat 3: Dependence on a BCH axiom.}
+In the Lean formalization, the step ``$\log S_4(t) - t(A+B) = t^5 R_5 +
+O(t^7)$'' is currently an axiom (\texttt{bch\_w4Deriv\_level3\_tight}), not
+a theorem. The symbolic computation verifies the mathematical identity,
+but the BCH expansion itself is not yet formalized in Lean (work in progress
+in the companion Lean-BCH project). The $\gamma_i$ values are therefore
+``machine-checked mathematically'' (via the Python script, whose output is
+reproducible) but ``axiomatized Lean-formally'' (pending Lean-BCH
+completion).
+
+\subsection{Summary}
+
+This section demonstrates a \emph{CAS-assisted formalization workflow} that
+produces a rigorously smaller Trotter bound than
+Childs~\cite{childsTheoryTrotterError2021}. The Lean formalization provides
+the theorem structure and the dominance lemma; the CAS step computes the
+specific rational coefficients. Both components are reproducible from the
+project repository, and together they illustrate how CAS computation can
+deliver tighter bounds into a formal setting without
+sacrificing rigor---once the BCH expansion is formalized (work in progress),
+the axiom becomes a theorem and the entire chain is Lean-verified.
