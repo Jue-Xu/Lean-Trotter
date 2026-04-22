@@ -3,17 +3,22 @@
 ## Status (current, 2026-04-22)
 
 **Sorry count: 0** (outer theorems closed with explicit residual-bound hypothesis; h2 and h3 PROVED; h4 axiomatized via BCH).
-**Axiom count: 7** (all in `Suzuki4ViaBCH.lean`, BCH-interface, to be removed when Lean-BCH completes).
+**Axiom count: 9** (all in `Suzuki4ViaBCH.lean`, BCH-interface, to be removed when Lean-BCH completes).
 
 **Delivered so far:**
 - `Suzuki4DerivExplicit.lean`: ~979 lines, 0 sorry
 - `Suzuki4Phase5.lean`: ~740 lines, 0 sorry
 - `Suzuki4MultinomialExpand.lean`: ~800 lines, 0 sorry (**h2 + h3 PROVED**)
 - `Suzuki4StrangBlocks.lean`: ~130 lines, 0 sorry (Tasks 1 + 2)
-- `Suzuki4ViaBCH.lean`: ~420 lines, 0 sorry, 7 axioms (Task 3 + Level 1 + Level 2)
+- `Suzuki4ViaBCH.lean`: ~780 lines, 0 sorry, 9 axioms (Level 1–4 BCH bounds + CAS sanity checks)
 
-**Level 1 and Level 2 BCH-derived Childs-style bounds** are now formalized.
-See `Suzuki4ViaBCH.lean` for details.
+**Level 1, 2, 3, 4 BCH-derived bounds** are formalized:
+- **L1** (`norm_suzuki4_childs_form_via_bch`): Childs 2021 exact (axiomatizes his heuristic).
+- **L2** (`norm_suzuki4_level2_bch`): unit coefficients on 8 Childs commutators.
+- **L3** (`norm_suzuki4_level3_bch`): BCH-derived leading-order γᵢ, 9×–64× tighter than Childs.
+- **L4** (`norm_suzuki4_level4_uniform`): uniform finite-`t` bound with explicit R₇ correction.
+
+See `Suzuki4ViaBCH.lean` for details; `TODO.md` for remaining work.
 
 The chain to the final S₄ O(t⁵) existential bound:
 

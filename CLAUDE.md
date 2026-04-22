@@ -36,18 +36,30 @@ left for an unconditional S₄ O(t⁵). Two routes are under active development:
 - **Path B (via Lean-BCH)**: import Lean-BCH's symmetric BCH cubic
   `norm_symmetric_bch_cubic_sub_smul_le`, apply 5-block composition with
   palindromic cancellation. Blocked on Lean-BCH's quintic BCH remainder
-  gap (see Lean-BCH's `quintic_pure_identity` nsmul diamond).
+  gap (see Lean-BCH's `quintic_pure_identity` nsmul diamond, line 2307,
+  ~50 lines fix).
 
 ### Axioms in use (all BCH-interface, to be removed when Lean-BCH completes)
 
-`LieTrotter/Suzuki4ViaBCH.lean` contains 7 axioms that stand in for
+`LieTrotter/Suzuki4ViaBCH.lean` contains 9 axioms that stand in for
 Lean-BCH theorems / BCH expansion consequences:
 - `symmetric_bch_cubic`, `exp_symmetric_bch_cubic`,
   `norm_symmetric_bch_cubic_le`, `norm_symmetric_bch_cubic_sub_smul_le`
   (mirror Lean-BCH `BCH/Basic.lean`)
 - `bch_iteratedDeriv_s4Func_order4` (BCH ⟹ h4)
-- `bch_w4Deriv_quintic_level2` (Level 2 primitive residual bound)
+- `bch_w4Deriv_quintic_level2` (Level 2 primitive residual bound, unit coefs)
+- `bch_w4Deriv_level3_tight` (Level 3 pointwise residual with tight γᵢ)
 - `bch_childs_pointwise_residual` (Level 1 Childs heuristic residual)
+- `bch_uniform_integrated` (Level 4 uniform finite-t bound with R₅ + R₇)
+
+### Remaining work
+
+See `TODO.md` for the full breakdown (6 tracks: BCH axiom elimination,
+Path A h4, scientific extensions, Mathlib PRs, paper polish, code hygiene).
+
+Short-term priority: close Lean-BCH's `quintic_pure_identity` nsmul gap
+(~1-2 sessions), which unblocks 6 of 9 axioms here and enables the full
+BCH-derived L3/L4 bounds to become axiom-free.
 
 ## Goal
 

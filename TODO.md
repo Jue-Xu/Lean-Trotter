@@ -1,8 +1,114 @@
 # TODO
 
-## High priority
+## Remaining work (as of 2026-04-22)
 
-- [ ] **Contribute `norm_exp_le` to Mathlib** — We proved `‖exp a‖ ≤ exp ‖a‖` for general Banach algebras; Mathlib only has `Complex.norm_exp_le_exp_norm` for `ℂ`. The helpers `norm_exp_sub_one_le`, `exp_sub_one_sub_bound_real`, and `norm_exp_sub_one_sub_le` are also natural additions.
+The project has 0 sorries and 9 axioms (all BCH-interface, in `Suzuki4ViaBCH.lean`).
+Main headline results—Lie-Trotter, Strang, commutator scaling, Suzuki S₄ with L1/L3/L4
+BCH bounds—are all proved. Remaining work falls into five tracks:
+
+### Track A: Eliminate the 9 BCH-interface axioms (headline gap)
+
+The single largest completion step. All 9 axioms are in `Suzuki4ViaBCH.lean`
+and stand in for Lean-BCH theorems + two CAS-derived numerical claims.
+
+| Axiom | What it asserts | Path to eliminate |
+|---|---|---|
+| `symmetric_bch_cubic` + 3 helpers | Lean-BCH's symmetric BCH cubic | Import Lean-BCH once its `quintic_pure_identity` nsmul-diamond gap (line 2307, ~50 lines fix) closes |
+| `bch_iteratedDeriv_s4Func_order4` | BCH ⟹ h4 | Derive from Lean-BCH expansion + Phase 5 bridge |
+| `bch_w4Deriv_quintic_level2` | Primitive pointwise residual (unit coefs) | Derive from Lean-BCH + norm bound |
+| `bch_w4Deriv_level3_tight` | BCH pointwise with tight γᵢ | Derive: Lean-BCH quintic + γᵢ projection |
+| `bch_childs_pointwise_residual` | Childs heuristic residual | Stays axiomatic (encodes Childs's claim directly) |
+| `bch_uniform_integrated` | Level 4 uniform bound (R₅ + R₇) | Derive: Lean-BCH quintic + R₇ norm bound |
+
+**Bottleneck:** Lean-BCH's `quintic_pure_identity` nsmul typeclass diamond
+(companion project `/Users/jue/Documents/Claude/Projects/Lean-BCH/`). Once
+that compiles, imports flow through and most axioms become theorems.
+
+### Track B: h4 alternative (Path A, Lean-native)
+
+As an alternative to Path B (Lean-BCH route), prove `sumQuadCorr (s4DList A B p) = 0`
+directly in `Suzuki4MultinomialExpand.lean`. Blocked on `module` tactic timeout
+for the quartic expansion (11 cons steps × 16 monomials, 8M heartbeats insufficient).
+Approaches:
+1. Manual cons-by-cons induction with BCH-like invariant (~1000 lines).
+2. Helper tactic / preprocessing to reduce `module` load.
+3. CAS-preprocessing: simplify the identity symbolically, import as pre-reduced form.
+
+Either Track A or B suffices; Track A is more promising because Lean-BCH is
+~50 lines from completion.
+
+### Track C: Scientific extensions
+
+- [ ] **Minimum-ℓ¹ Childs projection.** Our projection sets `γ₃ = γ₇ = 0`;
+  the ℓ¹-optimal projection in the 8-commutator over-complete basis requires
+  a small linear program. Would tighten Level 3/4 bounds slightly.
+- [ ] **R₉ via CAS extension.** `compute_bch_r9.py` would extend to order 9
+  and give a tighter uniform bound constant. Diminishing returns (R₇ already
+  provides orders-of-magnitude margin for typical Trotter regimes).
+- [ ] **Multi-operator S₄.** Generalize `s4Func A B p` to `s4Func A₁ ... Aₘ p`.
+  Opens Childs's multi-operator Trotter framework (physics applications).
+- [ ] **Higher-order Suzuki (S₆, S₈).** Recursive Suzuki hierarchy. Each step
+  reuses palindromic + cubic-cancellation structure. Very ambitious.
+- [ ] **Total-error convergence theorem for S₄.** Current L3/L4 give step error
+  `O(t⁵)`; a total-error theorem `(S₄(1/n))^n → exp(A+B)` at `O(1/n⁴)` would
+  parallel the existing `lie_trotter` and `symmetric_lie_trotter` theorems.
+
+### Track D: Mathlib contributions
+
+Several lemmas are ready for upstreaming (~20-50 lines each):
+
+- [ ] `norm_exp_le` for general Banach algebras (Mathlib only has ℂ version).
+  **PR readiness cleanup needed:**
+  1. Weaken `[NormOneClass 𝔸]` → use `norm_pow_le'` (works with just `[NormedRing 𝔸]`)
+  2. Remove `include 𝕂 in` pattern (non-standard for Mathlib); use section variables instead
+  3. Follow Mathlib naming: `norm_exp_le` → `norm_exp_le_exp_norm`, etc.
+  4. Drop redundant helpers (`real_exp_summable`, `real_exp_eq_tsum` already in Mathlib)
+  5. Target file: `Mathlib.Analysis.Normed.Algebra.Exponential` (modify existing, not new file)
+  6. Open a Zulip thread first to confirm maintainer interest before investing effort
+- [ ] `norm_exp_sub_one_le`, `norm_exp_sub_one_sub_le`, `exp_sub_one_sub_bound_real`
+  — companion lemmas, same file.
+- [ ] `suzuki4Exp` / `strangBlock` definitions if there's demand.
+
+### Track E: Paper / writing
+
+- [ ] Polish `lean4trotter/lean4trotter.tex` (25 pages, some references tightenable).
+- [ ] Abstract update mentioning L3/L4 BCH-derived results.
+- [ ] Replace Table 1 (numerical comparison) with a log-scale bar chart of
+  BCH vs Childs coefficients (more striking visualization).
+- [ ] Submission target selection: arXiv + ITP/CPP/JFR/JAR.
+- [ ] Zulip announcement post (short, leanprover.zulipchat.com #general).
+
+### Track F: Code hygiene
+
+- [ ] Replace `import Mathlib.Tactic` with specific tactic imports (faster compile).
+- [ ] Explicit `omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in ...` on theorems that
+  don't use these (warnings currently benign but noisy).
+- [ ] Matrix specialization: `matrix_lie_trotter` for `Matrix (Fin d) (Fin d) ℂ`
+  (~30 lines; requires `NormOneClass` for matrix norm).
+
+---
+
+## Recommended path forward
+
+**Short term (1-2 weeks):**
+- **Track A:** close Lean-BCH's `quintic_pure_identity` gap (`/Users/jue/Documents/Claude/Projects/Lean-BCH/BCH/Basic.lean`, line 2307). ~1-2 sessions.
+- Once closed, flip the imports in `Suzuki4ViaBCH.lean`: 9 axioms → 0 or 1 axiom.
+
+**Medium term (1-3 months):**
+- **Track E:** polish paper; submit to arXiv.
+- **Track D:** open Mathlib Zulip thread; prepare first PR (`norm_exp_le`).
+- **Track C:** pick one extension (multi-operator S₄ recommended; physics-relevant).
+
+**Long term (>3 months):**
+- Higher-order Suzuki S₆/S₈ if funding / collaborator interest.
+- Full automated BCH prefactor pipeline (CAS + Lean-BCH → Lean-Trotter).
+
+---
+
+## Completed and published (historical)
+
+- [x] **Contribute `norm_exp_le` to Mathlib** — We proved `‖exp a‖ ≤ exp ‖a‖` for general Banach algebras; Mathlib only has `Complex.norm_exp_le_exp_norm` for `ℂ`. The helpers `norm_exp_sub_one_le`, `exp_sub_one_sub_bound_real`, and `norm_exp_sub_one_sub_le` are also natural additions.
+  (Retained above as Track D; marked done here for history.)
 
   **PR readiness assessment** (cleanup needed before submitting):
   1. Weaken `[NormOneClass 𝔸]` → use `norm_pow_le'` (works with just `[NormedRing 𝔸]`)
