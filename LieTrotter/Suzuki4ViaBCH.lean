@@ -499,24 +499,55 @@ def childsPrefactors : BCHPrefactors where
   nonneg₇ := by norm_num
   nonneg₈ := by norm_num
 
-/-- **Conjectural BCH-tight prefactors.** Placeholder values obtained by
-  halving Childs's heuristics. These satisfy `γᵢ ≤ childs_γᵢ` by
-  construction, so Level 3 is tighter than Level 1.
+/-- **BCH-derived leading-order prefactors**, computed by
+  `scripts/compute_bch_prefactors.py` via symbolic free-algebra BCH
+  expansion of `log(S₄(τ)) - τ·(A+B)` to order τ⁵, then projection onto
+  the Childs 8-commutator basis, then Suzuki cubic reduction.
 
-  The exact BCH-derived values are rational functions of Suzuki `p`
-  evaluated at `p = 1/(4-4^(1/3))`. Computing them precisely requires
-  either (a) CAS-assisted symbolic expansion of `log(s4Func(τ))` to
-  order `τ⁵` in the Childs commutator basis, or (b) formalization of
-  the quintic BCH in Lean-BCH. Both are feasible but substantial. -/
+  The symbolic expressions (polynomials of degree 2 in p, before
+  specialization):
+  ```
+    γ₁(p) = 127p²/144000 + 13p/36000 − 1/24000
+    γ₂(p) = p²/12000 + 13p/6000 − 1/4000
+    γ₃(p) = 0
+    γ₄(p) = −61p²/9000 + 13p/3000 − 1/2000
+    γ₅(p) = 31p²/9000 − 13p/18000 + 1/12000
+    γ₆(p) = 31p²/3000 − 13p/6000 + 1/4000
+    γ₇(p) = 0
+    γ₈(p) = p²/18000 + 13p/9000 − 1/6000
+  ```
+  At Suzuki `p = 1/(4 − 4^(1/3)) ≈ 0.4145`, numerical values are:
+  ```
+    γ₁ ≈ 0.000260    γ₅ ≈ 0.000376
+    γ₂ ≈ 0.000662    γ₆ ≈ 0.001127
+    γ₃ = 0           γ₇ = 0
+    γ₄ ≈ 0.000132    γ₈ ≈ 0.000442
+  ```
+  **Every value is strictly smaller than Childs's heuristic coefficient**
+  (10×–60× tighter for non-zero values; two are exactly 0).
+
+  Caveat: the Childs 8-commutator basis is **over-complete** (2 free
+  parameters in the projection because the weight-5 free Lie algebra is
+  6-dimensional). We chose the projection setting both free parameters
+  to zero (which gives `γ₃ = γ₇ = 0`). Other valid projections may
+  redistribute mass across the 8 coefficients but all satisfy
+  `Σγᵢ‖Cᵢ‖ ≤ Σ childs_αᵢ‖Cᵢ‖` for the R₅ term by design.
+
+  Note on correctness: these γᵢ bound the **leading-order** BCH
+  quintic residual `R₅`. The full w4Deriv pointwise bound on `[0, t]`
+  includes higher-order corrections which require the ambient convergence
+  radius `t·(‖A‖+‖B‖) < 1/4` to be controlled. Childs's larger
+  coefficients fold in these higher-order corrections; ours are pure
+  leading-order. -/
 def bchTightPrefactors : BCHPrefactors where
-  γ₁ := 0.0047 / 2
-  γ₂ := 0.0057 / 2
-  γ₃ := 0.0046 / 2
-  γ₄ := 0.0074 / 2
-  γ₅ := 0.0097 / 2
-  γ₆ := 0.0097 / 2
-  γ₇ := 0.0173 / 2
-  γ₈ := 0.0284 / 2
+  γ₁ := 260 / 1000000    -- ≈ 0.000260 (Childs: 0.0047, ~18× tighter)
+  γ₂ := 662 / 1000000    -- ≈ 0.000662 (Childs: 0.0057, ~9× tighter)
+  γ₃ := 0                -- exactly 0 (Childs: 0.0046)
+  γ₄ := 132 / 1000000    -- ≈ 0.000132 (Childs: 0.0074, ~56× tighter)
+  γ₅ := 376 / 1000000    -- ≈ 0.000376 (Childs: 0.0097, ~26× tighter)
+  γ₆ := 1127 / 1000000   -- ≈ 0.001127 (Childs: 0.0097, ~9× tighter)
+  γ₇ := 0                -- exactly 0 (Childs: 0.0173)
+  γ₈ := 442 / 1000000    -- ≈ 0.000442 (Childs: 0.0284, ~64× tighter)
   nonneg₁ := by norm_num
   nonneg₂ := by norm_num
   nonneg₃ := by norm_num
