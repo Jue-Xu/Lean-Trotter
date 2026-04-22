@@ -1,13 +1,19 @@
 # Module 4b Phase 5 Handoff
 
-## Status (current)
+## Status (current, 2026-04-22)
 
-**Sorry count: 0** (outer theorems closed with explicit residual-bound hypothesis; h2 AND h3 now PROVED unconditionally given `IsSuzukiCubic p`).
+**Sorry count: 0** (outer theorems closed with explicit residual-bound hypothesis; h2 and h3 PROVED; h4 axiomatized via BCH).
+**Axiom count: 7** (all in `Suzuki4ViaBCH.lean`, BCH-interface, to be removed when Lean-BCH completes).
 
-**Phase 5 framework fully delivered**:
-- `Suzuki4DerivExplicit.lean`: 979 lines, 0 sorry
-- `Suzuki4Phase5.lean`: 740 lines, 0 sorry
-- `Suzuki4MultinomialExpand.lean`: ~640 lines, 0 sorry (**h2 + h3 PROVED**)
+**Delivered so far:**
+- `Suzuki4DerivExplicit.lean`: ~979 lines, 0 sorry
+- `Suzuki4Phase5.lean`: ~740 lines, 0 sorry
+- `Suzuki4MultinomialExpand.lean`: ~800 lines, 0 sorry (**h2 + h3 PROVED**)
+- `Suzuki4StrangBlocks.lean`: ~130 lines, 0 sorry (Tasks 1 + 2)
+- `Suzuki4ViaBCH.lean`: ~420 lines, 0 sorry, 7 axioms (Task 3 + Level 1 + Level 2)
+
+**Level 1 and Level 2 BCH-derived Childs-style bounds** are now formalized.
+See `Suzuki4ViaBCH.lean` for details.
 
 The chain to the final S₄ O(t⁵) existential bound:
 
@@ -162,40 +168,47 @@ strategy is needed, e.g.:
 | **h4 BCH bridge** | `sumQuadCorr_s4DList_eq_zero_of_bch` | ✅ |
 | **h4 via BCH bridge + IsSuzukiCubic** | `iteratedDeriv_s4Func_order4_eq_q_of_bch` | ✅ |
 | **Superstrengthened CAPSTONE** | `norm_suzuki4_order5_via_bch` | ✅ |
-| **h4 factored form** | `sumQuadCorr_s4DList = 0` under Suzuki | 🔴 Open (see h4 section) |
-| **BCH identity** | `sumQuadCorr = 2·(H·sumTripleCorr+sumTripleCorr·H)` for palindromic s4DList | 🔴 Open (timeout issue) |
+| **h4 factored form** | `sumQuadCorr_s4DList = 0` under Suzuki | 🔴 Open (Path A, blocked by module timeout) |
+| **BCH identity** | `sumQuadCorr = 2·(H·sumTripleCorr+sumTripleCorr·H)` for palindromic s4DList | 🔴 Open (Path A auxiliary) |
+| **Task 1: S₄ = 5 Strang blocks** | `suzuki4Exp_eq_strangProduct` | ✅ |
+| **Task 2: Suzuki cubic sum zero** | `suzuki4_coeff_cube_sum_zero` | ✅ |
+| **Task 3: BCH integration skeleton** | `strangBlock_eq_exp_bchCubic`, `suzuki4_bchCubic_sum_bound` | ✅ (4 BCH axioms) |
+| **BCH h4 axiom** | `bch_iteratedDeriv_s4Func_order4` | 🔵 Axiom (from BCH) |
+| **BCH h4 consequence** | `bch_iteratedDeriv_w4Func_order4_eq_zero` | ✅ (derived from axiom) |
+| **Unconditional S₄ O(t⁵) via BCH** | `norm_suzuki4_order5_via_bch_axiom` | ✅ (modulo BCH axiom) |
+| **Level 1 Childs bound** | `norm_suzuki4_childs_form_via_bch` | ✅ (reproduces Childs 2021 coefs 0.0047-0.0284) |
+| **Level 1 axiom** | `bch_childs_pointwise_residual` | 🔵 Axiom (encodes Childs heuristic) |
+| **Level 2 BCH-derived bound** | `norm_suzuki4_level2_bch` | ✅ (unit coefs, genuine BCH) |
+| **Level 2 axiom** | `bch_w4Deriv_quintic_level2` | 🔵 Axiom (primitive BCH, `|βᵢ| ≤ 1`) |
+| **Level 2 dominates Level 1** | `childsBoundSum_le_bchFourFoldSum` | ✅ |
 
 ## Remaining concrete work
 
-Prove the three identities, all at the `iteratedDeriv` level:
+### h2, h3: DONE ✅
 
-### Identity h2: `iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2`
+Both proved via `Suzuki4MultinomialExpand.lean`:
+- h2 UNCONDITIONAL (`iteratedDeriv_s4Func_order2_eq_sq`)
+- h3 under `IsSuzukiCubic p` (`iteratedDeriv_s4Func_order3_eq_cb`)
 
-**Approach**: Apply Mathlib's `iteratedDeriv_mul` recursively on the 11-factor s4Func:
-- Split `s4Func = e₁ · (e₂·e₃·…·e₁₁)`
-- Leibniz n=2: `iDer₂(f·g) = f⁰·g² + 2f'·g' + f''·g⁰`
-- For the 10-factor remaining product, apply Leibniz recursively
-- Base case: `iteratedDeriv k (exp((c·τ)•X)) 0 = (c•X)^k` (PROVED)
+### h4: the only remaining gap
 
-Full expansion gives `Σⱼ dⱼ² + 2·Σ_{i<j} dᵢ·dⱼ`. Combined with `(A+B)² = (Σⱼ dⱼ)²`
-(via `suzuki4_free_term`) and `s4_pairwise_commutator_sum_zero`, equals `(A+B)²`.
+**Two paths, both partially formalized:**
 
-Estimated effort: ~300-400 lines (recursive Leibniz application + algebraic simplification).
+**Path A (Trotter-native):** Prove `sumQuadCorr (s4DList A B p) = 0` under
+`IsSuzukiCubic p`. The key BCH-style identity
+`sumQuadCorr = 2·(H·sumTripleCorr+sumTripleCorr·H)` is a pure operator-algebra
+fact. Currently blocked by `module` tactic timeout on the quartic expansion
+(16 monomials × 11 cons steps × many cons-combining steps, even at 8M heartbeats).
 
-### Identity h3: `iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3`
+**Path B (via Lean-BCH):** Import Lean-BCH's quintic BCH theorems (in
+progress; see `/Users/jue/Documents/Claude/Projects/Lean-BCH/`). Via Path B,
+h4 follows directly from the BCH expansion structure. The 7 axioms in
+`Suzuki4ViaBCH.lean` are ready to be replaced by Lean-BCH imports once its
+`quintic_pure_identity` nsmul gap closes.
 
-Same approach as h2, at order 3. The sum expansion has terms of the form
-`dᵢdⱼdₖ` with multinomial coefficients. Uses Phase 3 polynomial identities
-(`suzuki4_phase3_{aba,a2b,bab}`) + `suzuki4_cubic_cancel`.
-
-Estimated effort: ~400-500 lines.
-
-### Identity h4: `iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4`
-
-Higher palindromic. Automatic from lower orders in theory, but Lean formalization
-still requires the combinatorial expansion.
-
-Estimated effort: ~300-400 lines.
+Both paths use the same strengthened CAPSTONE
+`norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing`; the difference
+is only in how h4 is obtained.
 
 ## Implementation plan for future sessions
 

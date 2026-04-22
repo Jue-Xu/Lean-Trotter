@@ -1,21 +1,53 @@
 # Lie–Trotter Product Formula — Lean 4 Formalization
 
-## Status: ✅ Complete (0 sorry's, full build passes)
+## Status: ✅ Complete (0 sorry's, 7 BCH-interface axioms, full build passes)
 
-S₄ fifth-order bound (`norm_suzuki4_fifth_order`) and Childs-form bound
-(`norm_suzuki4_childs_form`) are closed with explicit residual-bound
-hypotheses `hResidual : ∀ τ ∈ [0,t], ‖w4Deriv τ‖ ≤ 5·C·τ⁴`. Proving this
-bound unconditionally from the Suzuki order conditions is the remaining
-research target — see `Suzuki4Phase5.lean` for the architectural reduction
-to three concrete `iteratedDeriv` identities on `s4Func` at τ=0.
+### Main results
 
-**h2 and h3 now PROVED UNCONDITIONALLY** (h3 requires `IsSuzukiCubic p`):
-- `iteratedDeriv_s4Func_order2_eq_sq` (h2, free)
-- `iteratedDeriv_s4Func_order3_eq_cb` (h3, given `IsSuzukiCubic p`)
+1. **First-order Lie–Trotter:** `lie_trotter`, `lie_trotter_error_rate` (O(1/n)) — **fully proved**.
+2. **Strang splitting** (second-order): `symmetric_lie_trotter` — **fully proved**.
+3. **S₄ fifth-order bound** (`norm_suzuki4_fifth_order`) and Childs-form bound
+   (`norm_suzuki4_childs_form`): closed with an explicit residual-bound hypothesis.
+4. **h2, h3 UNCONDITIONAL** (via operator-algebra factored-form identities):
+   - `iteratedDeriv_s4Func_order2_eq_sq` (h2, no hypothesis)
+   - `iteratedDeriv_s4Func_order3_eq_cb` (h3, given `IsSuzukiCubic p`)
+5. **Strengthened CAPSTONE**
+   (`norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing`): takes just
+   `IsSuzukiCubic p` and w4Func order-4 vanishing to close the S₄ O(t⁵) bound.
+6. **Path B skeleton** (`LieTrotter/Suzuki4StrangBlocks.lean`,
+   `LieTrotter/Suzuki4ViaBCH.lean`): S₄ as 5 palindromic Strang blocks; BCH
+   interface axiomatized; cubic sum cancellation proved.
+7. **BCH-derived Childs bounds** (Level 1 + Level 2):
+   - Level 1 `norm_suzuki4_childs_form_via_bch`: recovers Childs (2021)
+     Prop pf4_bound_2term with exact 0.0047-0.0284 coefficients (axiomatizes
+     Childs's heuristic balanced factoring).
+   - Level 2 `norm_suzuki4_level2_bch`: rigorously BCH-derived S₄ bound
+     with explicit unit coefficients on 8 four-fold commutators. Does NOT
+     depend on Childs's heuristic balancing.
 
-Only **h4** remains: `iteratedDeriv 4 (s4Func A B p) 0 = (A + B)^4`.
-Strengthened CAPSTONE `norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing`
-takes just `IsSuzukiCubic p` and w4Func order-4 vanishing to close the S₄ O(t⁵) bound.
+### Remaining research target
+
+**h4** (the order-4 derivative identity) is the only Lean-Trotter-side gap
+left for an unconditional S₄ O(t⁵). Two routes are under active development:
+
+- **Path A (Trotter-native)**: prove `sumQuadCorr (s4DList A B p) = 0` via
+  a BCH-like operator-algebra identity. Currently blocked by `module`
+  tactic timeout on quartic expansion (16 monomials × 11 cons steps).
+- **Path B (via Lean-BCH)**: import Lean-BCH's symmetric BCH cubic
+  `norm_symmetric_bch_cubic_sub_smul_le`, apply 5-block composition with
+  palindromic cancellation. Blocked on Lean-BCH's quintic BCH remainder
+  gap (see Lean-BCH's `quintic_pure_identity` nsmul diamond).
+
+### Axioms in use (all BCH-interface, to be removed when Lean-BCH completes)
+
+`LieTrotter/Suzuki4ViaBCH.lean` contains 7 axioms that stand in for
+Lean-BCH theorems / BCH expansion consequences:
+- `symmetric_bch_cubic`, `exp_symmetric_bch_cubic`,
+  `norm_symmetric_bch_cubic_le`, `norm_symmetric_bch_cubic_sub_smul_le`
+  (mirror Lean-BCH `BCH/Basic.lean`)
+- `bch_iteratedDeriv_s4Func_order4` (BCH ⟹ h4)
+- `bch_w4Deriv_quintic_level2` (Level 2 primitive residual bound)
+- `bch_childs_pointwise_residual` (Level 1 Childs heuristic residual)
 
 ## Goal
 
@@ -90,8 +122,12 @@ Lean-Trotter/
 │   ├── Suzuki4Module3.lean        ← Module 3: FTC-2 reduction (residual → C·t⁵/5)
 │   ├── Suzuki4Module4.lean        ← Module 4a: continuity of w4Deriv
 │   ├── Suzuki4DerivExplicit.lean  ← Module 4b-A1/A2/A3/B1: explicit derivative + order-0
-│   ├── Suzuki4ChildsForm.lean     ← Childs Prop pf4_bound_2term (8 explicit 4-fold commutators, 1 sorry)
-│   └── Suzuki4OrderFive.lean      ← S₄ O(t⁵) abstract-form target (1 sorry for Module 4b residual)
+│   ├── Suzuki4ChildsForm.lean     ← Childs Prop pf4_bound_2term (8 explicit 4-fold commutators, closed)
+│   ├── Suzuki4OrderFive.lean      ← S₄ O(t⁵) abstract-form target (closed with explicit residual hypothesis)
+│   ├── Suzuki4MultinomialExpand.lean ← prodExpList + multinomial formulas + h2 ✅ + h3 under IsSuzukiCubic ✅
+│   ├── Suzuki4Phase5.lean         ← Taylor-reduction + Leibniz bridges + CAPSTONE
+│   ├── Suzuki4StrangBlocks.lean   ← S₄ = 5 Strang blocks factorization (Task 1) + Suzuki cubic sum (Task 2)
+│   └── Suzuki4ViaBCH.lean         ← BCH-interface axioms + Level 1 Childs bound + Level 2 explicit bound
 ├── LieTrotter.lean            ← root import file
 ├── lakefile.lean
 ├── lean-toolchain

@@ -29,36 +29,36 @@
   ```
   Telescopes into a sum of pairwise C1-type bounds. Estimate: ~150 lines. Reuses all existing infrastructure.
 
-- [ ] **Fourth-order Suzuki formula (H1)** — BCH-based approach via cubic coefficient extraction:
+- [~] **Fourth-order Suzuki formula (H1)** — Substantially progressed, one gap remains (h4).
 
-  **Core difficulty:** The triangle inequality cannot capture the cubic cancellation. The Suzuki parameter has $1-4p < 0$ (since $p \approx 0.414$), so $|1-4p|^3 \neq (1-4p)^3$ and the norm bound $4|p|^3 + |1-4p|^3 = 8p^3 \neq 0$. We must extract the cubic coefficient $E_3$ as an explicit algebra element and show the signed cancellation $4p^3 + (1-4p)^3 = 0$ kills it.
+  **Status (2026-04-22):**
+  - ✅ Infrastructure: prodExpList framework, multinomial formulas up to order 4,
+    Phase 5 Taylor-reduction + Leibniz bridges, CAPSTONE theorem.
+  - ✅ h2 PROVED UNCONDITIONAL (`iteratedDeriv_s4Func_order2_eq_sq`)
+  - ✅ h3 PROVED under `IsSuzukiCubic p` via factored-form operator identity
+    `sumTripleCorr_s4DList_eq_factored`.
+  - ✅ Strengthened CAPSTONE `norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing`
+    takes only IsSuzukiCubic + w4Func order-4 vanishing.
+  - ✅ Task 1 (`suzuki4Exp_eq_strangProduct`): S₄ = 5 Strang blocks.
+  - ✅ Task 2 (`suzuki4_coeff_cube_sum_zero`): 4p³+(1-4p)³=0 under Suzuki.
+  - ✅ Task 3 (Suzuki4ViaBCH.lean): BCH-interface axioms + Level 1 Childs bound
+    + Level 2 rigorous BCH bound with explicit unit prefactors.
+  - 🔴 **Remaining: h4** (`iteratedDeriv 4 (s4Func A B p) 0 = (A+B)^4`).
 
-  **Approach:** Import [Lean-BCH](https://github.com/Jue-Xu/Lean-BCH) as Lake dependency and extend it with:
-  - A quartic log series remainder (**done**: `norm_logOnePlus_sub_sub_sub_le`)
-  - A fourth-order BCH expansion extracting the degree-3 term `bch_cubic_term` (**scaffolded**, 3 sorry's)
-  - Quintic symmetric BCH bound: $\|Z(c\cdot a, c\cdot b) - c(a+b) - c^3 E_3\| \le K c^5 s^5$
+  **Two paths for h4:**
+  - **Path A (native)**: prove `sumQuadCorr_s4DList = 0` under Suzuki; blocked
+    by `module` tactic timeout on quartic expansion.
+  - **Path B (via Lean-BCH)**: wait for Lean-BCH's quintic BCH to complete
+    (`quintic_pure_identity` nsmul gap), then replace the 7 BCH-interface
+    axioms in `Suzuki4ViaBCH.lean` with imports. This gives h4 automatically
+    via `bch_iteratedDeriv_s4Func_order4`.
 
-  **Implementation plan (see plan file `bright-purring-torvalds.md`):**
-
-  Phase 1 — Extend Lean-BCH (~460 lines):
-  1. ✅ Quartic log remainder: $\|\log(1+x) - x + x^2/2 - x^3/3\| \le \|x\|^4/(1-\|x\|)$
-  2. Fourth-order BCH expansion: $\text{bch}(a,b) = a+b+\frac{1}{2}[a,b]+E_3(a,b)+O(s^4)$
-  3. Quintic symmetric BCH: $E_3(ca,cb) = c^3 E_3(a,b) + O(c^5 s^5)$
-  4. $E_3$ norm bound and homogeneity
-
-  Phase 2 — Infrastructure (~50 lines):
-  5. Sync Mathlib versions between Lean-BCH and Lean-Trotter
-  6. Add `require lean-bch from git` to lakefile
-
-  Phase 3 — Suzuki assembly (~400 lines, new file `LieTrotter/Suzuki4Order4.lean`):
-  7. Connect Strang step to BCH log: $S_2(c/n) = \exp(Z_c)$
-  8. $S_4$ as palindromic triple product: $\exp(2Z_p) \cdot \exp(Z_q) \cdot \exp(2Z_p)$
-  9. Quintic step error: $(4p^3+(1-4p)^3) E_3 = 0$ kills cubic → $O(1/n^5)$
-  10. Assembly: $O(1/n^5)$ step → $O(1/n^4)$ total via telescoping
-  11. Suzuki parameter existence: $\exists p,\; 4p^3+(1-4p)^3=0$
-  12. Main theorem: `suzuki4_convergence_order4`
-
-  **Estimated total: ~900 lines.** Critical path: 1→2→3→5→6→7→8→9→10→12.
+  **Currently usable results (modulo BCH axioms):**
+  - `norm_suzuki4_order5_via_bch_axiom`: existential S₄ O(t⁵) under IsSuzukiCubic.
+  - `norm_suzuki4_childs_form_via_bch`: Childs 2021 Prop pf4_bound_2term with
+    exact coefficients 0.0047-0.0284.
+  - `norm_suzuki4_level2_bch`: rigorous BCH-derived bound with explicit unit
+    coefficients on 8 four-fold commutators (no Childs heuristic required).
 
 - [x] **Truncated BCH bounds ([Lean-BCH](https://github.com/Jue-Xu/Lean-BCH))** — ✅ Complete (0 sorry's before Suzuki extension).
   Proved: `exp_bch`, `norm_bch_sub_add_sub_bracket_le` (H1), `norm_symmetric_bch_sub_add_le` (H2), Lie bracket bridge (M1).

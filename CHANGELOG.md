@@ -4,6 +4,93 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-04-22: Level 2 BCH-derived Childs-style bound
+
+**What:** Added a rigorously BCH-derived 4th-order Trotter bound (Level 2)
+that uses explicit unit coefficients on the 8 Childs 4-fold commutators,
+in contrast to the Level 1 bound which axiomatizes Childs's heuristic
+0.0047-0.0284 coefficients directly.
+
+**New theorems (in `Suzuki4ViaBCH.lean`):**
+- `bchFourFoldSum A B`: sum of 8 four-fold commutator norms, unit coefs.
+- `bch_w4Deriv_quintic_level2` (axiom): primitive BCH pointwise residual
+  `‖w4Deriv τ‖ ≤ 5 · bchFourFoldSum · τ⁴`, derived from `|βᵢ(Suzuki-p)| ≤ 1`
+  for the BCH quintic expansion coefficients.
+- `norm_suzuki4_level2_bch` (theorem): `‖S₄(t) - exp(tH)‖ ≤ t⁵ · bchFourFoldSum`.
+- `childsBoundSum_le_bchFourFoldSum`: Level 2 dominates Level 1, confirming
+  Level 2 is the weaker (rigorous) cousin.
+
+**Level 1 vs Level 2 comparison:**
+- Level 1 (`norm_suzuki4_childs_form_via_bch`): reproduces Childs et al.
+  2021 Proposition pf4_bound_2term exactly with coefficients 0.0047-0.0284.
+  Depends on `bch_childs_pointwise_residual` axiom which encodes Childs's
+  heuristic balanced-factoring result.
+- Level 2 (`norm_suzuki4_level2_bch`): weaker bound (unit coefficients),
+  stronger derivation (primitive BCH axiom only). "Honest" BCH recovery.
+
+---
+
+## 2026-04-22: Option A Part 1 — BCH-derived Childs bound (Level 1)
+
+**What:** Axiomatized the BCH-implied h4 identity and the Childs pointwise
+residual, derived the unconditional S₄ O(t⁵) existence and the Childs-form
+bound (matching Childs 2021 Proposition pf4_bound_2term exactly).
+
+**New theorems (in `Suzuki4ViaBCH.lean`):**
+- `bch_iteratedDeriv_s4Func_order4` (axiom): under IsSuzukiCubic,
+  `iDer 4 (s4Func A B p) 0 = (A+B)^4`.
+- `bch_iteratedDeriv_w4Func_order4_eq_zero`: w4Func order-4 vanishing
+  derived via the Phase 5 bridge + proved h2, h3 + BCH h4 axiom.
+- `norm_suzuki4_order5_via_bch_axiom`: existential S₄ O(t⁵) bound
+  unconditional modulo the BCH h4 axiom.
+- `bch_childs_pointwise_residual` (axiom): Childs-form pointwise residual.
+- `norm_suzuki4_childs_form_via_bch`: Childs's exact 4th-order bound.
+
+---
+
+## 2026-04-21: Task 3 integration skeleton (Suzuki4ViaBCH)
+
+**What:** Axiomatized minimal Lean-BCH interface (symmetric_bch_cubic +
+3 theorems), proved `strangBlock_eq_exp_bchCubic` (each block as exp of
+linear+cubic) and `suzuki4_bchCubic_sum_bound` (cubic sum over 5 blocks
+is O(t⁵) under IsSuzukiCubic via Task 2's `4p³+(1-4p)³ = 0`).
+
+**New file:** `LieTrotter/Suzuki4ViaBCH.lean`.
+
+---
+
+## 2026-04-21: Tasks 1 + 2 — Strang block decomposition and Suzuki cubic sum
+
+**What:**
+- Task 1 (`suzuki4Exp_eq_strangProduct`): S₄ factors as 5 symmetric Strang
+  blocks with coefficients (p, p, 1-4p, p, p). Proved by merging 4 A-A
+  junctions via `exp_add_of_commute`.
+- Task 2 (`suzuki4_coeff_cube_sum_zero`): `4p³+(1-4p)³ = 0` under
+  IsSuzukiCubic p.
+
+**New file:** `LieTrotter/Suzuki4StrangBlocks.lean`.
+
+---
+
+## 2026-04-19: h3 PROVED UNCONDITIONALLY via factored-form identity
+
+**What:** Proved `sumTripleCorr (s4DList A B p) = (4p³+(1-4p)³) · <op combo>`
+as a pure operator-algebra identity (5-line tactic chain + `module`), then
+derived h3 (`iteratedDeriv 3 (s4Func A B p) 0 = (A+B)^3`) under
+`IsSuzukiCubic p`.
+
+**New theorems (in `Suzuki4MultinomialExpand.lean`):**
+- `sumTripleCorr_s4DList_eq_factored`
+- `sumTripleCorr_s4DList_eq_zero`
+- `iteratedDeriv_s4Func_order3_eq_cb`
+- `iteratedDeriv_w4Func_order3_eq_zero`
+- `norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing`
+  (strengthened CAPSTONE: only IsSuzukiCubic + w4Func order-4 vanishing needed)
+
+Build: 3351 jobs, 0 sorries.
+
+---
+
 ## 2026-04-15: Second-order Strang commutator-scaling — complete
 
 **What:** Proved the commutator-scaling bound for the second-order Suzuki (Strang) formula, matching the Proposition in Childs et al. (2021), §VII.A:

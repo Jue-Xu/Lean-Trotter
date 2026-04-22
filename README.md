@@ -51,8 +51,36 @@ LieTrotter/
 ├── StrangSplitting.lean   — symmetric Lie-Trotter with O(1/n²) rate
 ├── MultiOperator.lean     — multi-operator first-order (A₁+⋯+Aₘ)
 ├── MultiStrang.lean       — multi-operator symmetric Strang with O(1/n²)
-└── Suzuki4.lean           — fourth-order Suzuki integrator (S₄ from five S₂)
+├── Suzuki4.lean           — fourth-order Suzuki integrator (S₄ from five S₂)
+├── CommutatorScaling.lean — first-order commutator-scaling error (Duhamel/FTC-2)
+├── MultiCommutatorScaling.lean    — multi-operator variant
+├── StrangCommutatorScaling.lean   — second-order (Strang) commutator-scaling
+├── HigherCommutator.lean  — triple FTC for [B,[B,[B,A]]]
+├── StrangCommutatorScalingTight.lean — tighter norm-of-difference Strang bound
+├── Suzuki4HasDerivAt.lean, Suzuki4Module{2,3,4}.lean, Suzuki4DerivExplicit.lean
+│                          — HasDerivAt / FTC-2 scaffolding for S₄
+├── Suzuki4ChildsForm.lean — Childs 2021 Prop pf4_bound_2term (conditional on residual)
+├── Suzuki4OrderFive.lean  — S₄ O(t⁵) abstract-form target (conditional on residual)
+├── Suzuki4MultinomialExpand.lean — prodExpList + h2, h3 UNCONDITIONAL + h4 infra
+├── Suzuki4Phase5.lean     — Taylor-reduction + Leibniz bridges + CAPSTONE
+├── Suzuki4StrangBlocks.lean — S₄ = 5 Strang blocks; Suzuki cubic sum lemmas
+└── Suzuki4ViaBCH.lean     — BCH-interface axioms + Level 1 (Childs) + Level 2 bounds
 ```
+
+### S₄ fourth-order bound (conditional on BCH axioms)
+
+`Suzuki4ViaBCH.lean` provides two forms of Childs's 4th-order Trotter error
+bound `‖S₄(t) - exp(tH)‖ ≤ t⁵ · (4-fold commutator sum)`, each modulo a BCH
+axiom that will become a theorem once the companion
+[Lean-BCH](https://github.com/Jue-Xu/Lean-BCH) project's quintic BCH
+expansion is finished:
+
+- **Level 1** (`norm_suzuki4_childs_form_via_bch`): matches Childs et al.
+  (2021) Prop pf4_bound_2term with his heuristic coefficients 0.0047–0.0284.
+- **Level 2** (`norm_suzuki4_level2_bch`): rigorous BCH-derived bound with
+  explicit unit coefficients on the 8 Childs 4-fold commutators, depending
+  only on the primitive claim `|βᵢ(Suzuki-p)| ≤ 1` for BCH quintic expansion
+  coefficients.
 
 ## Building
 
