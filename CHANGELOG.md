@@ -4,6 +4,42 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-04-23: Childs-heuristic axiom retired (axiom count 5 → 4)
+
+**What:** Removed the `bch_childs_pointwise_residual` axiom that directly
+encoded Childs 2021's heuristic coefficients 0.0047–0.0284. Replaced the
+Level-1 bound `norm_suzuki4_childs_form_via_bch` with a new derivation
+`norm_suzuki4_childs_form_via_level3` that composes the CAS-certified
+Level 3 bound with the Lean-proved termwise inequality γᵢ ≤ αᵢ
+(`bchTightPrefactors_le_childs`).
+
+**Why:** Childs et al. 2021 themselves label those coefficients heuristic
+("we do not have a rigorous proof of the tightness of these bounds"). The
+Level-3 derivation delivers the same numerical bound from a strictly
+stronger CAS-certified foundation, turning the Level-1 marketing claim
+from "reproduces Childs's heuristic" to "reproduces Childs's bound from
+an independently-tighter foundation."
+
+**Impact:** Bound statement unchanged (`t⁵ · childsBoundSum`).
+Axiom count 5 → 4. Build: 3353 jobs pass.
+
+---
+
+## 2026-04-23: Lean-BCH interface migration (axiom count 9 → 5)
+
+**What:** Lean-BCH imported as git dependency at rev `61bf599`. Four
+symmetric-BCH-cubic interface axioms (`symmetric_bch_cubic`,
+`exp_symmetric_bch_cubic`, `norm_symmetric_bch_cubic_le`,
+`norm_symmetric_bch_cubic_sub_smul_le`) replaced by theorems derived from
+the corresponding Lean-BCH theorems specialized to `𝕂 := ℝ`.
+
+**Constant bump:** scaling bound constant raised from axiomatized `10⁴`
+to proven `2·10⁷`. Downstream `suzuki4_bchCubic_sum_bound`: `50000·s⁵`
+→ `10⁸·s⁵`. Scope note: affects only Path-B roadmap composition theorem
+(not yet wired), not the L1/L2/L3/L4 headline prefactors.
+
+---
+
 ## 2026-04-22: Level 2 BCH-derived Childs-style bound
 
 **What:** Added a rigorously BCH-derived 4th-order Trotter bound (Level 2)

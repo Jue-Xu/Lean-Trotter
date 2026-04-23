@@ -75,8 +75,10 @@ axiom that will become a theorem once the companion
 [Lean-BCH](https://github.com/Jue-Xu/Lean-BCH) project's quintic BCH
 expansion is finished:
 
-- **Level 1** (`norm_suzuki4_childs_form_via_bch`): matches Childs et al.
-  (2021) Prop pf4_bound_2term with his heuristic coefficients 0.0047–0.0284.
+- **Level 1** (`norm_suzuki4_childs_form_via_level3`): reproduces Childs et al.
+  (2021) Prop pf4_bound_2term with his exact coefficients 0.0047–0.0284,
+  derived from the CAS-certified Level 3 bound plus the Lean-proved
+  termwise inequality γᵢ ≤ αᵢ (no heuristic axiomatization).
 - **Level 2** (`norm_suzuki4_level2_bch`): rigorous BCH-derived bound with
   explicit unit coefficients on the 8 Childs 4-fold commutators, depending
   only on the primitive claim `|βᵢ(Suzuki-p)| ≤ 1` for BCH quintic expansion

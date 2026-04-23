@@ -2,31 +2,39 @@
 
 ## Remaining work (as of 2026-04-23)
 
-The project has 0 sorries and **5 BCH-interface axioms** in `Suzuki4ViaBCH.lean`
-(down from 9 after the 2026-04-23 Lean-BCH migration). Main headline
-results—Lie-Trotter, Strang, commutator scaling, Suzuki S₄ with L1/L3/L4
-BCH bounds—are all proved. Lean-BCH is now imported as a git dependency
-(`require lean-bch from git ... @ "61bf599"`). Remaining work falls into
-five tracks:
+The project has 0 sorries and **4 BCH-interface axioms** in `Suzuki4ViaBCH.lean`
+(down from 9 after the 2026-04-23 Lean-BCH migration + Childs-axiom
+retirement). Main headline results—Lie-Trotter, Strang, commutator scaling,
+Suzuki S₄ with L1/L2/L3/L4 BCH bounds—are all proved. Lean-BCH is imported
+as a git dependency (`require lean-bch from git ... @ "61bf599"`). Remaining
+work falls into five tracks:
 
-### Track A: Eliminate the 5 BCH-interface axioms (headline gap)
+### Track A: Eliminate the 4 BCH-interface axioms (headline gap)
 
-All 5 remaining axioms encode 5-factor palindromic BCH expansion facts
+All 4 remaining axioms encode 5-factor palindromic BCH expansion facts
 that go beyond Lean-BCH's current 2-factor quintic remainder.
 
 | Axiom | What it asserts | Path to eliminate |
 |---|---|---|
 | `bch_iteratedDeriv_s4Func_order4` | BCH ⟹ h4 (abstract O(t⁵)) | Path A (Trotter-native `sumQuadCorr = 0`), OR: derive from 5-factor palindromic quintic remainder in Lean-BCH |
 | `bch_w4Deriv_quintic_level2` | Primitive pointwise residual (unit coefs) | Derive from Lean-BCH 5-factor quintic + unit triangle bound |
-| `bch_w4Deriv_level3_tight` | Pointwise residual with tight γᵢ | Lean-BCH 5-factor quintic + Childs-basis projection + numeric specialization |
-| `bch_childs_pointwise_residual` | Childs heuristic residual | Retire (not provable rigorously; superseded by Level 3) |
+| `bch_w4Deriv_level3_tight` | Pointwise residual with tight γᵢ (also underwrites Childs reproduction via `norm_suzuki4_childs_form_via_level3`) | Lean-BCH 5-factor quintic + Childs-basis projection + numeric specialization |
 | `bch_uniform_integrated` | Level 4 uniform (R₅ + R₇) | Lean-BCH order-7 extension + R₇ norm bound |
 
 **Recommended order:**
 1. Path A h4 (Trotter-native) — closes axiom 1 without BCH development; blocked by `module` tactic timeout on quartic expansion.
-2. Retire Childs heuristic (axiom 4).
-3. Extend Lean-BCH to 5-factor palindromic quintic remainder — closes axioms 2, and leading order of 3.
-4. CAS-assisted order-7 BCH expansion for axiom 5 (largest remaining work).
+2. Extend Lean-BCH to 5-factor palindromic quintic remainder — closes axioms 2, and leading order of 3.
+3. Formalize Childs-basis projection + numeric specialization — closes axiom 3.
+4. CAS-assisted order-7 BCH expansion — closes axiom 4 (largest remaining work).
+
+### Track A.0 (retired): the Childs-heuristic axiom
+
+Closed 2026-04-23: `bch_childs_pointwise_residual` was retired because
+Childs et al. 2021 themselves label those coefficients heuristic. The
+Childs reproduction theorem `norm_suzuki4_childs_form_via_level3` now
+derives the same numerical bound from the CAS-certified Level 3
+(`norm_suzuki4_level3_bch`) plus the Lean-proved termwise inequality
+`bchTightPrefactors_le_childs` (γᵢ ≤ αᵢ). Axiom count 5 → 4.
 
 ### Track A.1 (retired): the 4 symmetric-BCH-cubic axioms
 
@@ -173,8 +181,9 @@ Several lemmas are ready for upstreaming (~20-50 lines each):
 
   **Currently usable results (modulo BCH axioms):**
   - `norm_suzuki4_order5_via_bch_axiom`: existential S₄ O(t⁵) under IsSuzukiCubic.
-  - `norm_suzuki4_childs_form_via_bch`: Childs 2021 Prop pf4_bound_2term with
-    exact coefficients 0.0047-0.0284.
+  - `norm_suzuki4_childs_form_via_level3`: reproduces Childs 2021 Prop pf4_bound_2term
+    with exact coefficients 0.0047-0.0284, derived from the Level 3 bound via the
+    Lean-proved termwise inequality γᵢ ≤ αᵢ (no heuristic axiomatization).
   - `norm_suzuki4_level2_bch`: rigorous BCH-derived bound with explicit unit
     coefficients on 8 four-fold commutators (no Childs heuristic required).
 

@@ -112,7 +112,7 @@ theorem norm_symmetric_bch_cubic_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 
   `suzuki4_bchCubic_sum_bound` with constant `10⁸`) feeds ONLY the
   Path-B roadmap theorem `norm_suzuki4_order5_via_strang_bch` (multi-exp
   composition, not yet wired up). **It does NOT affect the L1/L2/L3/L4
-  headline Trotter error bounds** (`norm_suzuki4_childs_form_via_bch`,
+  headline Trotter error bounds** (`norm_suzuki4_childs_form_via_level3`,
   `norm_suzuki4_level2_bch`, `norm_suzuki4_level3_bch`,
   `norm_suzuki4_level4_uniform`), which derive their prefactors from the
   separate `bch_w4Deriv_*` axioms encoding pointwise residuals on the
@@ -438,34 +438,22 @@ theorem norm_suzuki4_level2_bch (A B : 𝔸)
     _ = t ^ 5 * bchFourFoldSum A B := by ring
 
 /-!
-## Level 1 (retained): Childs-form with his heuristic coefficients
+## Level 1 (Childs 2021 bound): derived from Level 3, no heuristic axiom
 
-We also retain the Level 1 version, which directly axiomatizes Childs's
-coefficients (equivalent to assuming the full balanced-factoring derivation
-he reports). This is strictly weaker in derivation quality than Level 2
-(more assumed), but produces the exact Childs bound.
+The theorem reproducing Childs's exact 4th-order bound with coefficients
+`{0.0047, 0.0057, 0.0046, 0.0074, 0.0097, 0.0097, 0.0173, 0.0284}` is
+`norm_suzuki4_childs_form_via_level3`, defined below after the Level 3
+framework. It composes the CAS-certified Level 3 bound with the Lean-proved
+termwise inequality `γᵢ ≤ αᵢ` (`bchTightPrefactors_le_childs`).
+
+**Axiom-elimination note (2026-04-23):** an earlier version of this file
+carried a separate `bch_childs_pointwise_residual` axiom that directly
+axiomatized Childs's pointwise residual bound with his heuristic
+coefficients. That axiom was retired because Childs's paper itself
+labels those coefficients heuristic ("we do not have a rigorous proof of
+the tightness of these bounds"). The Level-3-derived reproduction gives
+the same numerical bound from a strictly stronger CAS-certified foundation.
 -/
-
-/-- **[AXIOMATIZED from Childs's balanced factoring]** Childs-form
-  pointwise residual. This encodes Childs's heuristic coefficients
-  0.0047…0.0284 directly. -/
-axiom bch_childs_pointwise_residual
-    (A B : 𝔸) (hA : star A = -A) (hB : star B = -B) (t : ℝ) (ht : 0 ≤ t) :
-    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    ∀ τ ∈ Set.Icc (0 : ℝ) t,
-      ‖w4Deriv A B p τ‖ ≤ (5 * childsBoundSum A B) * τ ^ 4
-
-/-- **Childs's 4th-order Trotter error bound** (Level 1, matches Childs
-  et al. 2021 Prop pf4_bound_2term with exact coefficients 0.0047-0.0284).
-  Proved via `bch_childs_pointwise_residual` (which axiomatizes Childs's
-  heuristic factoring). -/
-theorem norm_suzuki4_childs_form_via_bch (A B : 𝔸)
-    (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
-    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ t ^ 5 * childsBoundSum A B := by
-  simp only
-  exact norm_suzuki4_childs_form A B hA hB ht
-    (bch_childs_pointwise_residual A B hA hB t ht)
 
 /-!
 ## Level 3: Explicit tighter prefactors via exact BCH expansion
@@ -676,6 +664,35 @@ theorem norm_suzuki4_level3_le_childs (A B : 𝔸)
     t ^ 5 * bchTightPrefactors.boundSum A B ≤ t ^ 5 * childsBoundSum A B := by
   apply mul_le_mul_of_nonneg_left (bchTightPrefactors_le_childs A B)
   positivity
+
+/-- **Childs 2021 bound, derived from Level 3**:
+  `‖S₄(t) - exp(tH)‖ ≤ t⁵ · childsBoundSum(A,B)` at Suzuki `p`,
+  matching Childs et al. 2021 Proposition `pf4_bound_2term` with
+  exact coefficients 0.0047, 0.0057, 0.0046, 0.0074, 0.0097, 0.0097,
+  0.0173, 0.0284.
+
+  **Derivation:** compose the CAS-certified Level 3 bound with the
+  Lean-proved termwise inequality `γᵢ ≤ αᵢ`
+  (`bchTightPrefactors_le_childs`). The result uses axiom
+  `bch_w4Deriv_level3_tight` (CAS-certified tight γᵢ) but **no heuristic
+  axiomatization of Childs's bound itself**.
+
+  This replaces the earlier `norm_suzuki4_childs_form_via_bch` which
+  directly axiomatized Childs's heuristic coefficients. The present
+  theorem delivers the same numerical bound from a strictly stronger
+  (and CAS-certified) foundation. -/
+theorem norm_suzuki4_childs_form_via_level3 (A B : 𝔸)
+    (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
+    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
+    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ t ^ 5 * childsBoundSum A B := by
+  simp only
+  calc ‖suzuki4Exp A B _ t - exp (t • (A + B))‖
+      ≤ t ^ 5 * bchTightPrefactors.boundSum A B :=
+        norm_suzuki4_level3_bch A B hA hB ht
+    _ ≤ t ^ 5 * childsBoundSum A B := by
+        have hle := bchTightPrefactors_le_childs (𝔸 := 𝔸) A B
+        have ht5 : 0 ≤ t ^ 5 := pow_nonneg ht 5
+        nlinarith
 
 /-!
 ## Level 4: uniform bound (R₅ + R₇ CAS data)

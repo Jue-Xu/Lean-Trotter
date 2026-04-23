@@ -1,6 +1,6 @@
 # Lie–Trotter Product Formula — Lean 4 Formalization
 
-## Status: ✅ Complete (0 sorry's, 5 BCH-interface axioms, full build passes)
+## Status: ✅ Complete (0 sorry's, 4 BCH-interface axioms, full build passes)
 
 ### Main results
 
@@ -18,12 +18,12 @@
    `LieTrotter/Suzuki4ViaBCH.lean`): S₄ as 5 palindromic Strang blocks; BCH
    interface axiomatized; cubic sum cancellation proved.
 7. **BCH-derived Childs bounds** (Level 1 + Level 2):
-   - Level 1 `norm_suzuki4_childs_form_via_bch`: recovers Childs (2021)
-     Prop pf4_bound_2term with exact 0.0047-0.0284 coefficients (axiomatizes
-     Childs's heuristic balanced factoring).
+   - Level 1 `norm_suzuki4_childs_form_via_level3`: recovers Childs (2021)
+     Prop pf4_bound_2term with exact 0.0047-0.0284 coefficients. Derived
+     from Level 3 via the Lean-proved termwise inequality γᵢ ≤ αᵢ — no
+     heuristic axiomatization of Childs's bound itself.
    - Level 2 `norm_suzuki4_level2_bch`: rigorously BCH-derived S₄ bound
-     with explicit unit coefficients on 8 four-fold commutators. Does NOT
-     depend on Childs's heuristic balancing.
+     with explicit unit coefficients on 8 four-fold commutators.
 
 ### Remaining research target
 
@@ -56,15 +56,20 @@ affect the L1/L2/L3/L4 headline S₄ error bounds (Childs / unit / tight-γᵢ
 / uniform-R₅+R₇), which derive prefactors from the independent
 `bch_w4Deriv_*` axioms on the full 5-factor product.
 
-`LieTrotter/Suzuki4ViaBCH.lean` retains 5 axioms — all of them encode BCH
+`LieTrotter/Suzuki4ViaBCH.lean` retains 4 axioms — all encode BCH
 structural facts that go beyond what Lean-BCH currently provides
 (Lean-BCH stops at the 2-factor quintic remainder; these axioms involve the
 5-factor palindromic product and its log-expansion):
 - `bch_iteratedDeriv_s4Func_order4` (BCH ⟹ h4) — supports `norm_suzuki4_order5_via_bch_axiom`
 - `bch_w4Deriv_quintic_level2` (Level 2 primitive residual, unit coefs) — supports `norm_suzuki4_level2_bch`
-- `bch_childs_pointwise_residual` (Level 1 Childs heuristic) — supports `norm_suzuki4_childs_form_via_bch`
-- `bch_w4Deriv_level3_tight` (Level 3 pointwise residual, tight γᵢ) — supports `norm_suzuki4_level3_bch`
+- `bch_w4Deriv_level3_tight` (Level 3 pointwise residual, tight γᵢ) — supports `norm_suzuki4_level3_bch`; also underwrites the Level-1-Childs reproduction `norm_suzuki4_childs_form_via_level3`
 - `bch_uniform_integrated` (Level 4 uniform finite-t bound with R₅ + R₇) — supports `norm_suzuki4_level4_uniform`
+
+**Retired 2026-04-23:** `bch_childs_pointwise_residual` (Childs heuristic)
+— replaced by `norm_suzuki4_childs_form_via_level3`, which reproduces
+Childs 2021's exact numerical bound (coefficients 0.0047…0.0284) from the
+CAS-certified Level 3 bound plus the Lean-proved inequality γᵢ ≤ αᵢ.
+No reliance on Childs's heuristic balanced factoring.
 
 ### Remaining work
 

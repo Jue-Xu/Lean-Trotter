@@ -10,10 +10,10 @@
 - `Suzuki4Phase5.lean`: ~740 lines, 0 sorry
 - `Suzuki4MultinomialExpand.lean`: ~800 lines, 0 sorry (**h2 + h3 PROVED**)
 - `Suzuki4StrangBlocks.lean`: ~130 lines, 0 sorry (Tasks 1 + 2)
-- `Suzuki4ViaBCH.lean`: ~780 lines, 0 sorry, 9 axioms (Level 1–4 BCH bounds + CAS sanity checks)
+- `Suzuki4ViaBCH.lean`: ~800 lines, 0 sorry, 4 axioms (post 2026-04-23 Lean-BCH migration + Childs-axiom retirement)
 
 **Level 1, 2, 3, 4 BCH-derived bounds** are formalized:
-- **L1** (`norm_suzuki4_childs_form_via_bch`): Childs 2021 exact (axiomatizes his heuristic).
+- **L1** (`norm_suzuki4_childs_form_via_level3`): reproduces Childs 2021 exact coefficients 0.0047–0.0284, derived from L3 via the Lean-proved γᵢ ≤ αᵢ inequality — no heuristic axiomatization.
 - **L2** (`norm_suzuki4_level2_bch`): unit coefficients on 8 Childs commutators.
 - **L3** (`norm_suzuki4_level3_bch`): BCH-derived leading-order γᵢ, 9×–64× tighter than Childs.
 - **L4** (`norm_suzuki4_level4_uniform`): uniform finite-`t` bound with explicit R₇ correction.
@@ -181,8 +181,8 @@ strategy is needed, e.g.:
 | **BCH h4 axiom** | `bch_iteratedDeriv_s4Func_order4` | 🔵 Axiom (from BCH) |
 | **BCH h4 consequence** | `bch_iteratedDeriv_w4Func_order4_eq_zero` | ✅ (derived from axiom) |
 | **Unconditional S₄ O(t⁵) via BCH** | `norm_suzuki4_order5_via_bch_axiom` | ✅ (modulo BCH axiom) |
-| **Level 1 Childs bound** | `norm_suzuki4_childs_form_via_bch` | ✅ (reproduces Childs 2021 coefs 0.0047-0.0284) |
-| **Level 1 axiom** | `bch_childs_pointwise_residual` | 🔵 Axiom (encodes Childs heuristic) |
+| **Level 1 Childs bound** | `norm_suzuki4_childs_form_via_level3` | ✅ (reproduces Childs 2021 coefs 0.0047-0.0284, derived from L3) |
+| **Level 1 axiom** | — | (retired 2026-04-23: Childs's heuristic superseded by L3 derivation) |
 | **Level 2 BCH-derived bound** | `norm_suzuki4_level2_bch` | ✅ (unit coefs, genuine BCH) |
 | **Level 2 axiom** | `bch_w4Deriv_quintic_level2` | 🔵 Axiom (primitive BCH, `|βᵢ| ≤ 1`) |
 | **Level 2 dominates Level 1** | `childsBoundSum_le_bchFourFoldSum` | ✅ |
