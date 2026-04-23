@@ -106,7 +106,17 @@ theorem norm_symmetric_bch_cubic_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 
 
   The constant `2·10⁷` comes from Lean-BCH's rigorous triangle-inequality
   proof; the previous axiomatized constant `10⁴` was speculative and
-  tighter than what the current Lean-BCH proof delivers. -/
+  tighter than what the current Lean-BCH proof delivers.
+
+  **Scope of the 2·10⁷ constant:** this bound (and its downstream
+  `suzuki4_bchCubic_sum_bound` with constant `10⁸`) feeds ONLY the
+  Path-B roadmap theorem `norm_suzuki4_order5_via_strang_bch` (multi-exp
+  composition, not yet wired up). **It does NOT affect the L1/L2/L3/L4
+  headline Trotter error bounds** (`norm_suzuki4_childs_form_via_bch`,
+  `norm_suzuki4_level2_bch`, `norm_suzuki4_level3_bch`,
+  `norm_suzuki4_level4_uniform`), which derive their prefactors from the
+  separate `bch_w4Deriv_*` axioms encoding pointwise residuals on the
+  full 5-factor product. -/
 theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
     (hc : |c| ≤ 1) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     ‖symmetric_bch_cubic (c • a) (c • b) - c ^ 3 • symmetric_bch_cubic a b‖ ≤

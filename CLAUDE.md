@@ -47,6 +47,15 @@ previously-axiomatized Lean-BCH interface declarations (`symmetric_bch_cubic`,
 `norm_symmetric_bch_cubic_sub_smul_le`) are now theorems derived from the
 corresponding BCH theorems specialized to `𝕂 := ℝ`.
 
+**Prefactor-bookkeeping note.** The migration raised the symmetric-BCH
+scaling constant from the previous speculative `10⁴·|c|³·s⁵` to Lean-BCH's
+rigorous `2·10⁷·|c|³·s⁵` (downstream `suzuki4_bchCubic_sum_bound`:
+`50000·s⁵ → 10⁸·s⁵`). This bump is confined to the Path-B composition
+roadmap (`norm_suzuki4_order5_via_strang_bch`, future work). It does NOT
+affect the L1/L2/L3/L4 headline S₄ error bounds (Childs / unit / tight-γᵢ
+/ uniform-R₅+R₇), which derive prefactors from the independent
+`bch_w4Deriv_*` axioms on the full 5-factor product.
+
 `LieTrotter/Suzuki4ViaBCH.lean` retains 5 axioms — all of them encode BCH
 structural facts that go beyond what Lean-BCH currently provides
 (Lean-BCH stops at the 2-factor quintic remainder; these axioms involve the
