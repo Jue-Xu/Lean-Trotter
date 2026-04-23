@@ -1,6 +1,6 @@
 # Lie–Trotter Product Formula — Lean 4 Formalization
 
-## Status: ✅ Complete (0 sorry's, 7 BCH-interface axioms, full build passes)
+## Status: ✅ Complete (0 sorry's, 5 BCH-interface axioms, full build passes)
 
 ### Main results
 
@@ -39,27 +39,34 @@ left for an unconditional S₄ O(t⁵). Two routes are under active development:
   gap (see Lean-BCH's `quintic_pure_identity` nsmul diamond, line 2307,
   ~50 lines fix).
 
-### Axioms in use (all BCH-interface, to be removed when Lean-BCH completes)
+### Axioms in use (all BCH-interface, to be removed as Lean-BCH extends)
 
-`LieTrotter/Suzuki4ViaBCH.lean` contains 9 axioms that stand in for
-Lean-BCH theorems / BCH expansion consequences:
-- `symmetric_bch_cubic`, `exp_symmetric_bch_cubic`,
-  `norm_symmetric_bch_cubic_le`, `norm_symmetric_bch_cubic_sub_smul_le`
-  (mirror Lean-BCH `BCH/Basic.lean`)
-- `bch_iteratedDeriv_s4Func_order4` (BCH ⟹ h4)
-- `bch_w4Deriv_quintic_level2` (Level 2 primitive residual bound, unit coefs)
-- `bch_w4Deriv_level3_tight` (Level 3 pointwise residual with tight γᵢ)
-- `bch_childs_pointwise_residual` (Level 1 Childs heuristic residual)
-- `bch_uniform_integrated` (Level 4 uniform finite-t bound with R₅ + R₇)
+Trotter now imports Lean-BCH directly (`require lean-bch from git`). Four
+previously-axiomatized Lean-BCH interface declarations (`symmetric_bch_cubic`,
+`exp_symmetric_bch_cubic`, `norm_symmetric_bch_cubic_le`,
+`norm_symmetric_bch_cubic_sub_smul_le`) are now theorems derived from the
+corresponding BCH theorems specialized to `𝕂 := ℝ`.
+
+`LieTrotter/Suzuki4ViaBCH.lean` retains 5 axioms — all of them encode BCH
+structural facts that go beyond what Lean-BCH currently provides
+(Lean-BCH stops at the 2-factor quintic remainder; these axioms involve the
+5-factor palindromic product and its log-expansion):
+- `bch_iteratedDeriv_s4Func_order4` (BCH ⟹ h4) — supports `norm_suzuki4_order5_via_bch_axiom`
+- `bch_w4Deriv_quintic_level2` (Level 2 primitive residual, unit coefs) — supports `norm_suzuki4_level2_bch`
+- `bch_childs_pointwise_residual` (Level 1 Childs heuristic) — supports `norm_suzuki4_childs_form_via_bch`
+- `bch_w4Deriv_level3_tight` (Level 3 pointwise residual, tight γᵢ) — supports `norm_suzuki4_level3_bch`
+- `bch_uniform_integrated` (Level 4 uniform finite-t bound with R₅ + R₇) — supports `norm_suzuki4_level4_uniform`
 
 ### Remaining work
 
-See `TODO.md` for the full breakdown (6 tracks: BCH axiom elimination,
-Path A h4, scientific extensions, Mathlib PRs, paper polish, code hygiene).
+See `TODO.md` for the full breakdown.
 
-Short-term priority: close Lean-BCH's `quintic_pure_identity` nsmul gap
-(~1-2 sessions), which unblocks 6 of 9 axioms here and enables the full
-BCH-derived L3/L4 bounds to become axiom-free.
+Short-term priority: close axiom `bch_iteratedDeriv_s4Func_order4` via
+Path A (Trotter-native operator-algebra identity `sumQuadCorr = 0`), or via
+an extension of Lean-BCH to the 5-factor palindromic quintic remainder
+`norm_symmetric_bch_quintic_sub_smul_le`. Either closes the headline
+axiom; the Trotter-native route is blocked only by `module` tactic
+timeout on quartic expansion (fixable by hand-unrolling).
 
 ## Goal
 

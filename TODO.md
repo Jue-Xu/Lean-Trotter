@@ -1,28 +1,40 @@
 # TODO
 
-## Remaining work (as of 2026-04-22)
+## Remaining work (as of 2026-04-23)
 
-The project has 0 sorries and 9 axioms (all BCH-interface, in `Suzuki4ViaBCH.lean`).
-Main headline results—Lie-Trotter, Strang, commutator scaling, Suzuki S₄ with L1/L3/L4
-BCH bounds—are all proved. Remaining work falls into five tracks:
+The project has 0 sorries and **5 BCH-interface axioms** in `Suzuki4ViaBCH.lean`
+(down from 9 after the 2026-04-23 Lean-BCH migration). Main headline
+results—Lie-Trotter, Strang, commutator scaling, Suzuki S₄ with L1/L3/L4
+BCH bounds—are all proved. Lean-BCH is now imported as a git dependency
+(`require lean-bch from git ... @ "61bf599"`). Remaining work falls into
+five tracks:
 
-### Track A: Eliminate the 9 BCH-interface axioms (headline gap)
+### Track A: Eliminate the 5 BCH-interface axioms (headline gap)
 
-The single largest completion step. All 9 axioms are in `Suzuki4ViaBCH.lean`
-and stand in for Lean-BCH theorems + two CAS-derived numerical claims.
+All 5 remaining axioms encode 5-factor palindromic BCH expansion facts
+that go beyond Lean-BCH's current 2-factor quintic remainder.
 
 | Axiom | What it asserts | Path to eliminate |
 |---|---|---|
-| `symmetric_bch_cubic` + 3 helpers | Lean-BCH's symmetric BCH cubic | Import Lean-BCH once its `quintic_pure_identity` nsmul-diamond gap (line 2307, ~50 lines fix) closes |
-| `bch_iteratedDeriv_s4Func_order4` | BCH ⟹ h4 | Derive from Lean-BCH expansion + Phase 5 bridge |
-| `bch_w4Deriv_quintic_level2` | Primitive pointwise residual (unit coefs) | Derive from Lean-BCH + norm bound |
-| `bch_w4Deriv_level3_tight` | BCH pointwise with tight γᵢ | Derive: Lean-BCH quintic + γᵢ projection |
-| `bch_childs_pointwise_residual` | Childs heuristic residual | Stays axiomatic (encodes Childs's claim directly) |
-| `bch_uniform_integrated` | Level 4 uniform bound (R₅ + R₇) | Derive: Lean-BCH quintic + R₇ norm bound |
+| `bch_iteratedDeriv_s4Func_order4` | BCH ⟹ h4 (abstract O(t⁵)) | Path A (Trotter-native `sumQuadCorr = 0`), OR: derive from 5-factor palindromic quintic remainder in Lean-BCH |
+| `bch_w4Deriv_quintic_level2` | Primitive pointwise residual (unit coefs) | Derive from Lean-BCH 5-factor quintic + unit triangle bound |
+| `bch_w4Deriv_level3_tight` | Pointwise residual with tight γᵢ | Lean-BCH 5-factor quintic + Childs-basis projection + numeric specialization |
+| `bch_childs_pointwise_residual` | Childs heuristic residual | Retire (not provable rigorously; superseded by Level 3) |
+| `bch_uniform_integrated` | Level 4 uniform (R₅ + R₇) | Lean-BCH order-7 extension + R₇ norm bound |
 
-**Bottleneck:** Lean-BCH's `quintic_pure_identity` nsmul typeclass diamond
-(companion project `/Users/jue/Documents/Claude/Projects/Lean-BCH/`). Once
-that compiles, imports flow through and most axioms become theorems.
+**Recommended order:**
+1. Path A h4 (Trotter-native) — closes axiom 1 without BCH development; blocked by `module` tactic timeout on quartic expansion.
+2. Retire Childs heuristic (axiom 4).
+3. Extend Lean-BCH to 5-factor palindromic quintic remainder — closes axioms 2, and leading order of 3.
+4. CAS-assisted order-7 BCH expansion for axiom 5 (largest remaining work).
+
+### Track A.1 (retired): the 4 symmetric-BCH-cubic axioms
+
+Closed 2026-04-23 via direct import of Lean-BCH's `symmetric_bch_cubic`,
+`exp_symmetric_bch`, `norm_symmetric_bch_cubic_le`, and
+`norm_symmetric_bch_cubic_sub_smul_le` (specialized to `𝕂 := ℝ`).
+Constant in the quintic scaling bound rose from speculative 10⁴ to
+proven 2·10⁷ (downstream `suzuki4_bchCubic_sum_bound`: 50000 → 10⁸).
 
 ### Track B: h4 alternative (Path A, Lean-native)
 
