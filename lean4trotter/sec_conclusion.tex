@@ -4,15 +4,20 @@
 We have presented the first machine-checked formalization of the Lie--Trotter
 product formula, together with its higher-order extensions and
 commutator-scaling error bounds, in Lean~4 with the \Mathlib library.
-The development comprises over 4\,300 lines with zero \texttt{sorry} axioms
-and covers:
+The development comprises over 10\,500 lines with zero \texttt{sorry} axioms
+(and four BCH-interface axioms confined to the Suzuki~$S_4$ track) and covers:
 \begin{itemize}
   \item First-order Lie--Trotter convergence at rate $O(1/n)$;
   \item Symmetric Strang splitting at rate $O(1/n^2)$;
   \item Multi-operator generalizations of both formulas;
-  \item A fourth-order Suzuki integrator;
   \item First- and second-order commutator-scaling bounds via a novel
-    Duhamel/FTC technique.
+    Duhamel/FTC technique;
+  \item A tighter second-order Strang bound via norm-of-difference that
+    captures signed cancellations invisible to the sum-of-norms form;
+  \item A fourth-order Suzuki $S_4$ track with four CAS-assisted
+    BCH-based bounds, including a strictly tighter replacement
+    (9$\times$--64$\times$) of Childs's 2021 heuristic prefactors and a
+    uniform finite-$t$ bound via an explicit $\tau^7$ correction.
 \end{itemize}
 
 The Duhamel approach to commutator scaling---avoiding ODE uniqueness in favor
@@ -28,15 +33,24 @@ Several extensions are natural:
     \leanref{ExpBounds.lean}{129}{exp\_sub\_one\_sub\_bound\_real})
     are general-purpose lemmas suitable for upstreaming to \Mathlib.
 
-  \item \emph{Tight higher-order Suzuki bounds.}
-    Our fourth-order Suzuki integrator currently has an $O(1/n^2)$ bound;
-    the tight $O(1/n^4)$ bound requires formalizing the parity-based
-    cancellation argument of Suzuki~\cite{suzukiGeneralTheoryFractal1991}.
+  \item \emph{Closing the four BCH-interface axioms.}
+    The Suzuki~$S_4$ track relies on four axioms encoding the
+    five-factor palindromic BCH log-expansion. These can be closed by
+    extending the companion
+    \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project from
+    its current three-factor symmetric BCH scope to five-factor
+    palindromic compositions, or---for the order-4 Taylor-coefficient
+    identity specifically---by a Trotter-native operator-algebra argument
+    that currently runs afoul of \texttt{module}-tactic time limits on
+    the quartic expansion (see \texttt{scripts/compute\_sumQuadCorr\_factored.py}
+    for the CAS-verified identity).
 
   \item \emph{Baker--Campbell--Hausdorff formula.}
-    The BCH formula $\log(e^A\,e^B) = A + B + \frac{1}{2}[A,B] + \cdots$
-    is closely related to the Trotter error expansion. A partial scaffold
-    exists in our repository.
+    The three-factor symmetric BCH identities are already formalized and
+    imported from the Lean-BCH companion project. Extending to
+    five-factor palindromic BCH or to the general $n$-factor case would
+    complete the BCH-interface chain and automatically eliminate the
+    remaining Suzuki~$S_4$ axioms.
 
   \item \emph{Specialization to quantum systems.}
     Connecting our abstract bounds to concrete gate-count estimates for

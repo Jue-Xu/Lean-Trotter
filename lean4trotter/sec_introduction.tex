@@ -56,9 +56,6 @@ Our formalization proves the following hierarchy of results:
     $(e^{A_1/n} \cdots e^{A_m/n})^n \to e^{A_1+\cdots+A_m}$
     and the palindromic (Strang) variant, both with explicit error bounds.
 
-  \item \textbf{Fourth-order Suzuki integrator}:
-    $S_4(t) = S_2(pt)^2\,S_2((1-4p)t)\,S_2(pt)^2$ with $O(1/n^2)$ convergence.
-
   \item \textbf{Commutator-scaling bounds} (\cref{sec:commutator}):
     \begin{align}
       \norm{e^{tB}\,e^{tA} - e^{t(A+B)}}
@@ -70,10 +67,30 @@ Our formalization proves the following hierarchy of results:
         \label{eq:comm-strang}
     \end{align}
     matching the commutator-scaling program of Childs et al.~\cite{childsTheoryTrotterError2021}.
+
+  \item \textbf{Tighter Strang bound via norm-of-difference}: a strictly
+    sharper second-order bound
+    $\norm{S_2(t)-e^{tH}} \le \tfrac{\norm{D}}{6}t^3 + \tfrac{T}{4}t^4$
+    where $D = \comm{B}{\comm{B}{A/2}} - \comm{A/2}{\comm{A/2}{B}}$ is an
+    effective double commutator capturing signed cancellations that the
+    triangle-inequality form of \eqref{eq:comm-strang} cannot see.
+
+  \item \textbf{Fourth-order Suzuki $S_4$ with CAS-assisted BCH bounds}
+    (\cref{sec:suzuki4}):
+    four formalized order-$t^5$ bounds for
+    $\norm{S_4(t) - e^{t(A+B)}}$, culminating in a provably
+    strictly tighter (9$\times$--64$\times$ per coefficient)
+    replacement of Childs's~2021 heuristic prefactors, together with a
+    uniform finite-$t$ bound obtained by extending the CAS computation to
+    order~$\tau^7$.
 \end{enumerate}
 
-The entire development comprises 13 Lean source files totaling over 4\,300 lines,
-with zero \texttt{sorry} axioms.
+The entire development comprises 29 Lean source files totaling over 10\,500 lines,
+with zero \texttt{sorry} axioms. Four BCH-interface axioms remain, all
+encoding five-factor palindromic BCH log-expansion facts for the $S_4$
+integrator; the three-factor symmetric BCH identities are imported directly
+from the companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project.
 Our \Lean formalization is available at
 \href{https://github.com/Jue-Xu/Lean-Trotter}{\texttt{github.com/Jue-Xu/Lean-Trotter}}.
 Our main contributions are:
@@ -87,7 +104,14 @@ Our main contributions are:
 
   \item Machine-checked \emph{commutator-scaling error bounds} at first and
     second order, with double-commutator coefficients matching the
-    theoretical literature.
+    theoretical literature---and a new tighter-Strang refinement
+    via norm-of-difference (\cref{apd:tighter}).
+
+  \item \emph{CAS-assisted BCH bounds for Suzuki $S_4$}: four machine-checked
+    bounds---including a rigorously tighter replacement for the
+    Childs (2021) prefactors and a uniform finite-$t$ bound via an
+    order-$\tau^7$ correction---with all CAS output verified by Lean
+    numerical sanity checks.
 
   \item Identification and filling of several \emph{gaps in \Mathlib}, notably
     the inequality $\norm{e^a} \le e^{\norm{a}}$ for general Banach algebras.

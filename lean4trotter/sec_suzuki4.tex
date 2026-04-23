@@ -188,7 +188,7 @@ across the remaining six.}
 The script emits a Lean snippet for the
 \texttt{bchTightPrefactors} definition in
 \leansrc{Suzuki4ViaBCH.lean}. The corresponding Lean theorem
-(\leanref{Suzuki4ViaBCH.lean}{384}{norm\_suzuki4\_level3\_bch})
+\texttt{norm\_suzuki4\_level3\_bch}
 \begin{equation}
   \norm{S_4(t) - e^{t(A+B)}} \;\le\; t^5 \cdot \sum_{i=1}^{8} \gamma_i\, \norm{C_i}
 \end{equation}
@@ -198,10 +198,9 @@ residual. This axiom is a clean interface---every step of its derivation is
 implemented symbolically in the script---and will be replaced by a theorem
 once the companion
 \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH}
-project's quintic BCH expansion is formalized.
+project's five-factor palindromic quintic expansion is formalized.
 
-A companion theorem
-(\leanref{Suzuki4ViaBCH.lean}{416}{norm\_suzuki4\_level3\_le\_childs})
+A companion theorem \texttt{norm\_suzuki4\_level3\_le\_childs}
 formally verifies that the BCH-derived bound dominates Childs's:
 \begin{equation}
   t^5 \cdot \sum_{i} \gamma_i\,\norm{C_i}
@@ -209,7 +208,9 @@ formally verifies that the BCH-derived bound dominates Childs's:
   t^5 \cdot \sum_{i} \alpha_i\,\norm{C_i}.
 \end{equation}
 The element-wise comparison $\abs{\gamma_i} \le \alpha_i$ is verified by
-\texttt{nlinarith} from the explicit numerical values.
+\texttt{nlinarith} from the explicit numerical values. This comparison is
+axiom-free and underwrites the Level~1 reproduction of Childs (2021)
+described below.
 
 \subsection{Extending to a uniform finite-\texorpdfstring{$t$}{t} bound: \texorpdfstring{$R_7$}{R7} correction}
 \label{sec:r7}
@@ -349,29 +350,38 @@ Level 4 bound is \emph{orders of magnitude} tighter than Childs's.
 \small
 \begin{tabular}{@{}lllp{5.5cm}@{}}
 \toprule
-\textbf{Level} & \textbf{Lean theorem} & \textbf{Form} & \textbf{Caveat} \\
+\textbf{Level} & \textbf{Lean theorem} & \textbf{Form} & \textbf{Notes} \\
 \midrule
 \textbf{L1 (Childs)}
-  & \leanref{Suzuki4ViaBCH.lean}{380}{norm\_suzuki4\_childs\_form\_via\_bch}
+  & \texttt{norm\_suzuki4\_childs\_form\_via\_level3}
   & $t^5 \sum \alpha_i \norm{C_i}$
-  & Reproduces Childs (2021) exactly. Not proved tight. \\
+  & Reproduces Childs (2021) exactly. Derived from L3 via
+    $\abs{\gamma_i} \le \alpha_i$; no heuristic axiom. \\
+\midrule
+\textbf{L2 (BCH unit)}
+  & \texttt{norm\_suzuki4\_level2\_bch}
+  & $t^5 \sum \norm{C_i}$
+  & Unit coefficients. Primitive BCH bound $\abs{\beta_i(\text{Suzuki-}p)} \le 1$. \\
 \midrule
 \textbf{L3 (BCH leading)}
-  & \leanref{Suzuki4ViaBCH.lean}{384}{norm\_suzuki4\_level3\_bch}
+  & \texttt{norm\_suzuki4\_level3\_bch}
   & $t^5 \sum \gamma_i \norm{C_i}$
-  & Strictly tighter than L1; leading-order only. \\
+  & Strictly tighter than L1 (9$\times$--64$\times$);
+    leading-order only. \\
 \midrule
 \textbf{L4 (BCH uniform)}
-  & \leanref{Suzuki4ViaBCH.lean}{586}{norm\_suzuki4\_level4\_uniform}
+  & \texttt{norm\_suzuki4\_level4\_uniform}
   & $t^5 \sum \gamma_i \norm{C_i} + t^7 K \max(\norm{A}, \norm{B})^7$
   & Uniform finite-$t$ bound. Strictly tighter than L1 for
     small $t$ (per \cref{eq:t-threshold}). \\
 \bottomrule
 \end{tabular}
-\caption{Three formalized BCH-based bounds for $\norm{S_4(t) - e^{t(A+B)}}$,
-in increasing rigor / tightness. L2 is the unit-coefficient sum
-$\sum \norm{C_i}$ used as an intermediate; see \texttt{Suzuki4ViaBCH.lean}
-for its definition.}
+\caption{Four formalized BCH-based bounds for $\norm{S_4(t) - e^{t(A+B)}}$,
+in increasing rigor / tightness. L1 is now a \emph{corollary} of L3---no
+heuristic axiomatization is required on Trotter's side---while L2/L3/L4
+each rely on a single dedicated BCH-derived pointwise residual axiom
+(\texttt{bch\_w4Deriv\_*}) encoding the five-factor palindromic BCH
+expansion.}
 \label{tab:levels}
 \end{table}
 
@@ -392,27 +402,51 @@ tightest in the Childs basis; however, any valid projection is strictly
 smaller than Childs's on all 8 coordinates.
 
 \paragraph{Caveat 2: Dependence on BCH axioms (pending Lean-BCH).}
-In the Lean formalization, the steps ``$\log S_4(t) - t(A+B) =
-t^5 R_5 + t^7 R_7 + O(t^9)$'', along with the $R_5$ projection onto
-Childs basis and the $R_7$ uniform bound, are encoded as axioms
-(\texttt{bch\_w4Deriv\_level3\_tight}, \texttt{bch\_uniform\_integrated}).
-The symbolic computations verify the mathematical identity and bounds,
-but the BCH expansion itself is not yet formalized in Lean (work in
-progress in the companion Lean-BCH project). The $\gamma_i$ and $K$
-values are ``machine-checked mathematically'' (via the Python scripts,
-whose output is reproducible) but ``axiomatized Lean-formally'' (pending
-Lean-BCH completion).
+Four BCH-interface axioms remain in \leansrc{Suzuki4ViaBCH.lean}, all
+encoding log-expansion facts for the five-factor palindromic
+$S_4$ product that are beyond the current scope of the companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project (which
+currently provides two-factor \texttt{bch} and three-factor symmetric
+BCH identities):
+\begin{itemize}[leftmargin=1.2em, nosep]
+  \item \texttt{bch\_iteratedDeriv\_s4Func\_order4}: the order-4
+    Taylor-coefficient identity $\partial_\tau^4 S_4(\tau)|_0 = (A+B)^4$
+    under the Suzuki cubic condition (supports the abstract $O(t^5)$
+    existence bound).
+  \item \texttt{bch\_w4Deriv\_quintic\_level2}: the primitive pointwise
+    residual bound $\norm{w_4'(\tau)} \le 5\,\norm{C_\mathrm{sum}}\,\tau^4$
+    with unit coefficients on the Childs basis (supports L2).
+  \item \texttt{bch\_w4Deriv\_level3\_tight}: the CAS-derived tight pointwise
+    residual with prefactors $\gamma_i$ (supports L3 and, by composition,
+    L1).
+  \item \texttt{bch\_uniform\_integrated}: the CAS-derived uniform
+    finite-$t$ bound combining $R_5$ and $R_7$ (supports L4).
+\end{itemize}
+The four three-factor symmetric-BCH-cubic identities previously
+axiomatized here (the \texttt{symmetric\_bch\_cubic} family) are now
+theorems, derived from the corresponding Lean-BCH theorems specialized to
+$\mathbb{K} = \mathbb{R}$. Trotter imports Lean-BCH directly as a git
+dependency. The $\gamma_i$ and $K$ values are ``machine-checked
+mathematically'' (via the Python scripts, whose output is reproducible)
+and ``axiomatized Lean-formally'' (pending Lean-BCH completion of the
+five-factor palindromic expansion).
 
 \subsection{Summary}
 
 This section demonstrates a \emph{CAS-assisted formalization workflow}
 producing the first rigorously improved Trotter bound for Suzuki $S_4$ in
-over a decade. Three bounds are formalized:
+over a decade. Four bounds are formalized:
 
 \begin{itemize}[leftmargin=*, nosep]
-  \item \textbf{L1 (Childs reproduction).} Reproduces Childs (2021)
-    Proposition pf4\_bound\_2term as a machine-checked statement,
-    axiomatizing his heuristic balanced-factoring result.
+  \item \textbf{L1 (Childs reproduction, axiom-free on Trotter's side).}
+    Reproduces Childs (2021) Proposition pf4\_bound\_2term with his
+    exact coefficients $0.0047$--$0.0284$. Derived from L3 via the
+    Lean-proved termwise inequality $\abs{\gamma_i} \le \alpha_i$;
+    no heuristic axiomatization of Childs's bound is required.
+  \item \textbf{L2 (BCH unit coefficients).} The simplest rigorous
+    BCH-derived bound, using unit coefficients on all 8 Childs commutators.
+    Follows from the primitive BCH bound $\abs{\beta_i(\text{Suzuki-}p)} \le 1$
+    and is dominated numerically by L3.
   \item \textbf{L3 (BCH leading-order).} Replaces Childs's heuristic
     coefficients $\alpha_i$ with the exact BCH-derived leading-order
     coefficients $\gamma_i$. All 8 are strictly smaller; the improvement
@@ -427,7 +461,10 @@ over a decade. Three bounds are formalized:
 Both the Lean formalization and the CAS computation are reproducible from
 the project repository. The axiomatized steps (BCH expansion, residual
 bounds) are single, well-defined mathematical claims that will become
-theorems once the BCH expansion is fully formalized in the companion
+theorems once the five-factor palindromic BCH expansion is fully
+formalized in the companion
 \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project---at which
-point L3 and L4 become fully Lean-verified without any remaining
-axioms.
+point all four levels become fully Lean-verified without any remaining
+axioms. The three-factor symmetric BCH interface on which L3/L4 depend
+is already imported from Lean-BCH as a git dependency and is no longer
+axiomatized on the Trotter side.

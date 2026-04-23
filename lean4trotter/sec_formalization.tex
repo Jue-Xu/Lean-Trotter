@@ -4,40 +4,67 @@
 \subsection{Project structure and statistics}
 \label{sec:project-structure}
 
-The formalization is organized into 13~Lean source files, listed in
-\cref{tab:files}. Each file is self-contained with explicit imports,
+The formalization is organized into 29~Lean source files, grouped by track
+in \cref{tab:files}. Each file is self-contained with explicit imports,
 enabling parallel development and independent verification.
 
 \begin{table}[ht]
 \centering
+\small
 \begin{tabular}{@{}lrl@{}}
 \toprule
 \textbf{File} & \textbf{Lines} & \textbf{Content} \\
 \midrule
+\multicolumn{3}{@{}l}{\textit{Lie--Trotter core (Tracks 1--4, \cref{sec:proof})}} \\
 \leansrc{Telescoping.lean}       & 106  & Algebraic telescoping + norm bound \\
 \leansrc{ExpBounds.lean}         & 212  & Exponential series remainder estimates \\
 \leansrc{StepError.lean}         & 674  & Quadratic step error (algebraic factorization) \\
 \leansrc{ExpDivPow.lean}         & 54   & $(e^{a/n})^n = e^a$ \\
 \leansrc{Assembly.lean}          & 146  & $O(1/n)$ convergence + main theorem \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{Strang, multi-operator, commutator scaling (Track~5)}} \\
 \leansrc{StrangSplitting.lean}   & 492  & Strang splitting, $O(1/n^2)$ \\
 \leansrc{MultiOperator.lean}     & 288  & Multi-operator first-order \\
 \leansrc{MultiStrang.lean}       & 428  & Multi-operator Strang \\
-\leansrc{Suzuki4.lean}           & 466  & Fourth-order Suzuki integrator \\
 \leansrc{CommutatorScaling.lean} & 379  & Duhamel commutator-scaling \\
-\leansrc{MultiCommutatorScaling.lean}      & 128 & Multi-operator comm.\ scaling \\
-\leansrc{StrangCommutatorScaling.lean}     & 733 & Strang double-commutator scaling \\
-\leansrc{MultiStrangCommutatorScaling.lean}& 174 & Multi-op.\ Strang comm.\ scaling \\
+\leansrc{MultiCommutatorScaling.lean}       & 128  & Multi-operator comm.\ scaling \\
+\leansrc{StrangCommutatorScaling.lean}      & 733  & Strang double-commutator scaling \\
+\leansrc{MultiStrangCommutatorScaling.lean} & 174  & Multi-op.\ Strang comm.\ scaling \\
+\leansrc{HigherCommutator.lean}            & 243  & Triple-FTC: extracts $[B,[B,[B,A]]]$ \\
+\leansrc{StrangCommutatorScalingTight.lean} & 559 & Tighter Strang via norm-of-difference $D$ \\
 \midrule
-\textbf{Total} & \textbf{4\,280} & \textbf{0 \texttt{sorry} axioms} \\
+\multicolumn{3}{@{}l}{\textit{Suzuki $S_4$ track (\cref{sec:suzuki4})}} \\
+\leansrc{Suzuki4.lean}                    & 466  & $S_4$ definition and basic $O(1/n^2)$ \\
+\leansrc{Suzuki4FullDuhamel.lean}         & 445  & $S_4$ $O(t^3)$ via 5-$S_2$ telescoping \\
+\leansrc{Suzuki4CommutatorScaling.lean}   & 90   & \texttt{suzuki4Exp} definition \\
+\leansrc{Suzuki4Deriv.lean}               & 96   & Derivative scaffolding \\
+\leansrc{Suzuki4HasDerivAt.lean}          & 136  & Module~1: \texttt{HasDerivAt} for 12-factor $w_4$ \\
+\leansrc{Suzuki4Module2.lean}             & 167  & Module~2: FTC-2 bridge \\
+\leansrc{Suzuki4Module3.lean}             & 184  & Module~3: FTC-2 reduction \\
+\leansrc{Suzuki4Module4.lean}             & 175  & Module~4a: continuity of $w_4'$ \\
+\leansrc{Suzuki4DerivExplicit.lean}       & 979  & Module~4b: explicit derivative + Phase 1--3 identities \\
+\leansrc{Suzuki4StrangBlocks.lean}        & 120  & $S_4$ = 5 Strang blocks + cubic cancellation \\
+\leansrc{Suzuki4MultinomialExpand.lean}   & 784  & Multinomial formulas; h2, h3 unconditional \\
+\leansrc{Suzuki4Phase5.lean}              & 772  & Taylor reduction + Leibniz bridges + CAPSTONE \\
+\leansrc{Suzuki4OrderFive.lean}           & 440  & $O(t^5)$ abstract-form target \\
+\leansrc{Suzuki4ChildsForm.lean}          & 216  & Childs Prop pf4\_bound\_2term framework \\
+\leansrc{Suzuki4ViaBCH.lean}              & 855  & L1/L2/L3/L4 BCH-derived bounds \\
+\midrule
+\textbf{Total} & \textbf{10\,541} & \textbf{0 \texttt{sorry} axioms,
+4 BCH-interface axioms} \\
 \bottomrule
 \end{tabular}
-\caption{Source files in the formalization.}
+\caption{Source files in the formalization, grouped by track.}
 \label{tab:files}
 \end{table}
 
-The development builds against Lean~4.29.0 and \Mathlib (commit
-\texttt{06a46dae}). Build time is under 3~seconds on a standard laptop
-after \Mathlib oleans are cached (\texttt{lake exe cache get}).
+The development builds against Lean~4.29.0-rc8 and current \Mathlib.
+The companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project is imported
+as a git dependency, supplying the symmetric three-factor BCH identities
+used in the Suzuki $S_4$ track. Build time for the full project is under
+2~minutes on a standard laptop after \Mathlib oleans are cached
+(\texttt{lake exe cache get}).
 
 \subsection{Type-level setup}
 \label{sec:type-setup}
