@@ -47,15 +47,38 @@ proven 2·10⁷ (downstream `suzuki4_bchCubic_sum_bound`: 50000 → 10⁸).
 ### Track B: h4 alternative (Path A, Lean-native)
 
 As an alternative to Path B (Lean-BCH route), prove `sumQuadCorr (s4DList A B p) = 0`
-directly in `Suzuki4MultinomialExpand.lean`. Blocked on `module` tactic timeout
-for the quartic expansion (11 cons steps × 16 monomials, 8M heartbeats insufficient).
-Approaches:
-1. Manual cons-by-cons induction with BCH-like invariant (~1000 lines).
-2. Helper tactic / preprocessing to reduce `module` load.
-3. CAS-preprocessing: simplify the identity symbolically, import as pre-reduced form.
+directly in `Suzuki4MultinomialExpand.lean`. **Blocked on `module` tactic timeout
+at 20M heartbeats** (the `whnf` stage fails before `module` itself even runs —
+expression size blows up after `simp only [← mul_assoc, smul_mul_smul_mul_smul]`
+on the quartic expansion).
 
-Either Track A or B suffices; Track A is more promising because Lean-BCH is
-~50 lines from completion.
+**Attempts (2026-04-23):**
+1. Yoshida BCH identity `sumQuadCorr = 2·(H·sumTripleCorr+sumTripleCorr·H)` via
+   direct `module` — timed out at 4M heartbeats (>4 min), still timed out at
+   40M (>10 min, killed).
+2. CAS-assisted factored form `sumQuadCorr s4DList = (4p³+q³) • Q_quartic`
+   with Q explicitly computed via `scripts/compute_sumQuadCorr_factored.py`
+   (14 quartic monomials) — module timed out at 4M heartbeats and at 20M
+   heartbeats (>8 min each).
+
+CAS confirms the factored form exists with 14 quartic monomials, and the
+scalar `4p³ + (1-4p)³` matches Suzuki cubic. The identity is mathematically
+correct; the obstruction is purely tactic/engineering.
+
+**Remaining approaches:**
+1. Hand-structured proof splitting the 14-monomial goal into ~4 groups of
+   3-4 monomials, closing each with `noncomm_ring` separately. Estimate:
+   500-800 lines of careful staging.
+2. Bump `maxHeartbeats` past 100M (may take 30+ min per build, not a
+   reasonable dev experience).
+3. Build a custom Lean helper tactic that handles sumQuadCorr + s4DList
+   more efficiently than generic `module`.
+4. Abandon Route B and pursue Route A (extend Lean-BCH with 5-factor
+   palindromic quintic remainder, derive h4 as a corollary there).
+
+Either Track A or B suffices for axiom 1 closure. Given the tactic-engineering
+difficulty here, option 1 (hand-staged proof) or option 4 (BCH extension) are
+most realistic.
 
 ### Track C: Scientific extensions
 
