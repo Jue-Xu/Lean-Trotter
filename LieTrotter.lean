@@ -52,4 +52,6 @@ import LieTrotter.Suzuki4DerivExplicit
 import LieTrotter.Suzuki4Phase5
 import LieTrotter.Suzuki4MultinomialExpand
 import LieTrotter.Suzuki4StrangBlocks
+import LieTrotter.TaylorMatch
+import LieTrotter.Suzuki4BchBound
 import LieTrotter.Suzuki4ViaBCH

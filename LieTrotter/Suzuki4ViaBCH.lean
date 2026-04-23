@@ -53,6 +53,10 @@ Once Lean-BCH compiles fully, replacing the `axiom` declarations with
 import LieTrotter.Suzuki4StrangBlocks
 import LieTrotter.Suzuki4MultinomialExpand
 import LieTrotter.Suzuki4ChildsForm
+import LieTrotter.Suzuki4Module4
+import LieTrotter.Suzuki4Phase5
+import LieTrotter.Suzuki4BchBound
+import LieTrotter.TaylorMatch
 import BCH.Basic
 
 noncomputable section
@@ -284,14 +288,47 @@ This is exactly the h4 identity. Once Lean-BCH exposes the BCH expansion
 for palindromic compositions, this axiom is replaced by a theorem.
 -/
 
-/-- **[AXIOMATIZED from BCH expansion]** For Suzuki palindromic `p`, the
-  4th iterated derivative of `s4Func` at `τ = 0` equals `(A+B)^4`.
+/-- **[THEOREM (was axiom)]** For Suzuki palindromic `p`, the 4th iterated
+  derivative of `s4Func` at `τ = 0` equals `(A+B)^4`.
 
-  Derivation: BCH gives `s4Func(τ) = exp(τH + O(τ⁵))` under `IsSuzukiCubic`,
-  whose 4th derivative at 0 equals `H^4 = (A+B)^4`. -/
-axiom bch_iteratedDeriv_s4Func_order4
+  **Proof**: derived from
+  - SLICE 1: the single-step O(|τ|⁵) BCH bound
+    `exists_norm_s4Func_sub_exp_le_t5 A B p hcubic`
+    (in `LieTrotter/Suzuki4BchBound.lean`, itself an application of BCH
+    M2b + M4b + exp-Lipschitz).
+  - SLICE 2: the Taylor-match-from-norm lemma
+    `iteratedDeriv_eq_of_norm_le_pow` (in `LieTrotter/TaylorMatch.lean`).
+  - The standard identity
+    `iteratedDeriv k (fun τ => exp(τ•X)) 0 = X^k`
+    (via `iteratedDeriv_exp_smul_mul_at_zero` with `c = 1`).
+
+  Under `IsSuzukiCubic p`, BCH gives `s4Func(τ) = exp(τH) + O(τ⁵)` in a
+  neighborhood of 0. The Taylor-match lemma converts the O(τ⁵) bound
+  into equality of the first five iterated derivatives at 0. The 4th
+  iterated derivative of `exp(τH)` at 0 is `H^4 = (A+B)^4`. -/
+theorem bch_iteratedDeriv_s4Func_order4
     (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
-    iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4
+    iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4 := by
+  -- SLICE 1: single-step O(|τ|⁵) bound on s4Func - exp(τ•(A+B)).
+  obtain ⟨δ, hδ_pos, C, _hC_nn, h_bound⟩ :=
+    exists_norm_s4Func_sub_exp_le_t5 A B p hcubic
+  -- ContDiff for both sides: s4Func and τ ↦ exp(τ•(A+B)).
+  have hCD_s4 : ContDiff ℝ 4 (s4Func A B p) := contDiff_s4Func A B p
+  have h_exp_fun_eq :
+      (fun τ : ℝ => exp (τ • (A + B))) = fun τ : ℝ => exp ((1 * τ) • (A + B)) := by
+    funext τ; rw [one_mul]
+  have hCD_exp : ContDiff ℝ 4 (fun τ : ℝ => exp (τ • (A + B))) := by
+    rw [h_exp_fun_eq]
+    exact contDiff_iff_contDiffAt.mpr fun x =>
+      contDiffAt_exp_smul_mul (A + B) 1 x
+  -- SLICE 2: Taylor-match at order 4.
+  have h_match := iteratedDeriv_eq_of_norm_le_pow hCD_s4 hCD_exp hδ_pos h_bound 4 le_rfl
+  -- Standard identity: iteratedDeriv 4 (fun τ => exp(τ•V)) 0 = V^4.
+  have h_exp_iter :
+      iteratedDeriv 4 (fun τ : ℝ => exp (τ • (A + B))) 0 = (A + B) ^ 4 := by
+    rw [h_exp_fun_eq, iteratedDeriv_exp_smul_mul_at_zero, one_smul]
+  rw [h_exp_iter] at h_match
+  exact h_match
 
 /-- **w4Func order-4 vanishing from BCH** (given Suzuki):
   `iteratedDeriv 4 (w4Func A B p) 0 = 0`.

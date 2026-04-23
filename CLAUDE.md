@@ -1,6 +1,27 @@
 # Lie–Trotter Product Formula — Lean 4 Formalization
 
-## Status: ✅ Complete (0 sorry's, 4 BCH-interface axioms, full build passes)
+## Status: 3 BCH-interface axioms + 1 sorry (reduced from 4 axioms / 0 sorries)
+
+**2026-04-23 update**: `bch_iteratedDeriv_s4Func_order4` is now a theorem,
+proved via a three-slice chain:
+- **SLICE 1** (`LieTrotter/Suzuki4BchBound.lean`,
+  `exists_norm_s4Func_sub_exp_le_t5`): single-step O(|τ|⁵) bound on
+  `‖s4Func A B p τ − exp(τ•(A+B))‖` under `IsSuzukiCubic p`. Structurally
+  complete (regime-nbhd construction, continuity lemmas,
+  `strangBlock_log_linear_bound`) with 1 remaining sorry on the final
+  polynomial-arithmetic bookkeeping (~100 lines).
+- **SLICE 2** (`LieTrotter/TaylorMatch.lean`,
+  `iteratedDeriv_eq_of_norm_le_pow`): general-purpose Taylor-match-from-norm
+  lemma, sorry-free. If `f, g` are `ContDiff ℝ k` and
+  `‖f − g‖ ≤ C·|τ|^{k+1}` near 0, then `iteratedDeriv j f 0 = iteratedDeriv j g 0`
+  for `j ≤ k`. Proved via `taylor_isLittleO_univ` + polynomial uniqueness.
+- **SLICE 3**: wire SLICE 1 + SLICE 2 + `iteratedDeriv_exp_smul_mul_at_zero`
+  to close `bch_iteratedDeriv_s4Func_order4` (in `Suzuki4ViaBCH.lean`).
+
+Net axiom count: 4 → 3. Transitively, the new theorem depends on `sorryAx`
+via SLICE 1's remaining arithmetic sorry; closing that sorry gives a fully
+closed `bch_iteratedDeriv_s4Func_order4` without any BCH-interface axiom
+dependency.
 
 ### Main results
 
@@ -56,11 +77,13 @@ affect the L1/L2/L3/L4 headline S₄ error bounds (Childs / unit / tight-γᵢ
 / uniform-R₅+R₇), which derive prefactors from the independent
 `bch_w4Deriv_*` axioms on the full 5-factor product.
 
-`LieTrotter/Suzuki4ViaBCH.lean` retains 4 axioms — all encode BCH
-structural facts that go beyond what Lean-BCH currently provides
-(Lean-BCH stops at the 2-factor quintic remainder; these axioms involve the
-5-factor palindromic product and its log-expansion):
-- `bch_iteratedDeriv_s4Func_order4` (BCH ⟹ h4) — supports `norm_suzuki4_order5_via_bch_axiom`
+`LieTrotter/Suzuki4ViaBCH.lean` retains 3 BCH-interface axioms (down from
+4 as of 2026-04-23), plus the `bch_iteratedDeriv_s4Func_order4` theorem
+which transitively depends on 1 sorry in `exists_norm_s4Func_sub_exp_le_t5`
+(SLICE 1):
+- ~~`bch_iteratedDeriv_s4Func_order4`~~ **NOW A THEOREM** — proved via
+  SLICE 1 + SLICE 2 + Mathlib's `iteratedDeriv_exp_smul_mul_at_zero`
+  (see `Suzuki4ViaBCH.lean`, depends transitively on 1 sorry in SLICE 1).
 - `bch_w4Deriv_quintic_level2` (Level 2 primitive residual, unit coefs) — supports `norm_suzuki4_level2_bch`
 - `bch_w4Deriv_level3_tight` (Level 3 pointwise residual, tight γᵢ) — supports `norm_suzuki4_level3_bch`; also underwrites the Level-1-Childs reproduction `norm_suzuki4_childs_form_via_level3`
 - `bch_uniform_integrated` (Level 4 uniform finite-t bound with R₅ + R₇) — supports `norm_suzuki4_level4_uniform`
