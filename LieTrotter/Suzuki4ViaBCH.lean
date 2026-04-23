@@ -53,6 +53,7 @@ Once Lean-BCH compiles fully, replacing the `axiom` declarations with
 import LieTrotter.Suzuki4StrangBlocks
 import LieTrotter.Suzuki4MultinomialExpand
 import LieTrotter.Suzuki4ChildsForm
+import BCH.Basic
 
 noncomputable section
 
@@ -61,39 +62,59 @@ open NormedSpace
 variable {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra ℝ 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
 
 /-!
-## Axiomatized Lean-BCH interface
+## Lean-BCH interface (imported from `BCH.Basic`)
 
-These four declarations mirror Lean-BCH's (`BCH/Basic.lean`) symmetric BCH
-cubic coefficient and its norm/scaling properties. They are treated as
-axioms here so Lean-Trotter can build independently; they will be replaced
-by imports once Lean-BCH compiles fully.
+The symmetric BCH cubic coefficient, its cubic norm bound, the `exp`
+composition formula, and the quintic scaling bound are all imported from
+Lean-BCH (specialized to `𝕂 := ℝ`). Previously these were axiomatized in
+this file; they are now theorems derived from `BCH.symmetric_bch_cubic ℝ`,
+`BCH.norm_symmetric_bch_cubic_le`, `BCH.exp_symmetric_bch`, and
+`BCH.norm_symmetric_bch_cubic_sub_smul_le`.
 -/
 
-/-- **[AXIOMATIZED from Lean-BCH]** The symmetric BCH cubic coefficient:
+/-- **[IMPORTED from Lean-BCH]** Alias for `BCH.symmetric_bch_cubic ℝ`:
   the degree-3 part of `bch(bch(a/2,b), a/2)`, defined so that
   `bch(bch(a/2,b), a/2) = (a+b) + symmetric_bch_cubic a b + O(‖a‖+‖b‖)⁵`. -/
-axiom symmetric_bch_cubic : 𝔸 → 𝔸 → 𝔸
+def symmetric_bch_cubic (a b : 𝔸) : 𝔸 :=
+  BCH.symmetric_bch_cubic ℝ a b
 
-/-- **[AXIOMATIZED from Lean-BCH]** `exp(a/2)·exp(b)·exp(a/2) = exp((a+b) + E₃(a,b))`
-  for `‖a‖+‖b‖ < 1/4`. Combines `exp_symmetric_bch` with the
-  `symmetric_bch_cubic` definition. -/
-axiom exp_symmetric_bch_cubic (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+/-- **[IMPORTED from Lean-BCH]** `exp(a/2)·exp(b)·exp(a/2) = exp((a+b) + E₃(a,b))`
+  for `‖a‖+‖b‖ < 1/4`. Combines `BCH.exp_symmetric_bch` with the
+  definition of `symmetric_bch_cubic`. -/
+theorem exp_symmetric_bch_cubic (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     exp ((1 / 2 : ℝ) • a) * exp b * exp ((1 / 2 : ℝ) • a) =
-    exp ((a + b) + symmetric_bch_cubic a b)
+    exp ((a + b) + symmetric_bch_cubic a b) := by
+  unfold symmetric_bch_cubic BCH.symmetric_bch_cubic
+  have hhalf : ((1 / 2 : ℝ)) = ((2 : ℝ)⁻¹) := by norm_num
+  rw [show ((a + b) + (BCH.bch (𝕂 := ℝ) (BCH.bch (𝕂 := ℝ) ((2 : ℝ)⁻¹ • a) b)
+              ((2 : ℝ)⁻¹ • a) - (a + b))) =
+        BCH.bch (𝕂 := ℝ) (BCH.bch (𝕂 := ℝ) ((2 : ℝ)⁻¹ • a) b) ((2 : ℝ)⁻¹ • a)
+        from by abel]
+  rw [hhalf]
+  exact (BCH.exp_symmetric_bch (𝕂 := ℝ) a b hab).symm
 
-/-- **[AXIOMATIZED from Lean-BCH]** Cubic norm bound:
+/-- **[IMPORTED from Lean-BCH]** Cubic norm bound:
   `‖E₃(a,b)‖ ≤ 300·(‖a‖+‖b‖)³`. -/
-axiom norm_symmetric_bch_cubic_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
-    ‖symmetric_bch_cubic a b‖ ≤ 300 * (‖a‖ + ‖b‖) ^ 3
+theorem norm_symmetric_bch_cubic_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖symmetric_bch_cubic a b‖ ≤ 300 * (‖a‖ + ‖b‖) ^ 3 :=
+  BCH.norm_symmetric_bch_cubic_le (𝕂 := ℝ) a b hab
 
-/-- **[AXIOMATIZED from Lean-BCH]** Scaling bound:
-  `‖E₃(c·a, c·b) - c³·E₃(a,b)‖ ≤ 10⁴·|c|³·(‖a‖+‖b‖)⁵` for `|c|≤1`.
+/-- **[IMPORTED from Lean-BCH]** Scaling bound:
+  `‖E₃(c·a, c·b) - c³·E₃(a,b)‖ ≤ 2·10⁷·|c|³·(‖a‖+‖b‖)⁵` for `|c|≤1`.
   Encodes the degree-3 homogeneity of `symmetric_bch_cubic` modulo a
-  quintic remainder. Key to Suzuki's order-4 cancellation. -/
-axiom norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
+  quintic remainder. Key to Suzuki's order-4 cancellation.
+
+  The constant `2·10⁷` comes from Lean-BCH's rigorous triangle-inequality
+  proof; the previous axiomatized constant `10⁴` was speculative and
+  tighter than what the current Lean-BCH proof delivers. -/
+theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
     (hc : |c| ≤ 1) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     ‖symmetric_bch_cubic (c • a) (c • b) - c ^ 3 • symmetric_bch_cubic a b‖ ≤
-      10000 * |c| ^ 3 * (‖a‖ + ‖b‖) ^ 5
+      20000000 * |c| ^ 3 * (‖a‖ + ‖b‖) ^ 5 := by
+  have h := BCH.norm_symmetric_bch_cubic_sub_smul_le (𝕂 := ℝ) a b c hc hab
+  -- In NormedAlgebra ℝ 𝔸, (↑c : ℝ) = c, so the coerced smul equals ordinary smul.
+  -- ℝ^3 smul of ℝ-valued quantity is the same numeric expression.
+  simpa [symmetric_bch_cubic] using h
 
 /-!
 ## Strang block via BCH
@@ -131,10 +152,11 @@ order-4 convergence.
   ```
   ‖∑ᵢ E₃(cᵢ·t·A, cᵢ·t·B)‖
     ≤ ‖(∑ cᵢ³)·E₃(tA, tB)‖ + ∑‖E₃(cᵢ·tA, cᵢ·tB) - cᵢ³·E₃(tA, tB)‖
-    ≤ 0 + 5·10⁴·max|cᵢ|³·(t·(‖A‖+‖B‖))⁵
+    ≤ 0 + 5·2·10⁷·max|cᵢ|³·(t·(‖A‖+‖B‖))⁵
   ```
   The `(∑ cᵢ³)·E₃` term vanishes by `suzuki4_coeff_cube_sum_zero` (Task 2);
-  the residual is bounded by `norm_symmetric_bch_cubic_sub_smul_le` (axiom). -/
+  the per-block residual is bounded by `norm_symmetric_bch_cubic_sub_smul_le`
+  (derived from `BCH.norm_symmetric_bch_cubic_sub_smul_le`, constant 2·10⁷). -/
 theorem suzuki4_bchCubic_sum_bound (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p)
     (hp : |p| ≤ 1) (hq : |1 - 4 * p| ≤ 1) (t : ℝ) (ht_nn : 0 ≤ t)
     (ht : t * (‖A‖ + ‖B‖) < 1 / 4) :
@@ -143,22 +165,22 @@ theorem suzuki4_bchCubic_sum_bound (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubi
       symmetric_bch_cubic (((1 - 4 * p) : ℝ) • (t • A)) (((1 - 4 * p) : ℝ) • (t • B)) +
       symmetric_bch_cubic ((p : ℝ) • (t • A)) ((p : ℝ) • (t • B)) +
       symmetric_bch_cubic ((p : ℝ) • (t • A)) ((p : ℝ) • (t • B))‖ ≤
-      50000 * (t * (‖A‖ + ‖B‖)) ^ 5 := by
+      100000000 * (t * (‖A‖ + ‖B‖)) ^ 5 := by
   -- Set up norms
   set s := ‖t • A‖ + ‖t • B‖ with hs_def
   have hAB_nn : 0 ≤ ‖A‖ + ‖B‖ := by positivity
   have hs_eq : s = t * (‖A‖ + ‖B‖) := by
     rw [hs_def, norm_smul, norm_smul, Real.norm_eq_abs, abs_of_nonneg ht_nn]; ring
   have hs_lt : s < 1 / 4 := by rw [hs_eq]; exact ht
-  -- Residuals and their bounds from the BCH axiom
+  -- Residuals and their bounds from the BCH theorem
   set E₃ab : 𝔸 := symmetric_bch_cubic (t • A) (t • B) with hE₃ab_def
   set Rp : 𝔸 := symmetric_bch_cubic (p • (t • A)) (p • (t • B)) - p ^ 3 • E₃ab with hRp_def
   set Rq : 𝔸 := symmetric_bch_cubic ((1 - 4 * p) • (t • A)) ((1 - 4 * p) • (t • B)) -
                 (1 - 4 * p) ^ 3 • E₃ab with hRq_def
-  -- Per-block residuals: ‖R_c‖ ≤ 10⁴·|c|³·s⁵
-  have hRp_bd : ‖Rp‖ ≤ 10000 * |p| ^ 3 * s ^ 5 := by
+  -- Per-block residuals: ‖R_c‖ ≤ 2·10⁷·|c|³·s⁵
+  have hRp_bd : ‖Rp‖ ≤ 20000000 * |p| ^ 3 * s ^ 5 := by
     rw [hRp_def]; exact norm_symmetric_bch_cubic_sub_smul_le (t • A) (t • B) p hp hs_lt
-  have hRq_bd : ‖Rq‖ ≤ 10000 * |1 - 4 * p| ^ 3 * s ^ 5 := by
+  have hRq_bd : ‖Rq‖ ≤ 20000000 * |1 - 4 * p| ^ 3 * s ^ 5 := by
     rw [hRq_def]; exact norm_symmetric_bch_cubic_sub_smul_le (t • A) (t • B) (1 - 4 * p) hq hs_lt
   -- Key abel identity: each E₃(c•a, c•b) = c³ • E₃ab + R_c, so the sum rearranges
   -- into (Σcᵢ³) • E₃ab + (sum of residuals). The Σcᵢ³=0 part vanishes by Suzuki.
@@ -174,7 +196,7 @@ theorem suzuki4_bchCubic_sum_bound (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubi
     rw [hRp_def, hRq_def]
     simp only [add_smul]; abel
   rw [hkey, hcube_sum, zero_smul, zero_add]
-  -- Each |cᵢ|³ ≤ 1, so each residual ≤ 10⁴·s⁵
+  -- Each |cᵢ|³ ≤ 1, so each residual ≤ 2·10⁷·s⁵
   have hp3_le : |p| ^ 3 ≤ 1 := by
     calc |p| ^ 3 ≤ 1 ^ 3 := pow_le_pow_left₀ (abs_nonneg p) hp 3
       _ = 1 := one_pow 3
@@ -184,15 +206,15 @@ theorem suzuki4_bchCubic_sum_bound (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubi
       _ = 1 := one_pow 3
   have hs_nn : 0 ≤ s := by rw [hs_eq]; positivity
   have hs5_nn : 0 ≤ s ^ 5 := pow_nonneg hs_nn 5
-  have hRp_le : ‖Rp‖ ≤ 10000 * s ^ 5 := by
-    calc ‖Rp‖ ≤ 10000 * |p| ^ 3 * s ^ 5 := hRp_bd
-      _ ≤ 10000 * 1 * s ^ 5 := by gcongr
-      _ = 10000 * s ^ 5 := by ring
-  have hRq_le : ‖Rq‖ ≤ 10000 * s ^ 5 := by
-    calc ‖Rq‖ ≤ 10000 * |1 - 4 * p| ^ 3 * s ^ 5 := hRq_bd
-      _ ≤ 10000 * 1 * s ^ 5 := by gcongr
-      _ = 10000 * s ^ 5 := by ring
-  -- Triangle inequality: ‖∑ Rᵢ‖ ≤ ∑ ‖Rᵢ‖ ≤ 5·10⁴·s⁵
+  have hRp_le : ‖Rp‖ ≤ 20000000 * s ^ 5 := by
+    calc ‖Rp‖ ≤ 20000000 * |p| ^ 3 * s ^ 5 := hRp_bd
+      _ ≤ 20000000 * 1 * s ^ 5 := by gcongr
+      _ = 20000000 * s ^ 5 := by ring
+  have hRq_le : ‖Rq‖ ≤ 20000000 * s ^ 5 := by
+    calc ‖Rq‖ ≤ 20000000 * |1 - 4 * p| ^ 3 * s ^ 5 := hRq_bd
+      _ ≤ 20000000 * 1 * s ^ 5 := by gcongr
+      _ = 20000000 * s ^ 5 := by ring
+  -- Triangle inequality: ‖∑ Rᵢ‖ ≤ ∑ ‖Rᵢ‖ ≤ 5·2·10⁷·s⁵ = 10⁸·s⁵
   calc ‖Rp + Rp + Rq + Rp + Rp‖
       ≤ ‖Rp‖ + ‖Rp‖ + ‖Rq‖ + ‖Rp‖ + ‖Rp‖ := by
         calc _ ≤ ‖Rp + Rp + Rq + Rp‖ + ‖Rp‖ := norm_add_le _ _
@@ -202,10 +224,10 @@ theorem suzuki4_bchCubic_sum_bound (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubi
               gcongr; exact norm_add_le _ _
           _ ≤ ‖Rp‖ + ‖Rp‖ + ‖Rq‖ + ‖Rp‖ + ‖Rp‖ := by
               gcongr; exact norm_add_le _ _
-    _ ≤ 10000 * s ^ 5 + 10000 * s ^ 5 + 10000 * s ^ 5 +
-        10000 * s ^ 5 + 10000 * s ^ 5 := by linarith
-    _ = 50000 * s ^ 5 := by ring
-    _ = 50000 * (t * (‖A‖ + ‖B‖)) ^ 5 := by rw [hs_eq]
+    _ ≤ 20000000 * s ^ 5 + 20000000 * s ^ 5 + 20000000 * s ^ 5 +
+        20000000 * s ^ 5 + 20000000 * s ^ 5 := by linarith
+    _ = 100000000 * s ^ 5 := by ring
+    _ = 100000000 * (t * (‖A‖ + ‖B‖)) ^ 5 := by rw [hs_eq]
 
 /-!
 ## Roadmap: full Path B integration theorem
