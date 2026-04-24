@@ -356,46 +356,17 @@ lemma exists_regime_nhds (A B : 𝔸) (p : ℝ) :
 
 /-! ## The main theorem (Form B)
 
-Uses Lean-BCH's M6 single-step bound at `n = 1, t := τ` combined with an explicit
-polynomial bookkeeping to extract the `|τ|^5` factor.
+Uses Lean-BCH's `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` (single-step bound at
+`n = 1`) combined with the new opaque-RHS payoff lemma
+`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (Lean-BCH commit `4ea6357`),
+which encapsulates the polynomial bookkeeping inside the BCH library.
 
-**Current status (2026-04-23):** structurally complete — the nbhd-of-0 regime
-construction (`exists_regime_nhds`) and the BCH M6/M4b chain are wired.
-The remaining closure step is an arithmetic exercise: bounding each of the
-four terms of the BCH M4b RHS by `K_i · |τ|^5` for `|τ| ≤ δ ≤ 1`, via the
-`strangBlock_log_linear_bound` helper plus explicit polynomial manipulation.
-Each term has `|τ|`-degree ≥ 5 by structure (leading M4b terms are `|τ|^5`;
-cross-terms are `‖sb‖·‖·τ•V‖·(|τ|^3 + |τ|^5)` ≈ `|τ|^5 + |τ|^7` using the
-linear bound on ‖sb‖). For `|τ| ≤ 1`, `|τ|^k ≤ |τ|^5` for `k ≥ 5`, so the
-whole expression is dominated by `K · |τ|^5` for an explicit (large) `K`.
-
-The detailed polynomial bounds are left as a sorry pending the 100-line
-explicit bookkeeping. Downstream, this yields
-`bch_iteratedDeriv_s4Func_order4` as a theorem (see `Suzuki4ViaBCH.lean`).
-
-The strategy:
-1. Get a nbhd of 0 where the 6 regime conditions hold.
-2. For `|τ|` in this nbhd, bound each `strangBlock_log` by a linear function of `|τ|`
-   (using `BCH.norm_strangBlock_log_le` with the regime implying `η ≤ 1/4`).
-3. Bound the entire M4b RHS by `K · |τ|^5` using the polynomial structure.
+**Status (2026-04-24):** SLICE 1 is now sorry-free on the Lean-Trotter side.
+The transitive sorry has migrated to Lean-BCH's `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`
+(an arithmetic-bookkeeping target on a single explicit polynomial).
 -/
 
-/-- For `0 ≤ η ≤ 1/4`, `η + η³ + 10⁷·η⁵ ≤ 40000 · η`. -/
-private lemma strangBlock_log_linear_bound {η : ℝ} (hη : 0 ≤ η) (hη_le : η ≤ 1/4) :
-    η + η ^ 3 + 10000000 * η ^ 5 ≤ 40000 * η := by
-  have hη4 : η ^ 4 ≤ (1/4) ^ 4 := pow_le_pow_left₀ hη hη_le 4
-  have hη4' : (1/4 : ℝ) ^ 4 = 1/256 := by norm_num
-  have hη2 : η ^ 2 ≤ (1/4) ^ 2 := pow_le_pow_left₀ hη hη_le 2
-  have hη2' : (1/4 : ℝ) ^ 2 = 1/16 := by norm_num
-  have h_cube : η ^ 3 = η * η ^ 2 := by ring
-  have h_quint : η ^ 5 = η * η ^ 4 := by ring
-  rw [h_cube, h_quint]
-  have h1 : η * η ^ 2 ≤ η * (1/16 : ℝ) := by
-    rw [← hη2']; exact mul_le_mul_of_nonneg_left hη2 hη
-  have h2 : 10000000 * (η * η ^ 4) ≤ 10000000 * (η * (1/256 : ℝ)) := by
-    rw [← hη4']
-    exact mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left hη4 hη) (by norm_num)
-  linarith
+/-! ### Single-step BCH-derived O(|τ|⁵) bound -/
 
 /-- **Form B**: single-step BCH-derived O(|τ|⁵) bound for the Suzuki 5-block product.
 
@@ -403,67 +374,122 @@ Under `IsSuzukiCubic p`, there exists `δ > 0` and `C ≥ 0` such that for all `
 
   ‖s4Func A B p τ - exp(τ•(A+B))‖ ≤ C · |τ|⁵.
 
-The proof applies Lean-BCH's M6 single-step bound (`norm_s4Func_sub_exp_le_of_IsSuzukiCubic`)
-with `n = 1, t := τ`. Each term in the M4b polynomial has order ≥ 5 in `|τ|`; for
-`|τ| ≤ 1`, `|τ|^k ≤ |τ|^5` for `k ≥ 5`, so the whole expression is dominated by
-`K · |τ|^5` for an explicit (large) constant `K`. -/
+The proof composes:
+- `BCH.norm_s4Func_sub_exp_le_of_IsSuzukiCubic` (single-step bound at `n=1`),
+- `BCH.suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (the new opaque-RHS payoff
+  lemma in Lean-BCH commit `4ea6357`).
+
+The polynomial bookkeeping that previously lived here has been pushed inside
+the BCH library, where it is bounded once and for all on the opaque def
+`suzuki5_bch_M4b_RHS`. -/
 theorem exists_norm_s4Func_sub_exp_le_t5
     (A B : 𝔸) (p : ℝ) (hSuzuki : BCH.IsSuzukiCubic p) :
     ∃ δ > 0, ∃ C ≥ 0, ∀ τ : ℝ, |τ| < δ →
       ‖s4Func A B p τ - exp (τ • (A + B))‖ ≤ C * |τ|^5 := by
-  -- Step 1: Extract δ₀ such that |τ| < δ₀ implies the regime.
+  -- Step 1: the BCH M4b RHS is bounded by `K · |τ|^5` near 0.
+  obtain ⟨δ_M, hδ_M_pos, K, hK_nn, h_M4b_le⟩ :=
+    BCH.suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic
+      (𝕂 := ℝ) A B p hSuzuki
+  -- Step 2: the 6 regime hypotheses required by `norm_s4Func_sub_exp_le_of_IsSuzukiCubic`
+  -- hold on a nbhd of 0.
   have hregime := exists_regime_nhds A B p
   rw [Metric.eventually_nhds_iff] at hregime
-  obtain ⟨δ₀, hδ₀_pos, hregime⟩ := hregime
-  -- Step 2: For the compactness bound on exp factor, we also want |τ| ≤ 1.
-  set δ := min δ₀ 1 with hδ_def
-  have hδ_pos : 0 < δ := lt_min hδ₀_pos (by norm_num : (0 : ℝ) < 1)
-  have hδ_le_δ₀ : δ ≤ δ₀ := min_le_left _ _
-  have hδ_le_one : δ ≤ 1 := min_le_right _ _
-  -- Step 3: Use BCH.norm_s4Func_sub_exp_le_of_IsSuzukiCubic with n=1, t:=τ, which gives
-  -- ‖s4Func A B p (τ/1) 1 - exp(τ•(A+B))‖ ≤ F(τ)·exp(...).
-  -- Recall s4Func in Trotter = suzuki5Product (rfl), and BCH.s4Func ℝ A B p τ 1 = suzuki5Product^1.
-  -- We choose a huge constant C that dominates the full M6 RHS times |τ|^{-5} for |τ| < δ.
-  -- We will take the M6 RHS as a continuous function of τ (call it F(τ)), apply our compactness
-  -- lemma on [-δ, δ], then use |τ|^{-5} ≤ 1 on |τ| ≤ δ is wrong; instead we shift to a compact
-  -- interval [−δ/2, δ] where |τ|^5 is bounded below.
-  --
-  -- HOWEVER: simplest rigorous path is to use the fact that for |τ| ≤ 1, |τ|^k ≤ |τ|^5 for k ≥ 5.
-  -- We define an explicit polynomial upper bound P(|τ|) ≤ C₀·|τ|^5 by:
-  --    • Replace each ‖strangBlock_log A B c τ‖ by 40000·|c|·|τ|·s using `strangBlock_log_linear_bound`.
-  --    • Replace each ‖(c·τ)•X‖ by |c|·|τ|·‖X‖ using `norm_smul`.
-  --    • Each term in M4b RHS is a product/power of these, of total |τ|-degree ≥ 5.
-  --    • For |τ| ≤ 1, each such term is ≤ (const) · |τ|^5.
-  -- Aggregate constants into C.
-  --
-  -- We simplify the work by first aggregating all τ-independent constants.
+  obtain ⟨δ_R, hδ_R_pos, hregime⟩ := hregime
+  -- Step 3: take δ := min δ_M δ_R 1.
+  set δ := min δ_M (min δ_R 1) with hδ_def
+  have hδ_pos : 0 < δ := lt_min hδ_M_pos (lt_min hδ_R_pos (by norm_num : (0:ℝ) < 1))
+  have hδ_le_M : δ ≤ δ_M := min_le_left _ _
+  have hδ_le_R : δ ≤ δ_R := le_trans (min_le_right _ _) (min_le_left _ _)
+  have hδ_le_one : δ ≤ 1 := le_trans (min_le_right _ _) (min_le_right _ _)
+  -- Step 4: define C := K · exp(s + K), where s := ‖A‖ + ‖B‖.
   set s := ‖A‖ + ‖B‖ with hs_def
-  have hs_nn : 0 ≤ s := by simp only [hs_def]; positivity
-  -- Key constant bounds:
-  -- For |τ| ≤ δ, the regime from hregime.
-  -- Absolute constant for ‖strangBlock_log‖ ≤ (40000·|c|·s)·|τ| under regime.
-  -- M4b has 4 main terms; we bound each by K_i · |τ|^5.
-  --
-  -- Rather than computing each K_i explicitly, we define the M6 RHS (from the M6-Suzuki theorem)
-  -- as a function F : ℝ → ℝ of τ. It is continuous. F(0) = 0 by direct computation. The quotient
-  -- F(τ)/|τ|^5 has a continuous extension at 0 (equal to some 5th-derivative value).
-  -- Take its sup on [−δ, δ]; call it C₀. Then F(τ) ≤ C₀·|τ|^5.
-  --
-  -- We bypass the nontrivial continuity-at-0 by noting: define
-  --    F_upper(τ) := (huge continuous function of τ) designed to dominate F and vanish to 5th order;
-  --    structure it so the sup of F_upper/|τ|^5 is a constant by construction.
-  --
-  -- Given time constraints, we use a direct workaround:
-  -- Apply M6 theorem, get `‖s4Func - exp‖ ≤ F(τ)`. F is continuous in τ.
-  -- Define G(τ) := F(τ) for τ ≠ 0, 0 for τ = 0. Not continuous.
-  -- Instead use: F(τ) ≤ F(τ) + |τ|^5 · (massive placeholder) for all τ ∈ [-δ, δ], and we just need
-  -- F(τ)/|τ|^5 bounded on (0, δ].
-  --
-  -- For |τ| in (δ/2, δ]: F(τ) is ≤ (sup F on [-δ, δ]) =: M. So F(τ)/|τ|^5 ≤ M / (δ/2)^5.
-  -- For |τ| in (0, δ/2]: use polynomial structure.
-  --
-  -- Given time constraints, we leave the polynomial bookkeeping as sorry but establish the
-  -- ultimate existence via a non-constructive compactness argument.
-  sorry
+  have hs_nn : 0 ≤ s := by show (0:ℝ) ≤ ‖A‖ + ‖B‖; positivity
+  set C := K * Real.exp (s + K) with hC_def
+  have hExp_pos : 0 < Real.exp (s + K) := Real.exp_pos _
+  have hC_nn : 0 ≤ C := mul_nonneg hK_nn hExp_pos.le
+  refine ⟨δ, hδ_pos, C, hC_nn, ?_⟩
+  intro τ hτ_lt
+  have habsτ_nn : 0 ≤ |τ| := abs_nonneg _
+  have hτ_le_one : |τ| ≤ 1 := le_trans hτ_lt.le hδ_le_one
+  have hτ_lt_M : |τ| < δ_M := lt_of_lt_of_le hτ_lt hδ_le_M
+  have hτ_lt_R : |τ| < δ_R := lt_of_lt_of_le hτ_lt hδ_le_R
+  -- Step 5: extract the regime hypotheses at this τ.
+  have hτ_dist : dist τ 0 < δ_R := by rw [Real.dist_eq]; simpa using hτ_lt_R
+  obtain ⟨h_R, h_pτ, h_1m4pτ, h_regsb, h_Zbch, h_nested⟩ := hregime hτ_dist
+  -- Step 6: the M4b RHS is ≤ K · |τ|^5.
+  have h_τnorm : ‖(τ : ℝ)‖ = |τ| := Real.norm_eq_abs τ
+  have h_M4b_τ : BCH.suzuki5_bch_M4b_RHS ℝ A B p τ ≤ K * |τ|^5 := by
+    have h := h_M4b_le τ (by rw [h_τnorm]; exact hτ_lt_M)
+    rw [h_τnorm] at h
+    exact h
+  -- Step 7: apply M6 at n=1, t=τ.
+  have h_1_ne : (1 : ℕ) ≠ 0 := one_ne_zero
+  have h_τdiv : (τ / (1 : ℕ) : ℝ) = τ := by simp
+  have hR_at_τ : BCH.suzuki5ArgNormBound (𝕂 := ℝ) A B p (τ / (1 : ℕ)) < Real.log 2 := by
+    rw [h_τdiv]; exact h_R
+  have hp_at_τ : ‖(p * (τ / (1 : ℕ))) • A‖ + ‖(p * (τ / (1 : ℕ))) • B‖ < 1 / 4 := by
+    rw [h_τdiv]; exact h_pτ
+  have h1m4p_at_τ : ‖((1 - 4 * p) * (τ / (1 : ℕ))) • A‖ +
+      ‖((1 - 4 * p) * (τ / (1 : ℕ))) • B‖ < 1 / 4 := by
+    rw [h_τdiv]; exact h_1m4pτ
+  have hreg_at_τ : ‖(4 : ℝ) • BCH.strangBlock_log ℝ A B p (τ / (1 : ℕ))‖ +
+      ‖BCH.strangBlock_log ℝ A B (1 - 4 * p) (τ / (1 : ℕ))‖ < 1 / 4 := by
+    rw [h_τdiv]; exact h_regsb
+  have hZ1_at_τ : ‖BCH.suzuki5_bch ℝ A B p (τ / (1 : ℕ))‖ < Real.log 2 := by
+    rw [h_τdiv]; exact h_Zbch
+  have hZ2_at_τ : ‖BCH.bch (𝕂 := ℝ)
+      (BCH.bch (𝕂 := ℝ)
+        ((2 : ℝ)⁻¹ • ((4 : ℝ) • BCH.strangBlock_log ℝ A B p (τ / (1 : ℕ))))
+        (BCH.strangBlock_log ℝ A B (1 - 4 * p) (τ / (1 : ℕ))))
+      ((2 : ℝ)⁻¹ • ((4 : ℝ) • BCH.strangBlock_log ℝ A B p (τ / (1 : ℕ))))‖ < Real.log 2 := by
+    rw [h_τdiv]; exact h_nested
+  have hM6 := BCH.norm_s4Func_sub_exp_le_of_IsSuzukiCubic (𝕂 := ℝ) A B p τ 1 h_1_ne
+    hSuzuki hR_at_τ hp_at_τ h1m4p_at_τ hreg_at_τ hZ1_at_τ hZ2_at_τ
+  -- Rewrite BCH.s4Func ℝ A B p (τ/1) 1 = s4Func A B p τ.
+  have h_s4Func_eq : BCH.s4Func ℝ A B p (τ / (1 : ℕ)) 1 = s4Func A B p τ := by
+    unfold BCH.s4Func
+    rw [h_τdiv, pow_one]
+    exact (s4Func_eq_suzuki5Product A B p τ).symm
+  rw [h_s4Func_eq] at hM6
+  -- Step 8: collapse `(1 : ℕ) : ℝ` factor and `τ/↑1`. After these simplifications,
+  -- hM6 takes the form `‖...‖ ≤ R · exp(‖τ•V‖ + R)` with `R := suzuki5_bch_M4b_RHS`.
+  simp only [Nat.cast_one, one_mul, div_one] at hM6
+  -- Now hM6 : ‖s4Func A B p τ - exp (τ • (A + B))‖ ≤
+  --   suzuki5_bch_M4b_RHS ℝ A B p τ * exp (‖τ • (A+B)‖ + suzuki5_bch_M4b_RHS ℝ A B p τ).
+  set R := BCH.suzuki5_bch_M4b_RHS ℝ A B p τ with hR_def
+  -- R ≥ 0 (it's a sum of norm-pow terms; we derive nonnegativity from the bound).
+  have hR_nn : 0 ≤ R := by
+    have hτ5_nn : 0 ≤ |τ|^5 := by positivity
+    have : 0 ≤ K * |τ|^5 := mul_nonneg hK_nn hτ5_nn
+    -- The M6 LHS is a norm ≥ 0; split the product to get R ≥ 0.
+    -- Actually simpler: derive R ≥ 0 directly from the M4b bound chain — we use the
+    -- fact that the M4b RHS bound `‖suzuki5_bch - τ•V‖ ≤ R` forces `R ≥ 0`.
+    have h_M4b_bound := BCH.norm_suzuki5_bch_sub_smul_le_of_IsSuzukiCubic
+      (𝕂 := ℝ) A B p τ hSuzuki h_R h_pτ h_1m4pτ h_regsb h_Zbch h_nested
+    exact le_trans (norm_nonneg _) h_M4b_bound
+  have hτ5_nn : 0 ≤ |τ|^5 := by positivity
+  have hτ5_le_one : |τ|^5 ≤ 1 := by
+    calc |τ|^5 ≤ 1^5 := pow_le_pow_left₀ habsτ_nn hτ_le_one 5
+      _ = 1 := by norm_num
+  have hτV_norm : ‖τ • (A + B)‖ ≤ s := by
+    have h1 : ‖τ • (A + B)‖ ≤ ‖(τ : ℝ)‖ * ‖A + B‖ := norm_smul_le _ _
+    rw [h_τnorm] at h1
+    have h_AB : ‖A + B‖ ≤ s := norm_add_le _ _
+    have : |τ| * ‖A + B‖ ≤ 1 * s :=
+      mul_le_mul hτ_le_one h_AB (norm_nonneg _) (by norm_num)
+    linarith
+  have hR_le_K : R ≤ K := by
+    calc R ≤ K * |τ|^5 := h_M4b_τ
+      _ ≤ K * 1 := mul_le_mul_of_nonneg_left hτ5_le_one hK_nn
+      _ = K := by ring
+  have hexp_le : Real.exp (‖τ • (A + B)‖ + R) ≤ Real.exp (s + K) :=
+    Real.exp_le_exp.mpr (by linarith)
+  have hexp_pos : 0 < Real.exp (‖τ • (A + B)‖ + R) := Real.exp_pos _
+  calc ‖s4Func A B p τ - exp (τ • (A + B))‖
+      ≤ R * Real.exp (‖τ • (A + B)‖ + R) := hM6
+    _ ≤ (K * |τ|^5) * Real.exp (s + K) := by
+        apply mul_le_mul h_M4b_τ hexp_le hexp_pos.le
+        exact mul_nonneg hK_nn hτ5_nn
+    _ = C * |τ|^5 := by rw [hC_def]; ring
 
 end

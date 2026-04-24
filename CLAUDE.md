@@ -1,15 +1,24 @@
 # Lie–Trotter Product Formula — Lean 4 Formalization
 
-## Status: 3 BCH-interface axioms + 1 sorry (reduced from 4 axioms / 0 sorries)
+## Status: 3 BCH-interface axioms + 0 sorries on Lean-Trotter side
+
+**2026-04-24 update**: SLICE 1 arithmetic sorry retired from Lean-Trotter.
+Lean-BCH was refactored (commit `4ea6357`) to introduce an opaque def
+`suzuki5_bch_M4b_RHS` plus a payoff corollary
+`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`. Using the new API, SLICE 1
+becomes a short composition (no kernel-reduction timeouts) with no arithmetic
+bookkeeping on the Lean-Trotter side. Lean-Trotter is now sorry-free;
+the only remaining `sorryAx` in the dependency graph lives inside Lean-BCH's
+`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (an arithmetic bound on the
+opaque def, tractable in isolation thanks to opacity).
 
 **2026-04-23 update**: `bch_iteratedDeriv_s4Func_order4` is now a theorem,
 proved via a three-slice chain:
 - **SLICE 1** (`LieTrotter/Suzuki4BchBound.lean`,
   `exists_norm_s4Func_sub_exp_le_t5`): single-step O(|τ|⁵) bound on
-  `‖s4Func A B p τ − exp(τ•(A+B))‖` under `IsSuzukiCubic p`. Structurally
-  complete (regime-nbhd construction, continuity lemmas,
-  `strangBlock_log_linear_bound`) with 1 remaining sorry on the final
-  polynomial-arithmetic bookkeeping (~100 lines).
+  `‖s4Func A B p τ − exp(τ•(A+B))‖` under `IsSuzukiCubic p`. Sorry-free
+  (2026-04-24); composes `BCH.norm_s4Func_sub_exp_le_of_IsSuzukiCubic` with
+  `BCH.suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`.
 - **SLICE 2** (`LieTrotter/TaylorMatch.lean`,
   `iteratedDeriv_eq_of_norm_le_pow`): general-purpose Taylor-match-from-norm
   lemma, sorry-free. If `f, g` are `ContDiff ℝ k` and
@@ -18,10 +27,11 @@ proved via a three-slice chain:
 - **SLICE 3**: wire SLICE 1 + SLICE 2 + `iteratedDeriv_exp_smul_mul_at_zero`
   to close `bch_iteratedDeriv_s4Func_order4` (in `Suzuki4ViaBCH.lean`).
 
-Net axiom count: 4 → 3. Transitively, the new theorem depends on `sorryAx`
-via SLICE 1's remaining arithmetic sorry; closing that sorry gives a fully
-closed `bch_iteratedDeriv_s4Func_order4` without any BCH-interface axiom
-dependency.
+Net axiom count: 4 → 3. `bch_iteratedDeriv_s4Func_order4` still depends
+transitively on `sorryAx` via Lean-BCH's
+`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`. Closing that Lean-BCH lemma
+(term-by-term analysis on the 4-term opaque RHS) gives a fully closed
+`bch_iteratedDeriv_s4Func_order4` without any sorry dependency.
 
 ### Main results
 
