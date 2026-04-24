@@ -2,13 +2,17 @@
 
 ## Remaining work (as of 2026-04-24)
 
-The project has **0 sorries on the Lean-Trotter side** and **3 BCH-interface
-axioms** in `Suzuki4ViaBCH.lean` (down from 9 via the 2026-04-23 Lean-BCH
-migration + Childs-axiom retirement, then 4→3 via the 2026-04-23/24 SLICE 1+2+3
-closure of `bch_iteratedDeriv_s4Func_order4`). Main headline results —
-Lie–Trotter, Strang, commutator scaling, Suzuki S₄ with L1/L2/L3/L4 BCH
-bounds — are all proved. Lean-BCH is imported as a git dependency
-(`require lean-bch from git ... @ "4ea6357"`). Remaining work:
+The project has **0 sorries on the Lean-Trotter side**, **0 transitive
+`sorryAx`** (Lean-BCH closed its last sorry at rev `c71d8f2`), and **3
+BCH-interface axioms** in `Suzuki4ViaBCH.lean` (down from 9 via the 2026-04-23
+Lean-BCH migration + Childs-axiom retirement, then 4→3 via the 2026-04-23/24
+SLICE 1+2+3 closure of `bch_iteratedDeriv_s4Func_order4`). Main headline
+results — Lie–Trotter, Strang, commutator scaling, Suzuki S₄ with L1/L2/L3/L4
+BCH bounds — are all proved. Axiom inspection:
+`bch_iteratedDeriv_s4Func_order4`, `exists_norm_s4Func_sub_exp_le_t5`, and
+`lie_trotter` each depend only on `[propext, Classical.choice, Quot.sound]`.
+Lean-BCH is imported as a git dependency (`require lean-bch from git ... @
+"c71d8f2"`). Remaining work:
 
 ### Track A: Close the 3 BCH-interface axioms (headline gap)
 
@@ -21,20 +25,16 @@ go beyond Lean-BCH's current 2-factor quintic remainder.
 | `bch_w4Deriv_level3_tight` | Pointwise residual with tight γᵢ (also underwrites Childs reproduction via `norm_suzuki4_childs_form_via_level3`) | Lean-BCH 5-factor quintic + Childs-basis projection + numeric specialization |
 | `bch_uniform_integrated` | Level 4 uniform (R₅ + R₇) | Lean-BCH order-7 extension + R₇ norm bound |
 
-**Also live:** a single transitive `sorryAx` via Lean-BCH's
-`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (`BCH/Palindromic.lean:2102`).
-This supports `bch_iteratedDeriv_s4Func_order4` (now a theorem on our side).
-Closing this sorry — ~100-200 lines of term-by-term analysis on the opaque
-4-term def — removes the last transitive sorryAx in the S₄ O(t⁵) chain.
+**No transitive `sorryAx`.** Lean-BCH's
+`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` was closed at rev `c71d8f2`
+(2026-04-24), removing the last sorry dependency from our headline chain.
 
 **Recommended order:**
-1. Close Lean-BCH's `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` sorry
-   (tractable thanks to the 2026-04-24 opaque-def refactor).
-2. Extend Lean-BCH to 5-factor palindromic quintic remainder — closes
+1. Extend Lean-BCH to 5-factor palindromic quintic remainder — closes
    `bch_w4Deriv_quintic_level2` + leading order of `bch_w4Deriv_level3_tight`.
-3. Formalize Childs-basis projection + numeric specialization — closes
+2. Formalize Childs-basis projection + numeric specialization — closes
    `bch_w4Deriv_level3_tight`.
-4. CAS-assisted order-7 BCH expansion + R₇ bound — closes
+3. CAS-assisted order-7 BCH expansion + R₇ bound — closes
    `bch_uniform_integrated` (largest remaining work).
 
 ### Track A.0 (retired): the Childs-heuristic axiom
@@ -156,12 +156,10 @@ Several lemmas are ready for upstreaming (~20-50 lines each):
 ## Recommended path forward
 
 **Short term (1-2 weeks):**
-- **Track A:** close Lean-BCH's `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`
-  sorry (`BCH/Palindromic.lean:2102`) — term-by-term analysis on the opaque
-  4-term def. Removes the last transitive `sorryAx` on our side.
 - **Track A (next):** extend Lean-BCH to 5-factor palindromic quintic remainder
   to close `bch_w4Deriv_quintic_level2` and the leading order of
   `bch_w4Deriv_level3_tight`. 3 axioms → 2 (or 1, depending on projection work).
+- **Track D:** start Mathlib PR for `norm_exp_le` (see cleanup checklist below).
 
 **Medium term (1-3 months):**
 - **Track E:** polish paper; submit to arXiv.

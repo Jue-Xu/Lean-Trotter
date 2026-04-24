@@ -10,7 +10,7 @@ require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git"
 
 require «lean-bch» from git
-  "https://github.com/Jue-Xu/Lean-BCH.git" @ "4ea6357"
+  "https://github.com/Jue-Xu/Lean-BCH.git" @ "c71d8f2"
 
 @[default_target]
 lean_lib «LieTrotter» where

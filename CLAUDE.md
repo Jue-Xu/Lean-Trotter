@@ -1,6 +1,14 @@
 # Lie–Trotter Product Formula — Lean 4 Formalization
 
-## Status (2026-04-24): 0 sorries on Lean-Trotter side, 3 BCH-interface axioms
+## Status (2026-04-24): 0 sorries, 0 transitive sorryAx, 3 BCH-interface axioms
+
+`#print axioms bch_iteratedDeriv_s4Func_order4`, `exists_norm_s4Func_sub_exp_le_t5`,
+and `lie_trotter` now all return only `[propext, Classical.choice, Quot.sound]` —
+the standard Lean foundational axioms. Lean-BCH's
+`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` was closed upstream at rev `c71d8f2`
+(2026-04-24), removing the last transitive `sorryAx` on our side. The three
+remaining `bch_w4Deriv_*` axioms each support exactly one L2/L3/L4 bound
+theorem; they are BCH-interface axioms (not sorries).
 
 **Headline results:**
 1. **Lie–Trotter** (`lie_trotter`, `lie_trotter_error_rate`, O(1/n)) — fully proved.
@@ -23,8 +31,8 @@
    - **SLICE 1** (`Suzuki4BchBound.lean`, `exists_norm_s4Func_sub_exp_le_t5`):
      single-step O(|τ|⁵) bound `‖s4Func A B p τ − exp(τ•(A+B))‖ ≤ C·|τ|⁵`.
      Sorry-free since 2026-04-24 — composes `BCH.norm_s4Func_sub_exp_le_of_IsSuzukiCubic`
-     with `BCH.suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (Lean-BCH opaque-RHS
-     refactor at rev `4ea6357`).
+     with `BCH.suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (Lean-BCH
+     opaque-RHS refactor at rev `fffca6c`, corollary closed at rev `c71d8f2`).
    - **SLICE 2** (`TaylorMatch.lean`, `iteratedDeriv_eq_of_norm_le_pow`):
      general Taylor-match-from-norm lemma, sorry-free. If `f, g` are `ContDiff ℝ k`
      and `‖f − g‖ ≤ C·|τ|^{k+1}` near 0, then `iteratedDeriv j f 0 =
@@ -37,11 +45,11 @@
 
 **Own sorries:** 0. All of `LieTrotter/*.lean` compiles sorry-free.
 
-**Transitive `sorryAx` dep:** 1, inside Lean-BCH's
-`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (`BCH/Palindromic.lean:2102`).
-Tractable now that the RHS is opaque — ~100-200 lines of term-by-term analysis
-on the 4-term def. Affects `bch_iteratedDeriv_s4Func_order4` and
-`exists_norm_s4Func_sub_exp_le_t5` transitively.
+**Transitive `sorryAx` dep:** 0. Lean-BCH's
+`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` was closed upstream at rev
+`c71d8f2` (2026-04-24). Axiom-inspect confirms:
+`bch_iteratedDeriv_s4Func_order4`, `exists_norm_s4Func_sub_exp_le_t5`, and
+`lie_trotter` depend only on the standard Lean foundational axioms.
 
 **BCH-interface axioms** (3, all in `Suzuki4ViaBCH.lean`, all 5-factor
 palindromic BCH facts beyond Lean-BCH's current 2-factor coverage):
@@ -460,8 +468,8 @@ CAPSTONE via h2 + h3 + h4 ✅
                 SLICE 1: BCH single-step O(|τ|⁵) — sorry-free (2026-04-24)
                 SLICE 2: Taylor-match-from-norm — sorry-free
                 SLICE 3: wire + iteratedDeriv_exp_smul_mul_at_zero — sorry-free
-                Transitive dep: Lean-BCH `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`
-                (opaque-def arithmetic; 1 sorry remaining in Lean-BCH).
+                Lean-BCH base: `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`
+                (closed upstream at rev `c71d8f2`, 2026-04-24).
 ```
 
 **Tighter Trotter-native bounds (existing, fully proved):**
@@ -600,7 +608,7 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/Suzuki4BchBound.lean` | 0 (SLICE 1 — single-step BCH O(|τ|⁵), since 2026-04-24) |
 | `LieTrotter/TaylorMatch.lean` | 0 (SLICE 2 — generic Taylor-match-from-norm) |
 | `LieTrotter/Suzuki4ViaBCH.lean` | 0 (SLICE 3 wiring + L1-L4 BCH bounds; 3 `bch_w4Deriv_*` axioms) |
-| **Total** | **0** (transitive `sorryAx` via Lean-BCH's `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`) |
+| **Total** | **0** sorries, **0** transitive `sorryAx` (Lean-BCH closed at rev `c71d8f2`) |
 
 ## Design Decisions
 
