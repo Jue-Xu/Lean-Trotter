@@ -58,6 +58,8 @@ import LieTrotter.Suzuki4Phase5
 import LieTrotter.Suzuki4BchBound
 import LieTrotter.TaylorMatch
 import BCH.Basic
+import BCH.ChildsBasis
+import BCH.Suzuki5Quintic
 
 noncomputable section
 
@@ -431,48 +433,151 @@ lemma childsBoundSum_le_bchFourFoldSum (A B : 𝔸) :
   have hC8 := norm_nonneg (childsComm₈ A B)
   nlinarith
 
-/-- **[AXIOMATIZED primitive BCH bound]** Pointwise residual bound on
-  `‖w4Deriv‖` from the BCH quintic expansion, with the **explicit
-  BCH-derived constant `M_bch = 1`** and unit coefficients on the 8
-  Childs 4-fold commutators.
-
-  Derivation sketch: For Suzuki palindromic `p`, BCH gives
-  `log(s4Func(τ)) = τH + τ⁵ · R₅ + O(τ⁷)` where
-  `R₅ = Σᵢ βᵢ(p)·Cᵢ` with `|βᵢ(p)| ≤ 1` at Suzuki `p`. Differentiating
-  `w4Func = exp(-τH)·s4Func` and using the triangle inequality yields
-  the pointwise bound with unit coefficients.
-
-  This is a rigorous BCH consequence; no heuristic balancing required. -/
-axiom bch_w4Deriv_quintic_level2
-    (A B : 𝔸) (hA : star A = -A) (hB : star B = -B)
-    (p : ℝ) (hcubic : IsSuzukiCubic p) (t : ℝ) (ht : 0 ≤ t) :
-    ∀ τ ∈ Set.Icc (0 : ℝ) t,
-      ‖w4Deriv A B p τ‖ ≤ (5 * bchFourFoldSum A B) * τ ^ 4
-
-/-- **Level 2 BCH-derived Trotter bound**: for any `p` satisfying
-  `IsSuzukiCubic p` and anti-Hermitian `A, B`,
+/-- **Level 2 BCH τ⁵ identification (primitive bound)**. Under
+  `IsSuzukiCubic p`, there exist `δ > 0` and `K ≥ 0` such that for all
+  `τ ∈ [0, δ)`,
 ```
-  ‖S₄(t) - exp(tH)‖ ≤ t⁵ · bchFourFoldSum(A, B)
+  ‖suzuki5_bch ℝ A B p τ − τ • (A + B)‖ ≤
+    τ⁵ · bchFourFoldSum A B + K · τ⁶
 ```
-  where `bchFourFoldSum = Σᵢ ‖Cᵢ‖` over the 8 Childs 4-fold commutators
-  with **unit coefficients**. The prefactor `1` is explicit and derived
-  from a primitive BCH axiom `bch_w4Deriv_quintic_level2` (not from
-  Childs's heuristic balancing).
+  where `suzuki5_bch = log(S₄(τ))`, `bchFourFoldSum = Σᵢ ‖Cᵢ‖` over the
+  8 Childs 4-fold commutators with **unit coefficients**, and the
+  `K·τ⁶` term encapsulates higher-order BCH corrections.
 
-  Tightening to Childs's 0.0047–0.0284 coefficients requires additional
-  algebraic simplification of the BCH `R₅` expression at Suzuki `p`. -/
+  **Now a theorem (was an axiom).** Derived directly from Lean-BCH's
+  bridge corollary `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic`
+  (rev `7ba3962`, branch `trotter-5factor-palindromic`), which itself
+  currently rests on the scoped private axiom
+  `BCH.suzuki5_R5_identification_axiom` — the Tier-2 symbolic 5-factor
+  BCH composition identification. `#print axioms bch_w4Deriv_quintic_level2`
+  therefore reports exactly
+  `{propext, Classical.choice, Quot.sound, BCH.suzuki5_R5_identification_axiom}`.
+  The axiom has a documented discharge roadmap (Tiers 1-3) in
+  Lean-BCH's `BCH/Suzuki5Quintic.lean`. -/
+theorem bch_w4Deriv_quintic_level2
+    (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
+    ∃ δ > (0 : ℝ), ∃ K ≥ (0 : ℝ), ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖BCH.suzuki5_bch ℝ A B p τ - τ • (A + B)‖ ≤
+        τ ^ 5 * BCH.bchFourFoldSum A B + K * τ ^ 6 :=
+  BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic A B p hcubic
+
+/-- **Level 2 BCH-derived Trotter bound**: under `IsSuzukiCubic p`, the
+  Suzuki S₄ product approximates `exp(t•(A+B))` to order `t⁵` on a
+  neighborhood of zero:
+```
+  ‖S₄(t) - exp(t•(A+B))‖ ≤ C · t⁵        for t ∈ [0, δ)
+```
+  with `C ≥ 0` explicit in terms of `bchFourFoldSum A B` (the sum of
+  norms of the 8 Childs 4-fold commutators with unit coefficients) and
+  the exp-Lipschitz constant near zero.
+
+  Derivation: combine `bch_w4Deriv_quintic_level2`
+  (τ⁵ identification of `log S₄(τ)`) with the M2b round-trip
+  `BCH.exp_suzuki5_bch` (`S₄(τ) = exp(suzuki5_bch τ)` in the
+  small-coefficient regime) and exp-Lipschitz `BCH.norm_exp_add_sub_exp_le`.
+
+  Tightening the leading coefficient from `bchFourFoldSum` to
+  Childs's 0.0047–0.0284 coefficients is Level 3
+  (`norm_suzuki4_level3_bch`, via `bch_w4Deriv_level3_tight`). -/
 theorem norm_suzuki4_level2_bch (A B : 𝔸)
-    (hA : star A = -A) (hB : star B = -B)
-    (p : ℝ) (hcubic : IsSuzukiCubic p) {t : ℝ} (ht : 0 ≤ t) :
-    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ t ^ 5 * bchFourFoldSum A B := by
-  have hCont : Continuous (w4Deriv A B p) := continuous_w4Deriv A B p
-  have hC_nn : 0 ≤ 5 * bchFourFoldSum A B := by
-    have := bchFourFoldSum_nonneg A B; positivity
-  have h := norm_suzuki4_order5_via_module3 A B hA hB p ht hCont hC_nn
-    (bch_w4Deriv_quintic_level2 A B hA hB p hcubic t ht)
-  calc ‖suzuki4Exp A B p t - exp (t • (A + B))‖
-      ≤ (5 * bchFourFoldSum A B) / 5 * t ^ 5 := h
-    _ = t ^ 5 * bchFourFoldSum A B := by ring
+    (p : ℝ) (hcubic : IsSuzukiCubic p) :
+    ∃ δ > 0, ∃ C ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 := by
+  -- Extract (δ_log, K) from the Lean-BCH τ⁵ identification.
+  obtain ⟨δ_log, hδ_log_pos, K, hK_nn, h_log_bound⟩ :=
+    bch_w4Deriv_quintic_level2 A B p hcubic
+  -- We also need the small-coefficient regime for M2b round-trip.
+  have h_regime := exists_regime_nhds A B p
+  rw [Metric.eventually_nhds_iff] at h_regime
+  obtain ⟨δ_reg, hδ_reg_pos, h_regime⟩ := h_regime
+  -- Shrink δ to ensure τ ≤ 1 so the exp factor is bounded uniformly.
+  set δ := min δ_log (min δ_reg 1) with hδ_def
+  have hδ_pos : 0 < δ := lt_min hδ_log_pos (lt_min hδ_reg_pos (by norm_num : (0:ℝ) < 1))
+  have hδ_le_log : δ ≤ δ_log := min_le_left _ _
+  have hδ_le_reg : δ ≤ δ_reg := le_trans (min_le_right _ _) (min_le_left _ _)
+  have hδ_le_one : δ ≤ 1 := le_trans (min_le_right _ _) (min_le_right _ _)
+  -- Define explicit C: (bchFourFoldSum + K) · exp(‖A+B‖ + bchFourFoldSum + K).
+  set Sfs := BCH.bchFourFoldSum A B with hSfs_def
+  have hSfs_nn : 0 ≤ Sfs := by
+    show (0:ℝ) ≤ BCH.bchFourFoldSum A B
+    exact BCH.bchFourFoldSum_nonneg A B
+  set C := (Sfs + K) * Real.exp (‖A + B‖ + Sfs + K) with hC_def
+  have hC_nn : 0 ≤ C := by
+    refine mul_nonneg (add_nonneg hSfs_nn hK_nn) (Real.exp_pos _).le
+  refine ⟨δ, hδ_pos, C, hC_nn, ?_⟩
+  intro τ hτ_nn hτ_lt
+  -- Pointwise regime + log bound at this τ.
+  have hτ_lt_log : τ < δ_log := lt_of_lt_of_le hτ_lt hδ_le_log
+  have hτ_lt_reg : τ < δ_reg := lt_of_lt_of_le hτ_lt hδ_le_reg
+  have hτ_le_one : τ ≤ 1 := le_trans hτ_lt.le hδ_le_one
+  have hτ_dist : dist τ 0 < δ_reg := by rw [Real.dist_eq]; simpa [abs_of_nonneg hτ_nn] using hτ_lt_reg
+  obtain ⟨h_R, _h_pτ, _h_1m4pτ, _h_regsb, _h_Zbch, _h_nested⟩ := h_regime hτ_dist
+  have h_log := h_log_bound τ hτ_nn hτ_lt_log
+  -- M2b round-trip: S₄(τ) = exp(suzuki5_bch τ).
+  have h_exp_bch : exp (BCH.suzuki5_bch ℝ A B p τ) = BCH.suzuki5Product (𝕂 := ℝ) A B p τ :=
+    BCH.exp_suzuki5_bch (𝕂 := ℝ) A B p τ h_R
+  -- Write suzuki5_bch = τ•(A+B) + δ_bch where δ_bch := suzuki5_bch - τ•(A+B).
+  set δ_bch := BCH.suzuki5_bch ℝ A B p τ - τ • (A + B) with hδ_bch_def
+  have h_add : τ • (A + B) + δ_bch = BCH.suzuki5_bch ℝ A B p τ := by
+    rw [hδ_bch_def]; abel
+  -- Apply exp-Lipschitz: ‖exp(X + δ) - exp(X)‖ ≤ ‖δ‖ · exp(‖X‖ + ‖δ‖).
+  have h_lip := BCH.norm_exp_add_sub_exp_le (𝕂 := ℝ) (τ • (A + B)) δ_bch
+  rw [h_add] at h_lip
+  -- Bound ‖δ_bch‖ = ‖suzuki5_bch - τ•(A+B)‖ ≤ τ⁵·Sfs + K·τ⁶.
+  have hδ_bch_norm : ‖δ_bch‖ ≤ τ ^ 5 * Sfs + K * τ ^ 6 := h_log
+  -- For τ ∈ [0, 1]: τ⁵·Sfs + K·τ⁶ ≤ (Sfs + K)·τ⁵ since τ⁶ ≤ τ⁵.
+  have hτ5_nn : 0 ≤ τ ^ 5 := pow_nonneg hτ_nn 5
+  have hτ6_le_τ5 : τ ^ 6 ≤ τ ^ 5 := by
+    have : τ ^ 6 = τ * τ ^ 5 := by ring
+    rw [this]
+    calc τ * τ ^ 5 ≤ 1 * τ ^ 5 := by
+            exact mul_le_mul_of_nonneg_right hτ_le_one hτ5_nn
+      _ = τ ^ 5 := by ring
+  have hδ_bch_poly : τ ^ 5 * Sfs + K * τ ^ 6 ≤ (Sfs + K) * τ ^ 5 := by
+    have h1 : K * τ ^ 6 ≤ K * τ ^ 5 := mul_le_mul_of_nonneg_left hτ6_le_τ5 hK_nn
+    nlinarith [hSfs_nn, hK_nn, hτ5_nn]
+  have hδ_bch_le : ‖δ_bch‖ ≤ (Sfs + K) * τ ^ 5 := le_trans hδ_bch_norm hδ_bch_poly
+  -- Bound ‖τ•(A+B)‖ ≤ τ · ‖A+B‖ ≤ ‖A+B‖ (since τ ≤ 1).
+  have hτV_norm : ‖τ • (A + B)‖ ≤ ‖A + B‖ := by
+    have h1 : ‖τ • (A + B)‖ ≤ ‖(τ : ℝ)‖ * ‖A + B‖ := norm_smul_le _ _
+    have h2 : ‖(τ : ℝ)‖ = τ := by rw [Real.norm_eq_abs, abs_of_nonneg hτ_nn]
+    rw [h2] at h1
+    calc ‖τ • (A + B)‖ ≤ τ * ‖A + B‖ := h1
+      _ ≤ 1 * ‖A + B‖ := mul_le_mul_of_nonneg_right hτ_le_one (norm_nonneg _)
+      _ = ‖A + B‖ := by ring
+  -- Bound the exp-Lipschitz factor.
+  have h_exp_le : Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) ≤ Real.exp (‖A + B‖ + Sfs + K) := by
+    apply Real.exp_le_exp.mpr
+    have hδ_bch_le_SfsK : ‖δ_bch‖ ≤ Sfs + K := by
+      calc ‖δ_bch‖ ≤ (Sfs + K) * τ ^ 5 := hδ_bch_le
+        _ ≤ (Sfs + K) * 1 := by
+            apply mul_le_mul_of_nonneg_left
+            · calc τ ^ 5 ≤ 1 ^ 5 := pow_le_pow_left₀ hτ_nn hτ_le_one 5
+                _ = 1 := one_pow 5
+            · exact add_nonneg hSfs_nn hK_nn
+        _ = Sfs + K := by ring
+    linarith
+  -- Now chain: ‖S₄ - exp(t•H)‖ ≤ ‖δ‖·exp(‖X‖+‖δ‖) ≤ (Sfs+K)·τ⁵·exp(‖A+B‖+Sfs+K) = C·τ⁵.
+  have h_s4_eq : BCH.suzuki5Product (𝕂 := ℝ) A B p τ = suzuki4Exp A B p τ := by
+    show BCH.suzuki5Product (𝕂 := ℝ) A B p τ = suzuki4Exp A B p τ
+    rfl
+  have h_lip' :
+      ‖BCH.suzuki5Product (𝕂 := ℝ) A B p τ - exp (τ • (A + B))‖ ≤
+        ‖δ_bch‖ * Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) := by
+    rw [← h_exp_bch]; exact h_lip
+  have h_final' :
+      ‖BCH.suzuki5Product (𝕂 := ℝ) A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 := by
+    have hExp_factor_nn : 0 ≤ Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) := (Real.exp_pos _).le
+    have hExp_target_nn : 0 ≤ Real.exp (‖A + B‖ + Sfs + K) := (Real.exp_pos _).le
+    have hδ_bch_nn : 0 ≤ ‖δ_bch‖ := norm_nonneg _
+    calc ‖BCH.suzuki5Product (𝕂 := ℝ) A B p τ - exp (τ • (A + B))‖
+        ≤ ‖δ_bch‖ * Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) := h_lip'
+      _ ≤ ((Sfs + K) * τ ^ 5) * Real.exp (‖A + B‖ + Sfs + K) := by
+          apply mul_le_mul hδ_bch_le h_exp_le hExp_factor_nn
+          exact mul_nonneg (add_nonneg hSfs_nn hK_nn) hτ5_nn
+      _ = C * τ ^ 5 := by rw [hC_def]; ring
+  rw [h_s4_eq] at h_final'
+  exact h_final'
 
 /-!
 ## Level 1 (Childs 2021 bound): derived from Level 3, no heuristic axiom

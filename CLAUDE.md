@@ -1,14 +1,28 @@
 # Lie–Trotter Product Formula — Lean 4 Formalization
 
-## Status (2026-04-24): 0 sorries, 0 transitive sorryAx, 3 BCH-interface axioms
+## Status (2026-04-24): 0 sorries, 2 BCH-interface axioms + 1 transitive BCH-private axiom
 
 `#print axioms bch_iteratedDeriv_s4Func_order4`, `exists_norm_s4Func_sub_exp_le_t5`,
-and `lie_trotter` now all return only `[propext, Classical.choice, Quot.sound]` —
+and `lie_trotter` all return only `[propext, Classical.choice, Quot.sound]` —
 the standard Lean foundational axioms. Lean-BCH's
 `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` was closed upstream at rev `c71d8f2`
-(2026-04-24), removing the last transitive `sorryAx` on our side. The three
-remaining `bch_w4Deriv_*` axioms each support exactly one L2/L3/L4 bound
-theorem; they are BCH-interface axioms (not sorries).
+(2026-04-24).
+
+**Axiom 1 retired (2026-04-24, later session):** `bch_w4Deriv_quintic_level2`
+is now a theorem (was an axiom), derived from Lean-BCH's bridge corollary
+`BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` (branch
+`trotter-5factor-palindromic`, rev `7ba3962`). The signature was adjusted to
+match Lean-BCH's existential-τ form `∃ δ > 0, ∃ K ≥ 0, ∀ τ ∈ [0, δ),
+‖suzuki5_bch τ − τ•(A+B)‖ ≤ τ⁵·bchFourFoldSum A B + K·τ⁶`. The downstream
+`norm_suzuki4_level2_bch` was rewritten to produce an existential-t
+`‖S₄(τ) − exp(τ•H)‖ ≤ C·τ⁵` form via exp-Lipschitz composition. Transitive
+axiom closure: `{propext, Classical.choice, Quot.sound, BCH.suzuki5_R5_identification_axiom}`
+(the BCH-private axiom encodes the Tier-2 symbolic 5-factor BCH composition,
+discharge roadmap documented in Lean-BCH's `BCH/Suzuki5Quintic.lean`).
+
+The two remaining `bch_w4Deriv_*` axioms (level3_tight, uniform_integrated)
+each support exactly one L3/L4 bound theorem; they are BCH-interface axioms
+(not sorries) for follow-up sessions.
 
 **Headline results:**
 1. **Lie–Trotter** (`lie_trotter`, `lie_trotter_error_rate`, O(1/n)) — fully proved.
