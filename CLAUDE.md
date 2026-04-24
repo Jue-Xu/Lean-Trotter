@@ -1,119 +1,71 @@
 # Lie–Trotter Product Formula — Lean 4 Formalization
 
-## Status: 3 BCH-interface axioms + 0 sorries on Lean-Trotter side
+## Status (2026-04-24): 0 sorries on Lean-Trotter side, 3 BCH-interface axioms
 
-**2026-04-24 update**: SLICE 1 arithmetic sorry retired from Lean-Trotter.
-Lean-BCH was refactored (commit `4ea6357`) to introduce an opaque def
-`suzuki5_bch_M4b_RHS` plus a payoff corollary
-`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`. Using the new API, SLICE 1
-becomes a short composition (no kernel-reduction timeouts) with no arithmetic
-bookkeeping on the Lean-Trotter side. Lean-Trotter is now sorry-free;
-the only remaining `sorryAx` in the dependency graph lives inside Lean-BCH's
-`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (an arithmetic bound on the
-opaque def, tractable in isolation thanks to opacity).
+**Headline results:**
+1. **Lie–Trotter** (`lie_trotter`, `lie_trotter_error_rate`, O(1/n)) — fully proved.
+2. **Strang splitting** (`symmetric_lie_trotter`, O(1/n²)) — fully proved.
+3. **Commutator scaling** (first-order, Strang, multi-operator, tighter Strang
+   bound `norm_strang_comm_scaling_tight`) — fully proved.
+4. **S₄ O(t⁵) abstract form** (`norm_suzuki4_fifth_order`,
+   `norm_suzuki4_childs_form`) — closed with explicit residual-bound hypothesis.
+5. **S₄ BCH-derived bounds** — closed given the 3 `bch_w4Deriv_*` axioms below:
+   - L1 `norm_suzuki4_childs_form_via_level3`: recovers Childs (2021) bound
+     (coefficients 0.0047–0.0284) from the CAS-certified Level 3 bound plus
+     the Lean-proved termwise inequality γᵢ ≤ αᵢ. No heuristic axiom.
+   - L2 `norm_suzuki4_level2_bch`: rigorous BCH bound with unit coefficients.
+   - L3 `norm_suzuki4_level3_bch`: tight γᵢ prefactors.
+   - L4 `norm_suzuki4_level4_uniform`: finite-t uniform bound with R₅ + R₇.
+6. **h2 + h3 unconditional** (`iteratedDeriv_s4Func_order2_eq_sq`,
+   `iteratedDeriv_s4Func_order3_eq_cb` under `IsSuzukiCubic p`).
+7. **h4 (`bch_iteratedDeriv_s4Func_order4`)**: NOW A THEOREM (2026-04-23/24),
+   closed via the three-slice chain
+   - **SLICE 1** (`Suzuki4BchBound.lean`, `exists_norm_s4Func_sub_exp_le_t5`):
+     single-step O(|τ|⁵) bound `‖s4Func A B p τ − exp(τ•(A+B))‖ ≤ C·|τ|⁵`.
+     Sorry-free since 2026-04-24 — composes `BCH.norm_s4Func_sub_exp_le_of_IsSuzukiCubic`
+     with `BCH.suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (Lean-BCH opaque-RHS
+     refactor at rev `4ea6357`).
+   - **SLICE 2** (`TaylorMatch.lean`, `iteratedDeriv_eq_of_norm_le_pow`):
+     general Taylor-match-from-norm lemma, sorry-free. If `f, g` are `ContDiff ℝ k`
+     and `‖f − g‖ ≤ C·|τ|^{k+1}` near 0, then `iteratedDeriv j f 0 =
+     iteratedDeriv j g 0` for `j ≤ k`. Proved via `taylor_isLittleO_univ` +
+     polynomial uniqueness.
+   - **SLICE 3** (`Suzuki4ViaBCH.lean`): wires SLICE 1 + SLICE 2 +
+     Mathlib's `iteratedDeriv_exp_smul_mul_at_zero`.
 
-**2026-04-23 update**: `bch_iteratedDeriv_s4Func_order4` is now a theorem,
-proved via a three-slice chain:
-- **SLICE 1** (`LieTrotter/Suzuki4BchBound.lean`,
-  `exists_norm_s4Func_sub_exp_le_t5`): single-step O(|τ|⁵) bound on
-  `‖s4Func A B p τ − exp(τ•(A+B))‖` under `IsSuzukiCubic p`. Sorry-free
-  (2026-04-24); composes `BCH.norm_s4Func_sub_exp_le_of_IsSuzukiCubic` with
-  `BCH.suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`.
-- **SLICE 2** (`LieTrotter/TaylorMatch.lean`,
-  `iteratedDeriv_eq_of_norm_le_pow`): general-purpose Taylor-match-from-norm
-  lemma, sorry-free. If `f, g` are `ContDiff ℝ k` and
-  `‖f − g‖ ≤ C·|τ|^{k+1}` near 0, then `iteratedDeriv j f 0 = iteratedDeriv j g 0`
-  for `j ≤ k`. Proved via `taylor_isLittleO_univ` + polynomial uniqueness.
-- **SLICE 3**: wire SLICE 1 + SLICE 2 + `iteratedDeriv_exp_smul_mul_at_zero`
-  to close `bch_iteratedDeriv_s4Func_order4` (in `Suzuki4ViaBCH.lean`).
+### Remaining gaps
 
-Net axiom count: 4 → 3. `bch_iteratedDeriv_s4Func_order4` still depends
-transitively on `sorryAx` via Lean-BCH's
-`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`. Closing that Lean-BCH lemma
-(term-by-term analysis on the 4-term opaque RHS) gives a fully closed
-`bch_iteratedDeriv_s4Func_order4` without any sorry dependency.
+**Own sorries:** 0. All of `LieTrotter/*.lean` compiles sorry-free.
 
-### Main results
+**Transitive `sorryAx` dep:** 1, inside Lean-BCH's
+`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (`BCH/Palindromic.lean:2102`).
+Tractable now that the RHS is opaque — ~100-200 lines of term-by-term analysis
+on the 4-term def. Affects `bch_iteratedDeriv_s4Func_order4` and
+`exists_norm_s4Func_sub_exp_le_t5` transitively.
 
-1. **First-order Lie–Trotter:** `lie_trotter`, `lie_trotter_error_rate` (O(1/n)) — **fully proved**.
-2. **Strang splitting** (second-order): `symmetric_lie_trotter` — **fully proved**.
-3. **S₄ fifth-order bound** (`norm_suzuki4_fifth_order`) and Childs-form bound
-   (`norm_suzuki4_childs_form`): closed with an explicit residual-bound hypothesis.
-4. **h2, h3 UNCONDITIONAL** (via operator-algebra factored-form identities):
-   - `iteratedDeriv_s4Func_order2_eq_sq` (h2, no hypothesis)
-   - `iteratedDeriv_s4Func_order3_eq_cb` (h3, given `IsSuzukiCubic p`)
-5. **Strengthened CAPSTONE**
-   (`norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing`): takes just
-   `IsSuzukiCubic p` and w4Func order-4 vanishing to close the S₄ O(t⁵) bound.
-6. **Path B skeleton** (`LieTrotter/Suzuki4StrangBlocks.lean`,
-   `LieTrotter/Suzuki4ViaBCH.lean`): S₄ as 5 palindromic Strang blocks; BCH
-   interface axiomatized; cubic sum cancellation proved.
-7. **BCH-derived Childs bounds** (Level 1 + Level 2):
-   - Level 1 `norm_suzuki4_childs_form_via_level3`: recovers Childs (2021)
-     Prop pf4_bound_2term with exact 0.0047-0.0284 coefficients. Derived
-     from Level 3 via the Lean-proved termwise inequality γᵢ ≤ αᵢ — no
-     heuristic axiomatization of Childs's bound itself.
-   - Level 2 `norm_suzuki4_level2_bch`: rigorously BCH-derived S₄ bound
-     with explicit unit coefficients on 8 four-fold commutators.
+**BCH-interface axioms** (3, all in `Suzuki4ViaBCH.lean`, all 5-factor
+palindromic BCH facts beyond Lean-BCH's current 2-factor coverage):
 
-### Remaining research target
+| Axiom | Supports | Path to close |
+|---|---|---|
+| `bch_w4Deriv_quintic_level2` | L2 bound (unit coefs) | Lean-BCH 5-factor quintic remainder + unit triangle |
+| `bch_w4Deriv_level3_tight` | L3 bound (tight γᵢ); also underwrites L1 Childs reproduction | 5-factor quintic + Childs-basis projection + numeric specialization |
+| `bch_uniform_integrated` | L4 uniform (R₅ + R₇) | Order-7 BCH extension + R₇ norm bound (CAS-assisted) |
 
-**h4** (the order-4 derivative identity) is the only Lean-Trotter-side gap
-left for an unconditional S₄ O(t⁵). Two routes are under active development:
+**Retired axioms** (historical):
+- `bch_iteratedDeriv_s4Func_order4` — became a theorem (2026-04-23, SLICE chain).
+- `bch_childs_pointwise_residual` (Childs heuristic) — retired 2026-04-23,
+  replaced by the Level-3-derived reproduction.
+- 4 symmetric-BCH-cubic axioms — retired 2026-04-23 via Lean-BCH direct import.
 
-- **Path A (Trotter-native)**: prove `sumQuadCorr (s4DList A B p) = 0` via
-  a BCH-like operator-algebra identity. Currently blocked by `module`
-  tactic timeout on quartic expansion (16 monomials × 11 cons steps).
-- **Path B (via Lean-BCH)**: import Lean-BCH's symmetric BCH cubic
-  `norm_symmetric_bch_cubic_sub_smul_le`, apply 5-block composition with
-  palindromic cancellation. Blocked on Lean-BCH's quintic BCH remainder
-  gap (see Lean-BCH's `quintic_pure_identity` nsmul diamond, line 2307,
-  ~50 lines fix).
+**Prefactor-bookkeeping note.** The Lean-BCH migration raised the symmetric-BCH
+scaling constant from a speculative `10⁴·|c|³·s⁵` to the rigorous
+`2·10⁷·|c|³·s⁵` (downstream `suzuki4_bchCubic_sum_bound`: `50000·s⁵ → 10⁸·s⁵`).
+This bump is confined to the Path-B composition roadmap
+(`norm_suzuki4_order5_via_strang_bch`). It does NOT affect the L1–L4 headline
+prefactors, which come from the independent `bch_w4Deriv_*` axioms.
 
-### Axioms in use (all BCH-interface, to be removed as Lean-BCH extends)
-
-Trotter now imports Lean-BCH directly (`require lean-bch from git`). Four
-previously-axiomatized Lean-BCH interface declarations (`symmetric_bch_cubic`,
-`exp_symmetric_bch_cubic`, `norm_symmetric_bch_cubic_le`,
-`norm_symmetric_bch_cubic_sub_smul_le`) are now theorems derived from the
-corresponding BCH theorems specialized to `𝕂 := ℝ`.
-
-**Prefactor-bookkeeping note.** The migration raised the symmetric-BCH
-scaling constant from the previous speculative `10⁴·|c|³·s⁵` to Lean-BCH's
-rigorous `2·10⁷·|c|³·s⁵` (downstream `suzuki4_bchCubic_sum_bound`:
-`50000·s⁵ → 10⁸·s⁵`). This bump is confined to the Path-B composition
-roadmap (`norm_suzuki4_order5_via_strang_bch`, future work). It does NOT
-affect the L1/L2/L3/L4 headline S₄ error bounds (Childs / unit / tight-γᵢ
-/ uniform-R₅+R₇), which derive prefactors from the independent
-`bch_w4Deriv_*` axioms on the full 5-factor product.
-
-`LieTrotter/Suzuki4ViaBCH.lean` retains 3 BCH-interface axioms (down from
-4 as of 2026-04-23), plus the `bch_iteratedDeriv_s4Func_order4` theorem
-which transitively depends on 1 sorry in `exists_norm_s4Func_sub_exp_le_t5`
-(SLICE 1):
-- ~~`bch_iteratedDeriv_s4Func_order4`~~ **NOW A THEOREM** — proved via
-  SLICE 1 + SLICE 2 + Mathlib's `iteratedDeriv_exp_smul_mul_at_zero`
-  (see `Suzuki4ViaBCH.lean`, depends transitively on 1 sorry in SLICE 1).
-- `bch_w4Deriv_quintic_level2` (Level 2 primitive residual, unit coefs) — supports `norm_suzuki4_level2_bch`
-- `bch_w4Deriv_level3_tight` (Level 3 pointwise residual, tight γᵢ) — supports `norm_suzuki4_level3_bch`; also underwrites the Level-1-Childs reproduction `norm_suzuki4_childs_form_via_level3`
-- `bch_uniform_integrated` (Level 4 uniform finite-t bound with R₅ + R₇) — supports `norm_suzuki4_level4_uniform`
-
-**Retired 2026-04-23:** `bch_childs_pointwise_residual` (Childs heuristic)
-— replaced by `norm_suzuki4_childs_form_via_level3`, which reproduces
-Childs 2021's exact numerical bound (coefficients 0.0047…0.0284) from the
-CAS-certified Level 3 bound plus the Lean-proved inequality γᵢ ≤ αᵢ.
-No reliance on Childs's heuristic balanced factoring.
-
-### Remaining work
-
-See `TODO.md` for the full breakdown.
-
-Short-term priority: close axiom `bch_iteratedDeriv_s4Func_order4` via
-Path A (Trotter-native operator-algebra identity `sumQuadCorr = 0`), or via
-an extension of Lean-BCH to the 5-factor palindromic quintic remainder
-`norm_symmetric_bch_quintic_sub_smul_le`. Either closes the headline
-axiom; the Trotter-native route is blocked only by `module` tactic
-timeout on quartic expansion (fixable by hand-unrolling).
+See `TODO.md` for the full breakdown of remaining work.
 
 ## Goal
 
@@ -163,43 +115,41 @@ theorem lie_trotter (A B : 𝔸) :
 
 ## File Structure
 
-```
-Lean-Trotter/
-├── LieTrotter/
-│   ├── Telescoping.lean       ← Task A: algebraic identity + norm bound
-│   ├── ExpBounds.lean         ← Task B: exp series remainder estimates (B1–B5)
-│   ├── StepError.lean         ← Task C: quadratic error + commutator extraction
-│   ├── ExpDivPow.lean         ← Task D: exp(a/n)^n = exp(a)
-│   ├── Assembly.lean          ← Task E: O(1/n) convergence rate + main thm
-│   ├── StrangSplitting.lean   ← Task F: symmetric Lie-Trotter with O(1/n²) rate
-│   ├── MultiOperator.lean     ← Task G: multi-operator generalization (A₁+⋯+Aₘ)
-│   ├── MultiStrang.lean       ← multi-operator symmetric Strang with O(1/n²)
-│   ├── Suzuki4.lean           ← fourth-order Suzuki integrator (five S₂ steps)
-│   ├── CommutatorScaling.lean ← Task H: commutator-scaling error via Duhamel
-│   ├── MultiCommutatorScaling.lean  ← multi-operator first-order commutator scaling
-│   ├── StrangCommutatorScaling.lean ← second-order Strang commutator scaling (anti-Hermitian)
-│   ├── MultiStrangCommutatorScaling.lean ← multi-operator Strang commutator scaling
-│   ├── HigherCommutator.lean      ← triple-FTC: extracts [B,[B,[B,A]]] from conjugation
-│   ├── StrangCommutatorScalingTight.lean ← tighter Strang bound via norm-of-difference
-│   ├── Suzuki4FullDuhamel.lean    ← S₄ O(t³) via 5-S₂ telescoping (sorry-free)
-│   ├── Suzuki4CommutatorScaling.lean ← `suzuki4Exp` definition (stub theorems removed)
-│   ├── Suzuki4HasDerivAt.lean     ← Module 1: HasDerivAt for 12-factor w₄
-│   ├── Suzuki4Module2.lean        ← Module 2: FTC-2 bridge ‖S₄-exp‖=‖w₄-1‖
-│   ├── Suzuki4Module3.lean        ← Module 3: FTC-2 reduction (residual → C·t⁵/5)
-│   ├── Suzuki4Module4.lean        ← Module 4a: continuity of w4Deriv
-│   ├── Suzuki4DerivExplicit.lean  ← Module 4b-A1/A2/A3/B1: explicit derivative + order-0
-│   ├── Suzuki4ChildsForm.lean     ← Childs Prop pf4_bound_2term (8 explicit 4-fold commutators, closed)
-│   ├── Suzuki4OrderFive.lean      ← S₄ O(t⁵) abstract-form target (closed with explicit residual hypothesis)
-│   ├── Suzuki4MultinomialExpand.lean ← prodExpList + multinomial formulas + h2 ✅ + h3 under IsSuzukiCubic ✅
-│   ├── Suzuki4Phase5.lean         ← Taylor-reduction + Leibniz bridges + CAPSTONE
-│   ├── Suzuki4StrangBlocks.lean   ← S₄ = 5 Strang blocks factorization (Task 1) + Suzuki cubic sum (Task 2)
-│   └── Suzuki4ViaBCH.lean         ← BCH-interface axioms + Level 1 Childs bound + Level 2 explicit bound
-├── LieTrotter.lean            ← root import file
-├── lakefile.lean
-├── lean-toolchain
-├── CLAUDE.md              ← this file (project goals, decisions, constraints)
-└── CHANGELOG.md           ← lab notes (completed tasks, failed approaches)
-```
+Core Lie–Trotter + Strang + commutator-scaling (all sorry-free):
+
+- `Telescoping.lean`, `ExpBounds.lean`, `StepError.lean`, `ExpDivPow.lean`,
+  `Assembly.lean` — Tasks A-E, main `lie_trotter` theorem.
+- `StrangSplitting.lean`, `MultiOperator.lean`, `MultiStrang.lean`,
+  `Suzuki4.lean` — Strang, multi-operator, Suzuki S₄ integrator definitions.
+- `CommutatorScaling.lean`, `MultiCommutatorScaling.lean`,
+  `StrangCommutatorScaling.lean`, `MultiStrangCommutatorScaling.lean`,
+  `HigherCommutator.lean`, `StrangCommutatorScalingTight.lean` — Track 6
+  Duhamel-based commutator-scaling bounds (first-order, Strang, tighter Strang).
+
+S₄ O(t⁵) machinery (Track 7):
+
+- `Suzuki4FullDuhamel.lean` — S₄ O(t³) via 5-S₂ telescoping.
+- `Suzuki4CommutatorScaling.lean` — `suzuki4Exp` definition.
+- `Suzuki4HasDerivAt.lean` / `Suzuki4Module2.lean` / `Suzuki4Module3.lean` —
+  Modules 1-3: HasDerivAt + FTC-2 bridge + residual-bound reduction.
+- `Suzuki4Module4.lean` — Module 4a: continuity of `w4Deriv`.
+- `Suzuki4DerivExplicit.lean` — Module 4b-A1/A2/A3/B1: explicit derivative.
+- `Suzuki4Phase5.lean` — Taylor-reduction + Leibniz bridges + CAPSTONE.
+- `Suzuki4MultinomialExpand.lean` — multinomial formulas + h2 + h3.
+- `Suzuki4ChildsForm.lean` — Childs-form conditional bound.
+- `Suzuki4OrderFive.lean` — S₄ O(t⁵) abstract-form target.
+- `Suzuki4StrangBlocks.lean` — S₄ as 5 Strang blocks + Suzuki cubic sum.
+
+BCH bridge + closure of `bch_iteratedDeriv_s4Func_order4` (added 2026-04-23/24):
+
+- `Suzuki4BchBound.lean` — **SLICE 1**: single-step O(|τ|⁵) bound via
+  Lean-BCH M6 + `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`.
+- `TaylorMatch.lean` — **SLICE 2**: generic Taylor-match-from-norm lemma.
+- `Suzuki4ViaBCH.lean` — **SLICE 3** wiring + 3 remaining BCH-interface axioms
+  + L1-L4 BCH bounds.
+
+Top-level: `LieTrotter.lean` (root import), `lakefile.lean`, `lean-toolchain`,
+`CLAUDE.md` (this file), `CHANGELOG.md` (lab notes), `TODO.md` (remaining work).
 
 ---
 
@@ -475,9 +425,12 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 | L4b-h4-bridge. `iteratedDeriv_s4Func_order4_eq_q_of_bridge` | h4 conditional on `sumQuadCorr_s4DList = 0` | ✅ Proved |
 | L4b-h4-bch. `sumQuadCorr_s4DList_eq_zero_of_bch`, `iteratedDeriv_s4Func_order4_eq_q_of_bch` | h4 via BCH-bridge + IsSuzukiCubic | ✅ Proved |
 | L4b-capstone-bch. `norm_suzuki4_order5_via_bch` | S₄ O(t⁵) taking only IsSuzukiCubic + BCH identity | ✅ Proved |
-| L4b-h4-BCH. (future) | BCH identity: `sumQuadCorr = 2·(H·sumTripleCorr+sumTripleCorr·H)` for palindromic | 🔴 Open (module timeout) |
+| L4b-h4-BCH (alt). | Trotter-native BCH identity `sumQuadCorr = 2·(H·sumTripleCorr+sumTripleCorr·H)` for palindromic | 🔴 Open (module timeout; superseded by SLICE 1+2+3) |
+| SLICE 1. `exists_norm_s4Func_sub_exp_le_t5` | Single-step BCH O(|τ|⁵) bound | ✅ Proved (via Lean-BCH M6 + opaque-RHS corollary) |
+| SLICE 2. `iteratedDeriv_eq_of_norm_le_pow` | Generic Taylor-match-from-norm | ✅ Proved |
+| SLICE 3. `bch_iteratedDeriv_s4Func_order4` | h4 as a theorem (prev. axiom) | ✅ Proved |
 | L5. `norm_suzuki4_childs_via_residual` | Conditional Childs-form bound (8 explicit 4-fold commutators) | ✅ Proved |
-| L5'. `norm_suzuki4_childs_form` | Unconditional Childs Prop pf4_bound_2term | 🔴 Open (= Module 4b-C2) |
+| L5'. `norm_suzuki4_childs_form_via_level3` | Childs Prop pf4_bound_2term reproduced from Level 3 | ✅ Proved (replaces retired Childs-heuristic axiom) |
 
 **Files:**
 - `LieTrotter/Suzuki4HasDerivAt.lean` (~136 lines) — Module 1
@@ -490,61 +443,36 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 - `LieTrotter/Suzuki4ChildsForm.lean` (~223 lines) — Childs Prop pf4_bound_2term + conditional reduction
 - `LieTrotter/Suzuki4OrderFive.lean` (~427 lines) — `norm_suzuki4_fifth_order` (alternative-form research target, 1 sorry)
 
-**Current architecture (Modules 1-3 + 4a + 4b partial + Phase 5 framework sorry-free):**
+**Current architecture (S₄ O(t⁵), all closed except transitive Lean-BCH sorry):**
 
 ```
 Module 1 (HasDerivAt for 12-factor w₄) ✅
-       ↓
 Module 2 (FTC-2 bridge: ‖S₄-exp‖ = ‖w₄-1‖) ✅
-       ↓
 Module 3 (FTC-2 reduction: residual bound → C·t⁵/5) ✅
-       ↓
-Module 4a (continuous_w4Deriv ✓)
-       ↓
-Module 4b-A1/A2/A3 (explicit derivative + factorization + order-0 ✓)
-       ↓
-Module 4b-Phase5-framework (Taylor-remainder reduction ✓)
-       ↓
-Orders 1/2/3 iteratedDerivWithin vanishings (remaining 🔴)
-       ↓
-norm_suzuki4_order5_of_vanishings (conditional close of outer sorries)
+Module 4a (continuous_w4Deriv) ✅
+Module 4b-A1/A2/A3 (explicit derivative + factorization + order-0) ✅
+Phase 5 Taylor-reduction framework + Leibniz bridges (orders 1-4) ✅
+CAPSTONE via h2 + h3 + h4 ✅
+       │
+       ├── h2 unconditional ✅
+       ├── h3 under IsSuzukiCubic p ✅
+       └── h4 via SLICE 1+2+3 chain ✅
+                SLICE 1: BCH single-step O(|τ|⁵) — sorry-free (2026-04-24)
+                SLICE 2: Taylor-match-from-norm — sorry-free
+                SLICE 3: wire + iteratedDeriv_exp_smul_mul_at_zero — sorry-free
+                Transitive dep: Lean-BCH `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`
+                (opaque-def arithmetic; 1 sorry remaining in Lean-BCH).
 ```
 
-**Phase 5 Taylor-reduction framework (NEW, ✅ done):**
-The file `Suzuki4Phase5.lean` provides the final conditional reduction: given
-`contDiff_w4Residual` (already proved) and the four `iteratedDerivWithin k`
-vanishings at τ=0 for k=0,1,2,3, Mathlib's `exists_taylor_mean_remainder_bound`
-produces the `‖w4Residual τ‖ ≤ C · τ⁴` bound. Combined with
-`norm_suzuki4_order5_from_residual_bound` (already proved), this conditionally
-closes the outer sorries.
+**Tighter Trotter-native bounds (existing, fully proved):**
+- `norm_suzuki4_comm_scaling`: O(t³) via 5-S₂ telescoping (norm-of-sum).
+- `norm_suzuki4_tight_proved`: O(t³)+O(t⁴) with norm-of-difference D and
+  triple correction T.
 
-**What remains (multi-session):**
-- Orders 1, 2, 3: prove `iteratedDerivWithin k (w4Residual A B p) (Icc 0 t) 0 = 0`.
-  Each requires an explicit HasDerivAt computation at τ=0 (Steps 1-3 of the
-  MODULE4B-PHASE5-HANDOFF plan). Order-0 is already proved trivially via
-  `w4Residual_at_zero`.
-
-**Module 4a (continuity, ✅ done):** `continuous_w4Deriv` proved via:
-- `w4Func A B p` is `ContDiff ℝ ⊤` (composition of analytic exp with smooth linear maps; products of smooth functions are smooth).
-- `ContDiff.continuous_deriv` gives `Continuous (deriv (w4Func A B p))`.
-- HasDerivAt uniqueness: `w4Deriv = deriv (w4Func A B p)`, hence continuous.
-
-**Module 4b (residual bound, 🔴 remaining sorry):**
-
-Produce the pointwise residual bound `‖w4Deriv A B p τ‖ ≤ C·τ⁴` from the Suzuki order conditions. Requires:
-1. Explicit form for `w4Deriv` (replacing the `Classical.choose` from Module 2): compute the 12-term product-rule expansion and simplify to `exp(-τH) · 𝒯₄(τ) · S₄(τ)` where 𝒯₄ is a sum of 11 conjugation differences.
-2. Order-condition cancellation (orders 0-3 of 𝒯₄ vanish):
-   - Order 0: `suzuki4_free_term` (✅ proved as standalone identity; `w4Deriv 0 = 0` consequence is deferred — see Module 4 file for direct attempt + Pi-mul obstacle)
-   - Order 1: palindromic symmetry of S₄
-   - Order 2: another polynomial identity
-   - Order 3: `suzuki4_cubic_cancel` (4p³+q³=0, ✅ proved)
-3. Order-4 residual bound via 4-fold commutator FTC iteration.
-
-**Tighter bounds (existing, fully proved):**
-- `norm_suzuki4_comm_scaling`: O(t³) via 5-S₂ telescoping (norm-of-sum)
-- `norm_suzuki4_tight_proved`: O(t³)+O(t⁴) with norm-of-difference D and triple correction T
-
-The genuine O(t⁵) requires the SIGNED cubic cancellation 4p³+q³=0, applied at the integrand level (before norms). The triangle inequality kills this cancellation, which is why Modules 1-3's integrand-level FTC-2 reduction is necessary.
+The genuine O(t⁵) requires the SIGNED cubic cancellation `4p³+q³=0` applied
+at the integrand level (before taking norms). Triangle inequality kills this
+cancellation — that's why Modules 1-3's integrand-level FTC-2 reduction is
+necessary.
 
 ---
 
@@ -669,7 +597,10 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/Suzuki4Phase5.lean` | 0 (Phase 5 Taylor-remainder framework + Leibniz bridges + CAPSTONE) |
 | `LieTrotter/Suzuki4ChildsForm.lean` | 0 (Childs form with explicit residual hypothesis — closed) |
 | `LieTrotter/Suzuki4OrderFive.lean` | 0 (S₄ O(t⁵) with explicit residual hypothesis — closed) |
-| **Total** | **0** |
+| `LieTrotter/Suzuki4BchBound.lean` | 0 (SLICE 1 — single-step BCH O(|τ|⁵), since 2026-04-24) |
+| `LieTrotter/TaylorMatch.lean` | 0 (SLICE 2 — generic Taylor-match-from-norm) |
+| `LieTrotter/Suzuki4ViaBCH.lean` | 0 (SLICE 3 wiring + L1-L4 BCH bounds; 3 `bch_w4Deriv_*` axioms) |
+| **Total** | **0** (transitive `sorryAx` via Lean-BCH's `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`) |
 
 ## Design Decisions
 
