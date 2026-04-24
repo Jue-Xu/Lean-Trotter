@@ -306,10 +306,14 @@ they are negligible, but if desired the same pipeline can extend the CAS to
 arbitrary order with correspondingly smaller corrections.
 
 The Lean formalization adds the uniform constant
-\leanref{Suzuki4ViaBCH.lean}{540}{bchR7UniformConstant}, the bound
-$\norm{R_7} \le K \cdot \max(\norm{A}, \norm{B})^7$ encoded as
-\leanref{Suzuki4ViaBCH.lean}{544}{bchR7Bound}, the axiomatized pointwise
-integrated bound \texttt{bch\_uniform\_integrated}, and the theorem
+\leanref{Suzuki4ViaBCH.lean}{540}{bchR7UniformConstant}
+and the bound
+\begin{equation}
+  \norm{R_7} \;\le\; K \cdot \max(\norm{A}, \norm{B})^7,
+\end{equation}
+encoded as \leanref{Suzuki4ViaBCH.lean}{544}{bchR7Bound}.
+The axiomatized integrated bound \texttt{bch\_uniform\_integrated}
+then yields the theorem
 \begin{leancode}
 theorem norm_suzuki4_level4_uniform :
     ‖suzuki4Exp A B p t - exp (t • (A+B))‖ ≤
@@ -350,41 +354,44 @@ Level 4 bound is \emph{orders of magnitude} tighter than Childs's.
 
 \begin{table}[ht]
 \centering
-\small
-\begin{tabular}{@{}lllp{5.5cm}@{}}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}l@{\hspace{4pt}}l@{\hspace{4pt}}l@{\hspace{4pt}}p{4.2cm}@{}}
 \toprule
 \textbf{Level} & \textbf{Lean theorem} & \textbf{Form} & \textbf{Notes} \\
 \midrule
 \textbf{L1 (Childs)}
-  & \texttt{norm\_suzuki4\_childs\_form\_via\_level3}
+  & \texttt{norm\_suzuki4\_childs\_form}
   & $t^5 \sum \alpha_i \norm{C_i}$
-  & Reproduces Childs (2021) exactly. Derived from L3 via
+  & Reproduces Childs (2021) exactly. Corollary of L3 via
     $\abs{\gamma_i} \le \alpha_i$; no heuristic axiom. \\
 \midrule
 \textbf{L2 (BCH unit)}
   & \texttt{norm\_suzuki4\_level2\_bch}
   & $t^5 \sum \norm{C_i}$
-  & Unit coefficients. Primitive BCH bound $\abs{\beta_i(\text{Suzuki-}p)} \le 1$. \\
+  & Unit coefficients from primitive BCH
+    $\abs{\beta_i(\text{Suzuki-}p)} \le 1$. \\
 \midrule
 \textbf{L3 (BCH leading)}
   & \texttt{norm\_suzuki4\_level3\_bch}
   & $t^5 \sum \gamma_i \norm{C_i}$
-  & Strictly tighter than L1 (9$\times$--64$\times$);
+  & Strictly tighter than L1 (9--64$\times$);
     leading-order only. \\
 \midrule
 \textbf{L4 (BCH uniform)}
   & \texttt{norm\_suzuki4\_level4\_uniform}
-  & $t^5 \sum \gamma_i \norm{C_i} + t^7 K \max(\norm{A}, \norm{B})^7$
-  & Uniform finite-$t$ bound. Strictly tighter than L1 for
-    small $t$ (per \cref{eq:t-threshold}). \\
+  & $t^5 \sum \gamma_i \norm{C_i} + t^7 K\,M^7$
+  & Uniform finite-$t$ bound; $M = \max(\norm{A}, \norm{B})$.
+    Tighter than L1 for small $t$ (\cref{eq:t-threshold}). \\
 \bottomrule
 \end{tabular}
 \caption{Four formalized BCH-based bounds for $\norm{S_4(t) - e^{t(A+B)}}$,
-in increasing rigor / tightness. L1 is now a \emph{corollary} of L3---no
-heuristic axiomatization is required on Trotter's side---while L2/L3/L4
-each rely on a single dedicated BCH-derived pointwise residual axiom
-(\texttt{bch\_w4Deriv\_*}) encoding the five-factor palindromic BCH
-expansion.}
+in increasing rigor / tightness. Theorem name in L1 abbreviates
+\texttt{norm\_suzuki4\_childs\_form\_via\_level3}. L1 is a
+\emph{corollary} of L3---no heuristic axiomatization on Trotter's
+side---while L2/L3/L4 each rely on one BCH-derived pointwise residual
+axiom (\texttt{bch\_w4Deriv\_*}) encoding the five-factor palindromic
+BCH expansion.}
 \label{tab:levels}
 \end{table}
 

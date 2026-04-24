@@ -65,12 +65,11 @@ The companion
 \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project is imported
 as a git dependency, supplying the symmetric three-factor BCH identities
 and the two-factor palindromic quintic remainder used in the Suzuki~$S_4$
-track. Lean-BCH is fully sorry-free as of revision \texttt{c71d8f2}
-(2026-04-24); in particular, \texttt{suzuki5\_bch\_M4b\_RHS\_le\_t5\_of\_IsSuzukiCubic}
-supplies the single-step $O(\abs{\tau}^5)$ payoff that anchors our
-SLICE-1 bound \texttt{exists\_norm\_s4Func\_sub\_exp\_le\_t5}. Build time
-for the full project is under 2~minutes on a standard laptop after
-\Mathlib oleans are cached (\texttt{lake exe cache get}).
+track. Lean-BCH is fully sorry-free as of revision~\texttt{c71d8f2}
+(2026-04-24); its single-step $O(\abs{\tau}^5)$ payoff lemma
+anchors our SLICE-1 bound in \leansrc{Suzuki4BchBound.lean}.
+Build time for the full project is under 2~minutes on a standard
+laptop after \Mathlib oleans are cached (\texttt{lake exe cache get}).
 
 \subsection{Type-level setup}
 \label{sec:type-setup}
@@ -191,11 +190,12 @@ formalization, as they require doing analysis---derivatives, interval integrals,
 FTC-2---in a non-commutative Banach algebra.
 
 \paragraph{Derivative computations.}
-The derivative $d/d\tau[e^{\tau B}] = B\,e^{\tau B}$ is provided by
-\texttt{hasDerivAt\_exp\_smul\_const'} in \Mathlib. The product rule
-\texttt{HasDerivAt.mul} extends to normed algebras. One subtlety:
-$(-\tau) \bullet B$ and $\tau \bullet (-B)$ are definitionally distinct but
-equal; we must normalize before applying derivative lemmas
+\Mathlib's \texttt{hasDerivAt\_exp\_smul\_const'} supplies the
+derivative $d/d\tau[e^{\tau B}] = B\,e^{\tau B}$, and the
+product rule \texttt{HasDerivAt.mul} extends to normed algebras.
+One subtlety: $(-\tau) \bullet B$ and $\tau \bullet (-B)$ are
+definitionally distinct but equal; we must normalize before
+applying derivative lemmas
 (\leanref{CommutatorScaling.lean}{75}{hasDerivAt\_exp\_conj}):
 
 \begin{leancode}

@@ -18,10 +18,10 @@ Trotter~\cite{trotter1959product} proved that for bounded operators $A, B$,
 \]
 The standard proof proceeds in two steps:
 \begin{enumerate}
-  \item \emph{Telescoping}: the identity
-    $X^n - Y^n = \sum_{k=0}^{n-1} X^k(X-Y)Y^{n-1-k}$
-    gives
-    $\norm{X^n - Y^n} \le n\,\norm{X-Y}\,(\max\{\norm{X},\norm{Y}\})^{n-1}$.
+  \item \emph{Telescoping}: writing $M = \max\{\norm{X},\norm{Y}\}$,
+    the identity
+    $X^n - Y^n = \sum_{k=0}^{n-1} X^k(X-Y)Y^{n-1-k}$ gives
+    $\norm{X^n - Y^n} \le n\,\norm{X-Y}\,M^{n-1}$.
 
   \item \emph{Step error}: the single-step approximation satisfies
     $\norm{e^a\,e^b - e^{a+b}} = O(\norm{a}\,\norm{b})$.
