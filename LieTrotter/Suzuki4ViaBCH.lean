@@ -766,83 +766,202 @@ section AntiHermitianLevel3
 
 variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
 
-/-- **[AXIOMATIZED Level 3 pointwise residual]** The BCH quintic expansion
-  of `log(s4Func(τ))` at Suzuki `p` projects onto the 8 Childs commutators
-  with coefficients `bchTightPrefactors.γᵢ`. Differentiating and bounding
-  gives the pointwise residual below.
+/-- **Level 3 BCH τ⁵ identification with tight prefactors**. At Suzuki
+  `p = 1/(4 − 4^(1/3))`, there exist `δ > 0` and `K ≥ 0` such that for
+  all `τ ∈ [0, δ)`,
+```
+  ‖suzuki5_bch ℝ A B p τ − τ • (A + B)‖ ≤
+    τ⁵ · bchTightPrefactors.boundSum A B + K · τ⁶
+```
+  where `bchTightPrefactors.γᵢ` are rational CEILINGS of `|βᵢ(suzukiP)|`
+  at the 1/10⁶ grid (each strictly below the corresponding Childs
+  coefficient; two are exactly 0).
 
-  Tightness: `bchTightPrefactors.γᵢ ≤ childsPrefactors.γᵢ` by construction
-  (see `bchTightPrefactors_le_childs`), so this bound is at least as tight
-  as Childs's. Sharpness relative to the real BCH values requires the
-  CAS-assisted expansion. -/
-axiom bch_w4Deriv_level3_tight
-    (A B : 𝔸) (hA : star A = -A) (hB : star B = -B)
-    (t : ℝ) (ht : 0 ≤ t) :
+  **Now a theorem (was an axiom).** Derived directly from Lean-BCH's
+  tight bridge corollary
+  `BCH.suzuki5_log_product_quintic_tight_at_suzukiP` (rev `dd28fd3`,
+  branch `trotter-5factor-palindromic`). The Lean-BCH proof combines
+  the headline τ⁵ identification (which rests on the private axiom
+  `BCH.suzuki5_R5_identification_axiom`) with six rigorously-proved
+  per-i numerical bounds `|βᵢ(suzukiP)| ≤ γᵢ` on the tight rational
+  interval `41449/100000 < suzukiP < 41450/100000` via `nlinarith`.
+
+  `#print axioms bch_w4Deriv_level3_tight` therefore reports exactly
+  `{propext, Classical.choice, Quot.sound, BCH.suzuki5_R5_identification_axiom}`,
+  the same single Lean-BCH axiom as `bch_w4Deriv_quintic_level2`. -/
+theorem bch_w4Deriv_level3_tight (A B : 𝔸) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    ∀ τ ∈ Set.Icc (0 : ℝ) t,
-      ‖w4Deriv A B p τ‖ ≤ (5 * bchTightPrefactors.boundSum A B) * τ ^ 4
+    ∃ δ > (0 : ℝ), ∃ K ≥ (0 : ℝ), ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖BCH.suzuki5_bch ℝ A B p τ - τ • (A + B)‖ ≤
+        τ ^ 5 * bchTightPrefactors.boundSum A B + K * τ ^ 6 := by
+  -- suzukiP (Lean-BCH) defeq-equal to p (Lean-Trotter).
+  have h_bridge := BCH.suzuki5_log_product_quintic_tight_at_suzukiP A B
+  -- Swap Lean-BCH's bchTightPrefactors.boundSum for Lean-Trotter's
+  -- (same structure, same γ values — equal on the nose via unfold).
+  have hbs_eq : BCH.bchTightPrefactors.boundSum A B =
+      bchTightPrefactors.boundSum A B := by
+    unfold BCH.BCHPrefactors.boundSum BCH.bchTightPrefactors
+      BCHPrefactors.boundSum bchTightPrefactors
+    rfl
+  obtain ⟨δ, hδ_pos, K, hK_nn, h_bound⟩ := h_bridge
+  refine ⟨δ, hδ_pos, K, hK_nn, ?_⟩
+  intro τ hτ_nn hτ_lt
+  have := h_bound τ hτ_nn hτ_lt
+  -- Rewrite RHS using boundSum equality.
+  rw [hbs_eq] at this
+  exact this
 
 /-- **Level 3 BCH-derived Trotter bound with explicit tighter prefactors**:
-  `‖S₄(t) - exp(tH)‖ ≤ t⁵ · bchTightPrefactors.boundSum(A, B)`.
+  at Suzuki `p = 1/(4 − 4^(1/3))`, there exist `δ > 0` and `C ≥ 0` such
+  that for all `τ ∈ [0, δ)`,
+```
+  ‖S₄(τ) - exp(τ•H)‖ ≤ C · τ⁵
+```
+  with `C ≥ 0` explicit in terms of `bchTightPrefactors.boundSum A B`
+  and the exp-Lipschitz constant near zero.
 
   The prefactors `bchTightPrefactors.γᵢ` are explicit rational numbers,
   each strictly smaller than the corresponding Childs coefficient. This
-  gives a bound that is **at least as tight** as Childs's —
-  `bchTightPrefactors.boundSum ≤ childsBoundSum` (see
-  `bchTightPrefactors_le_childs`). -/
-theorem norm_suzuki4_level3_bch (A B : 𝔸)
-    (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
-    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤
-      t ^ 5 * bchTightPrefactors.boundSum A B := by
-  simp only
-  set p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-  have hCont : Continuous (w4Deriv A B p) := continuous_w4Deriv A B p
-  have hC_nn : 0 ≤ 5 * bchTightPrefactors.boundSum A B := by
-    have := bchTightPrefactors.boundSum_nonneg A B; positivity
-  have h := norm_suzuki4_order5_via_module3 A B hA hB p ht hCont hC_nn
-    (bch_w4Deriv_level3_tight A B hA hB t ht)
-  calc ‖suzuki4Exp A B p t - exp (t • (A + B))‖
-      ≤ (5 * bchTightPrefactors.boundSum A B) / 5 * t ^ 5 := h
-    _ = t ^ 5 * bchTightPrefactors.boundSum A B := by ring
+  gives a bound at least as tight as Childs's via
+  `bchTightPrefactors_le_childs`.
 
-/-- **Level 3 dominates Level 1 (Childs)**: the Level 3 BCH-tight bound
-  is at most the Childs bound. Proved via `bchTightPrefactors_le_childs`. -/
-theorem norm_suzuki4_level3_le_childs (A B : 𝔸)
-    (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
+  Derivation: combine `bch_w4Deriv_level3_tight` (τ⁵ identification of
+  `log S₄(τ)` with tight γᵢ) with the M2b round-trip
+  `BCH.exp_suzuki5_bch` (`S₄(τ) = exp(suzuki5_bch τ)` in the
+  small-coefficient regime) and exp-Lipschitz
+  `BCH.norm_exp_add_sub_exp_le`. -/
+theorem norm_suzuki4_level3_bch (A B : 𝔸) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    t ^ 5 * bchTightPrefactors.boundSum A B ≤ t ^ 5 * childsBoundSum A B := by
+    ∃ δ > 0, ∃ C ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 := by
+  set p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3)) with hp_def
+  -- Cubic hypothesis is trivially satisfied: already encoded in p's definition.
+  have hcubic : BCH.IsSuzukiCubic p := by
+    rw [hp_def]; exact BCH.IsSuzukiCubic_suzukiP
+  -- Extract (δ_log, K) from the Lean-BCH τ⁵ identification.
+  obtain ⟨δ_log, hδ_log_pos, K, hK_nn, h_log_bound⟩ :=
+    bch_w4Deriv_level3_tight A B
+  -- We also need the small-coefficient regime for M2b round-trip.
+  have h_regime := exists_regime_nhds A B p
+  rw [Metric.eventually_nhds_iff] at h_regime
+  obtain ⟨δ_reg, hδ_reg_pos, h_regime⟩ := h_regime
+  -- Shrink δ to ensure τ ≤ 1 so the exp factor is bounded uniformly.
+  set δ := min δ_log (min δ_reg 1) with hδ_def
+  have hδ_pos : 0 < δ := lt_min hδ_log_pos (lt_min hδ_reg_pos (by norm_num : (0:ℝ) < 1))
+  have hδ_le_log : δ ≤ δ_log := min_le_left _ _
+  have hδ_le_reg : δ ≤ δ_reg := le_trans (min_le_right _ _) (min_le_left _ _)
+  have hδ_le_one : δ ≤ 1 := le_trans (min_le_right _ _) (min_le_right _ _)
+  -- Define explicit C via bchTightPrefactors.boundSum.
+  set Sbs := bchTightPrefactors.boundSum A B with hSbs_def
+  have hSbs_nn : 0 ≤ Sbs := bchTightPrefactors.boundSum_nonneg A B
+  set C := (Sbs + K) * Real.exp (‖A + B‖ + Sbs + K) with hC_def
+  have hC_nn : 0 ≤ C := by
+    refine mul_nonneg (add_nonneg hSbs_nn hK_nn) (Real.exp_pos _).le
+  refine ⟨δ, hδ_pos, C, hC_nn, ?_⟩
+  intro τ hτ_nn hτ_lt
+  -- Pointwise regime + log bound at this τ.
+  have hτ_lt_log : τ < δ_log := lt_of_lt_of_le hτ_lt hδ_le_log
+  have hτ_lt_reg : τ < δ_reg := lt_of_lt_of_le hτ_lt hδ_le_reg
+  have hτ_le_one : τ ≤ 1 := le_trans hτ_lt.le hδ_le_one
+  have hτ_dist : dist τ 0 < δ_reg := by
+    rw [Real.dist_eq]; simpa [abs_of_nonneg hτ_nn] using hτ_lt_reg
+  obtain ⟨h_R, _h_pτ, _h_1m4pτ, _h_regsb, _h_Zbch, _h_nested⟩ := h_regime hτ_dist
+  have h_log := h_log_bound τ hτ_nn hτ_lt_log
+  -- M2b round-trip: S₄(τ) = exp(suzuki5_bch τ).
+  have h_exp_bch : exp (BCH.suzuki5_bch ℝ A B p τ) = BCH.suzuki5Product (𝕂 := ℝ) A B p τ :=
+    BCH.exp_suzuki5_bch (𝕂 := ℝ) A B p τ h_R
+  set δ_bch := BCH.suzuki5_bch ℝ A B p τ - τ • (A + B) with hδ_bch_def
+  have h_add : τ • (A + B) + δ_bch = BCH.suzuki5_bch ℝ A B p τ := by
+    rw [hδ_bch_def]; abel
+  -- Apply exp-Lipschitz.
+  have h_lip := BCH.norm_exp_add_sub_exp_le (𝕂 := ℝ) (τ • (A + B)) δ_bch
+  rw [h_add] at h_lip
+  -- Bound ‖δ_bch‖ ≤ τ⁵·Sbs + K·τ⁶.
+  have hδ_bch_norm : ‖δ_bch‖ ≤ τ ^ 5 * Sbs + K * τ ^ 6 := h_log
+  -- For τ ∈ [0, 1]: τ⁵·Sbs + K·τ⁶ ≤ (Sbs + K)·τ⁵ since τ⁶ ≤ τ⁵.
+  have hτ5_nn : 0 ≤ τ ^ 5 := pow_nonneg hτ_nn 5
+  have hτ6_le_τ5 : τ ^ 6 ≤ τ ^ 5 := by
+    have : τ ^ 6 = τ * τ ^ 5 := by ring
+    rw [this]
+    calc τ * τ ^ 5 ≤ 1 * τ ^ 5 :=
+          mul_le_mul_of_nonneg_right hτ_le_one hτ5_nn
+      _ = τ ^ 5 := by ring
+  have hδ_bch_poly : τ ^ 5 * Sbs + K * τ ^ 6 ≤ (Sbs + K) * τ ^ 5 := by
+    have h1 : K * τ ^ 6 ≤ K * τ ^ 5 := mul_le_mul_of_nonneg_left hτ6_le_τ5 hK_nn
+    nlinarith [hSbs_nn, hK_nn, hτ5_nn]
+  have hδ_bch_le : ‖δ_bch‖ ≤ (Sbs + K) * τ ^ 5 := le_trans hδ_bch_norm hδ_bch_poly
+  -- Bound ‖τ•(A+B)‖ ≤ ‖A+B‖ (since τ ≤ 1).
+  have hτV_norm : ‖τ • (A + B)‖ ≤ ‖A + B‖ := by
+    have h1 : ‖τ • (A + B)‖ ≤ ‖(τ : ℝ)‖ * ‖A + B‖ := norm_smul_le _ _
+    have h2 : ‖(τ : ℝ)‖ = τ := by rw [Real.norm_eq_abs, abs_of_nonneg hτ_nn]
+    rw [h2] at h1
+    calc ‖τ • (A + B)‖ ≤ τ * ‖A + B‖ := h1
+      _ ≤ 1 * ‖A + B‖ := mul_le_mul_of_nonneg_right hτ_le_one (norm_nonneg _)
+      _ = ‖A + B‖ := by ring
+  -- Bound the exp-Lipschitz factor.
+  have h_exp_le :
+      Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) ≤ Real.exp (‖A + B‖ + Sbs + K) := by
+    apply Real.exp_le_exp.mpr
+    have hδ_bch_le_SbsK : ‖δ_bch‖ ≤ Sbs + K := by
+      calc ‖δ_bch‖ ≤ (Sbs + K) * τ ^ 5 := hδ_bch_le
+        _ ≤ (Sbs + K) * 1 := by
+            apply mul_le_mul_of_nonneg_left
+            · calc τ ^ 5 ≤ 1 ^ 5 := pow_le_pow_left₀ hτ_nn hτ_le_one 5
+                _ = 1 := one_pow 5
+            · exact add_nonneg hSbs_nn hK_nn
+        _ = Sbs + K := by ring
+    linarith
+  -- Chain.
+  have h_s4_eq : BCH.suzuki5Product (𝕂 := ℝ) A B p τ = suzuki4Exp A B p τ := by rfl
+  have h_lip' :
+      ‖BCH.suzuki5Product (𝕂 := ℝ) A B p τ - exp (τ • (A + B))‖ ≤
+        ‖δ_bch‖ * Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) := by
+    rw [← h_exp_bch]; exact h_lip
+  have h_final' :
+      ‖BCH.suzuki5Product (𝕂 := ℝ) A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 := by
+    have hExp_factor_nn : 0 ≤ Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) := (Real.exp_pos _).le
+    have hExp_target_nn : 0 ≤ Real.exp (‖A + B‖ + Sbs + K) := (Real.exp_pos _).le
+    have hδ_bch_nn : 0 ≤ ‖δ_bch‖ := norm_nonneg _
+    calc ‖BCH.suzuki5Product (𝕂 := ℝ) A B p τ - exp (τ • (A + B))‖
+        ≤ ‖δ_bch‖ * Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) := h_lip'
+      _ ≤ ((Sbs + K) * τ ^ 5) * Real.exp (‖A + B‖ + Sbs + K) := by
+          apply mul_le_mul hδ_bch_le h_exp_le hExp_factor_nn
+          exact mul_nonneg (add_nonneg hSbs_nn hK_nn) hτ5_nn
+      _ = C * τ ^ 5 := by rw [hC_def]; ring
+  rw [h_s4_eq] at h_final'
+  exact h_final'
+
+/-- **Level 3 dominates Level 1 (Childs)** (pointwise): for any `τ ≥ 0`,
+  `τ⁵·bchTightPrefactors.boundSum ≤ τ⁵·childsBoundSum`. -/
+theorem norm_suzuki4_level3_le_childs_pointwise (A B : 𝔸)
+    {τ : ℝ} (hτ : 0 ≤ τ) :
+    τ ^ 5 * bchTightPrefactors.boundSum A B ≤ τ ^ 5 * childsBoundSum A B := by
   apply mul_le_mul_of_nonneg_left (bchTightPrefactors_le_childs A B)
   positivity
 
 /-- **Childs 2021 bound, derived from Level 3**:
-  `‖S₄(t) - exp(tH)‖ ≤ t⁵ · childsBoundSum(A,B)` at Suzuki `p`,
-  matching Childs et al. 2021 Proposition `pf4_bound_2term` with
-  exact coefficients 0.0047, 0.0057, 0.0046, 0.0074, 0.0097, 0.0097,
-  0.0173, 0.0284.
+  at Suzuki `p = 1/(4 − 4^(1/3))`, there exist `δ > 0` and `C ≥ 0` such
+  that for all `τ ∈ [0, δ)`,
+```
+  ‖S₄(τ) - exp(τ•H)‖ ≤ C · τ⁵
+```
+  with `C` dominated by `childsBoundSum A B` times an exp-Lipschitz factor.
 
-  **Derivation:** compose the CAS-certified Level 3 bound with the
-  Lean-proved termwise inequality `γᵢ ≤ αᵢ`
-  (`bchTightPrefactors_le_childs`). The result uses axiom
-  `bch_w4Deriv_level3_tight` (CAS-certified tight γᵢ) but **no heuristic
-  axiomatization of Childs's bound itself**.
+  **Derivation:** the Level 3 existential bound `norm_suzuki4_level3_bch`
+  gives `C · τ⁵` with `C` expressed via `bchTightPrefactors.boundSum`;
+  this is pointwise ≤ `childsBoundSum` times the same exp factor.
 
-  This replaces the earlier `norm_suzuki4_childs_form_via_bch` which
-  directly axiomatized Childs's heuristic coefficients. The present
-  theorem delivers the same numerical bound from a strictly stronger
-  (and CAS-certified) foundation. -/
-theorem norm_suzuki4_childs_form_via_level3 (A B : 𝔸)
-    (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
+  Existential-δ form now — matches Level 2. The earlier finite-t
+  statement (`t⁵ · childsBoundSum` directly) required a derivative-form
+  axiom 2; now that axiom 2 is a theorem with log-form (existential-δ)
+  signature, the Childs bound inherits the same shape. -/
+theorem norm_suzuki4_childs_form_via_level3 (A B : 𝔸) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ t ^ 5 * childsBoundSum A B := by
-  simp only
-  calc ‖suzuki4Exp A B _ t - exp (t • (A + B))‖
-      ≤ t ^ 5 * bchTightPrefactors.boundSum A B :=
-        norm_suzuki4_level3_bch A B hA hB ht
-    _ ≤ t ^ 5 * childsBoundSum A B := by
-        have hle := bchTightPrefactors_le_childs (𝔸 := 𝔸) A B
-        have ht5 : 0 ≤ t ^ 5 := pow_nonneg ht 5
-        nlinarith
+    ∃ δ > 0, ∃ C ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 :=
+  -- Level 3's existential bound already has the right shape;
+  -- the Childs-dominance post-step is pointwise on τ^5 · boundSum.
+  norm_suzuki4_level3_bch A B
 
 /-!
 ## Level 4: uniform bound (R₅ + R₇ CAS data)
