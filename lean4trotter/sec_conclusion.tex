@@ -4,8 +4,8 @@
 We have presented the first machine-checked formalization of the Lie--Trotter
 product formula, together with its higher-order extensions and
 commutator-scaling error bounds, in Lean~4 with the \Mathlib library.
-The development comprises over 10\,500 lines with zero \texttt{sorry} axioms
-(and four BCH-interface axioms confined to the Suzuki~$S_4$ track) and covers:
+The development comprises over 11\,400 lines with zero \texttt{sorry} axioms
+(and three BCH-interface axioms confined to the Suzuki~$S_4$ track) and covers:
 \begin{itemize}
   \item First-order Lie--Trotter convergence at rate $O(1/n)$;
   \item Symmetric Strang splitting at rate $O(1/n^2)$;
@@ -33,24 +33,31 @@ Several extensions are natural:
     \leanref{ExpBounds.lean}{129}{exp\_sub\_one\_sub\_bound\_real})
     are general-purpose lemmas suitable for upstreaming to \Mathlib.
 
-  \item \emph{Closing the four BCH-interface axioms.}
-    The Suzuki~$S_4$ track relies on four axioms encoding the
-    five-factor palindromic BCH log-expansion. These can be closed by
-    extending the companion
+  \item \emph{Closing the three BCH-interface axioms.}
+    The Suzuki~$S_4$ track relies on three axioms encoding the
+    five-factor palindromic BCH log-expansion at orders $t^5$ and $t^7$.
+    These can be closed by extending the companion
     \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project from
-    its current three-factor symmetric BCH scope to five-factor
-    palindromic compositions, or---for the order-4 Taylor-coefficient
-    identity specifically---by a Trotter-native operator-algebra argument
-    that currently runs afoul of \texttt{module}-tactic time limits on
-    the quartic expansion (see \texttt{scripts/compute\_sumQuadCorr\_factored.py}
-    for the CAS-verified identity).
+    its current coverage (three-factor symmetric BCH plus two-factor
+    palindromic quintic remainder) to the five-factor palindromic case.
+    A fourth axiom (the order-4 Taylor-coefficient identity
+    \texttt{bch\_iteratedDeriv\_s4Func\_order4}) was retired via a
+    three-slice chain that composes Lean-BCH's two-factor quintic payoff
+    with a generic Taylor-match-from-norm lemma and
+    \Mathlib's \texttt{iteratedDeriv} API; a Trotter-native
+    operator-algebra alternative (via
+    \texttt{scripts/compute\_sumQuadCorr\_factored.py}) remains as a
+    nice-to-have that would remove the transitive dependence on Lean-BCH
+    for the order-4 identity specifically.
 
   \item \emph{Baker--Campbell--Hausdorff formula.}
-    The three-factor symmetric BCH identities are already formalized and
-    imported from the Lean-BCH companion project. Extending to
-    five-factor palindromic BCH or to the general $n$-factor case would
-    complete the BCH-interface chain and automatically eliminate the
-    remaining Suzuki~$S_4$ axioms.
+    The three-factor symmetric BCH identities and the two-factor
+    palindromic quintic remainder are already formalized and imported
+    from the Lean-BCH companion project (fully sorry-free as of
+    revision~\texttt{c71d8f2}). Extending to five-factor palindromic
+    BCH at orders $t^5$ and $t^7$, or to the general $n$-factor case,
+    would complete the BCH-interface chain and automatically eliminate
+    the remaining Suzuki~$S_4$ axioms.
 
   \item \emph{Specialization to quantum systems.}
     Connecting our abstract bounds to concrete gate-count estimates for

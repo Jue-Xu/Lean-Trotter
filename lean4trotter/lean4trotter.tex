@@ -116,19 +116,26 @@ Childs et al.\ (2021), where the product $\norm{A}\norm{B}$ is replaced by
 the commutator norm $\norm{\comm{B}{A}}$.
 The commutator-scaling proofs introduce a Duhamel/FTC-based technique that
 avoids ODE uniqueness theory entirely.
-The formalization comprises over 10\,500 lines of Lean~4 with zero
+The formalization comprises over 11\,400 lines of Lean~4 with zero
 \texttt{sorry} axioms, building against current \Mathlib and filling several
 gaps in the library's treatment of the matrix exponential.
 A dedicated Suzuki~$S_4$ track (the longest in the project) uses
 CAS-assisted Baker--Campbell--Hausdorff (BCH) expansions to produce
 four levels of order-$t^5$ error bounds, including a provably
 strictly tighter prefactor refinement of Childs et al.\ (2021).
-The three-factor symmetric BCH identities are imported directly from the
-companion
-\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project;
-the project's remaining axioms (four, all encoding the
-five-factor palindromic BCH expansion of the $S_4$ product) are well-defined
-mathematical claims pending further Lean-BCH development.
+The three-factor symmetric BCH identities and the two-factor palindromic
+quintic remainder are imported directly from the companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project.
+A three-slice chain combining a Lean-BCH single-step $O(\abs{\tau}^5)$ bound, a
+generic Taylor-match-from-norm lemma, and \Mathlib's \texttt{iteratedDeriv}
+machinery retires the order-4 Taylor-coefficient identity axiom, reducing the
+Trotter-side axiom count to three BCH-interface axioms---all encoding the
+five-factor palindromic BCH expansion of $S_4$ at order $t^5$ and $t^7$,
+pending further Lean-BCH development. Axiom inspection confirms that
+the headline theorems (Lie--Trotter, Strang, and the abstract $S_4$
+$O(t^5)$ identity) depend only on Lean's foundational axioms
+\texttt{[propext, Classical.choice, Quot.sound]}---no transitive
+\texttt{sorryAx}.
 \end{abstract}
 
 \tableofcontents

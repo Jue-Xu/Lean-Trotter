@@ -85,12 +85,18 @@ Our formalization proves the following hierarchy of results:
     order~$\tau^7$.
 \end{enumerate}
 
-The entire development comprises 29 Lean source files totaling over 10\,500 lines,
-with zero \texttt{sorry} axioms. Four BCH-interface axioms remain, all
+The entire development comprises 31 Lean source files totaling over 11\,400 lines,
+with zero \texttt{sorry} axioms. Three BCH-interface axioms remain, all
 encoding five-factor palindromic BCH log-expansion facts for the $S_4$
-integrator; the three-factor symmetric BCH identities are imported directly
-from the companion
-\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project.
+integrator at orders $t^5$ and $t^7$; the three-factor symmetric BCH
+identities and the two-factor palindromic quintic remainder are imported
+directly from the companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project (fully
+sorry-free as of revision~\texttt{c71d8f2}).
+Axiom inspection confirms that the headline theorems (Lie--Trotter,
+Strang, commutator scaling, and the abstract $S_4$ $O(t^5)$ identity)
+depend only on the standard foundational axioms \texttt{[propext,
+Classical.choice, Quot.sound]}.
 Our \Lean formalization is available at
 \href{https://github.com/Jue-Xu/Lean-Trotter}{\texttt{github.com/Jue-Xu/Lean-Trotter}}.
 Our main contributions are:

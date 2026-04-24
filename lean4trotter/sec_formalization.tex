@@ -4,7 +4,7 @@
 \subsection{Project structure and statistics}
 \label{sec:project-structure}
 
-The formalization is organized into 29~Lean source files, grouped by track
+The formalization is organized into 31~Lean source files, grouped by track
 in \cref{tab:files}. Each file is self-contained with explicit imports,
 enabling parallel development and independent verification.
 
@@ -48,10 +48,12 @@ enabling parallel development and independent verification.
 \leansrc{Suzuki4Phase5.lean}              & 772  & Taylor reduction + Leibniz bridges + CAPSTONE \\
 \leansrc{Suzuki4OrderFive.lean}           & 440  & $O(t^5)$ abstract-form target \\
 \leansrc{Suzuki4ChildsForm.lean}          & 216  & Childs Prop pf4\_bound\_2term framework \\
-\leansrc{Suzuki4ViaBCH.lean}              & 855  & L1/L2/L3/L4 BCH-derived bounds \\
+\leansrc{Suzuki4BchBound.lean}            & 495  & SLICE~1: single-step $O(\abs{\tau}^5)$ via Lean-BCH M6 \\
+\leansrc{TaylorMatch.lean}                & 331  & SLICE~2: generic Taylor-match-from-norm \\
+\leansrc{Suzuki4ViaBCH.lean}              & 892  & SLICE~3 wiring + L1/L2/L3/L4 BCH-derived bounds \\
 \midrule
-\textbf{Total} & \textbf{10\,541} & \textbf{0 \texttt{sorry} axioms,
-4 BCH-interface axioms} \\
+\textbf{Total} & \textbf{11\,404} & \textbf{0 \texttt{sorry} axioms,
+3 BCH-interface axioms} \\
 \bottomrule
 \end{tabular}
 \caption{Source files in the formalization, grouped by track.}
@@ -62,9 +64,13 @@ The development builds against Lean~4.29.0-rc8 and current \Mathlib.
 The companion
 \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project is imported
 as a git dependency, supplying the symmetric three-factor BCH identities
-used in the Suzuki $S_4$ track. Build time for the full project is under
-2~minutes on a standard laptop after \Mathlib oleans are cached
-(\texttt{lake exe cache get}).
+and the two-factor palindromic quintic remainder used in the Suzuki~$S_4$
+track. Lean-BCH is fully sorry-free as of revision \texttt{c71d8f2}
+(2026-04-24); in particular, \texttt{suzuki5\_bch\_M4b\_RHS\_le\_t5\_of\_IsSuzukiCubic}
+supplies the single-step $O(\abs{\tau}^5)$ payoff that anchors our
+SLICE-1 bound \texttt{exists\_norm\_s4Func\_sub\_exp\_le\_t5}. Build time
+for the full project is under 2~minutes on a standard laptop after
+\Mathlib oleans are cached (\texttt{lake exe cache get}).
 
 \subsection{Type-level setup}
 \label{sec:type-setup}

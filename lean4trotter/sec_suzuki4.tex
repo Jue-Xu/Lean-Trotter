@@ -198,7 +198,10 @@ residual. This axiom is a clean interface---every step of its derivation is
 implemented symbolically in the script---and will be replaced by a theorem
 once the companion
 \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH}
-project's five-factor palindromic quintic expansion is formalized.
+project's five-factor palindromic quintic expansion is formalized. (The
+\emph{two}-factor palindromic quintic is already available in Lean-BCH
+and is used to retire the separate order-4 Taylor-coefficient axiom; see
+\cref{sec:caveats}.)
 
 A companion theorem \texttt{norm\_suzuki4\_level3\_le\_childs}
 formally verifies that the BCH-derived bound dominates Childs's:
@@ -402,17 +405,13 @@ tightest in the Childs basis; however, any valid projection is strictly
 smaller than Childs's on all 8 coordinates.
 
 \paragraph{Caveat 2: Dependence on BCH axioms (pending Lean-BCH).}
-Four BCH-interface axioms remain in \leansrc{Suzuki4ViaBCH.lean}, all
+Three BCH-interface axioms remain in \leansrc{Suzuki4ViaBCH.lean}, all
 encoding log-expansion facts for the five-factor palindromic
 $S_4$ product that are beyond the current scope of the companion
 \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project (which
-currently provides two-factor \texttt{bch} and three-factor symmetric
-BCH identities):
+currently provides two-factor \texttt{bch}, three-factor symmetric
+BCH identities, and the two-factor palindromic quintic remainder):
 \begin{itemize}[leftmargin=1.2em, nosep]
-  \item \texttt{bch\_iteratedDeriv\_s4Func\_order4}: the order-4
-    Taylor-coefficient identity $\partial_\tau^4 S_4(\tau)|_0 = (A+B)^4$
-    under the Suzuki cubic condition (supports the abstract $O(t^5)$
-    existence bound).
   \item \texttt{bch\_w4Deriv\_quintic\_level2}: the primitive pointwise
     residual bound $\norm{w_4'(\tau)} \le 5\,\norm{C_\mathrm{sum}}\,\tau^4$
     with unit coefficients on the Childs basis (supports L2).
@@ -422,14 +421,27 @@ BCH identities):
   \item \texttt{bch\_uniform\_integrated}: the CAS-derived uniform
     finite-$t$ bound combining $R_5$ and $R_7$ (supports L4).
 \end{itemize}
-The four three-factor symmetric-BCH-cubic identities previously
-axiomatized here (the \texttt{symmetric\_bch\_cubic} family) are now
-theorems, derived from the corresponding Lean-BCH theorems specialized to
-$\mathbb{K} = \mathbb{R}$. Trotter imports Lean-BCH directly as a git
-dependency. The $\gamma_i$ and $K$ values are ``machine-checked
-mathematically'' (via the Python scripts, whose output is reproducible)
-and ``axiomatized Lean-formally'' (pending Lean-BCH completion of the
-five-factor palindromic expansion).
+The previously axiomatized order-4 Taylor-coefficient identity
+\texttt{bch\_iteratedDeriv\_s4Func\_order4}, which supports the abstract
+$O(t^5)$ existence bound, is now a \emph{theorem}: a three-slice chain
+composes a single-step $O(\abs{\tau}^5)$ bound from Lean-BCH
+(\texttt{norm\_s4Func\_sub\_exp\_le\_of\_IsSuzukiCubic} composed with the
+opaque-RHS corollary
+\texttt{suzuki5\_bch\_M4b\_RHS\_le\_t5\_of\_IsSuzukiCubic} at Lean-BCH
+rev~\texttt{c71d8f2}), a generic Taylor-match-from-norm lemma
+(\leanref{TaylorMatch.lean}{1}{iteratedDeriv\_eq\_of\_norm\_le\_pow}),
+and \Mathlib's
+\texttt{iteratedDeriv\_exp\_smul\_mul\_at\_zero}. Axiom inspection
+confirms that the resulting theorem and the other headline results
+(Lie--Trotter, Strang, single-step $S_4$ bound) depend only on
+\texttt{[propext, Classical.choice, Quot.sound]}, with no transitive
+\texttt{sorryAx}. The four three-factor symmetric-BCH-cubic identities
+previously axiomatized here (the \texttt{symmetric\_bch\_cubic} family)
+are likewise theorems derived from the corresponding Lean-BCH theorems
+specialized to $\mathbb{K} = \mathbb{R}$. The $\gamma_i$ and $K$ values
+are ``machine-checked mathematically'' (via the Python scripts, whose
+output is reproducible) and ``axiomatized Lean-formally'' (pending
+Lean-BCH completion of the five-factor palindromic expansion).
 
 \subsection{Summary}
 
