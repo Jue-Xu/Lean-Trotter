@@ -678,15 +678,23 @@ def childsPrefactors : BCHPrefactors where
     γ₇(p) = 0
     γ₈(p) = p²/18000 + 13p/9000 − 1/6000
   ```
-  At Suzuki `p = 1/(4 − 4^(1/3)) ≈ 0.4145`, numerical values are:
+  At Suzuki `p = 1/(4 − 4^(1/3)) ≈ 0.4145`, the CAS-computed
+  `|βᵢ(suzukiP)|` values are:
   ```
-    γ₁ ≈ 0.000260    γ₅ ≈ 0.000376
-    γ₂ ≈ 0.000662    γ₆ ≈ 0.001127
-    γ₃ = 0           γ₇ = 0
-    γ₄ ≈ 0.000132    γ₈ ≈ 0.000442
+    |β₁| ≈ 0.0002595   |β₅| ≈ 0.0003757
+    |β₂| ≈ 0.0006624   |β₆| ≈ 0.0011272
+    |β₃| = 0           |β₇| = 0
+    |β₄| ≈ 0.0001317   |β₈| ≈ 0.0004416
   ```
-  **Every value is strictly smaller than Childs's heuristic coefficient**
-  (10×–60× tighter for non-zero values; two are exactly 0).
+  We store **ceilings** at the 1/1000000 grid as the stored rational γᵢ
+  values (e.g. γ₂ = 663/10⁶ > |β₂|), so `γᵢ ≥ |βᵢ(suzukiP)|` holds
+  rigorously. This is essential for any provable R₅ norm bound
+  `‖suzuki5_R5‖ ≤ boundSum` (prior versions used truncations which
+  failed the bound by ~10⁻⁷ for γ₂ and γ₆).
+
+  **Every ceiling value is strictly smaller than Childs's heuristic
+  coefficient** (~9× to ~64× tighter for non-zero values; two are
+  exactly 0).
 
   Caveat: the Childs 8-commutator basis is **over-complete** (2 free
   parameters in the projection because the weight-5 free Lie algebra is
@@ -702,14 +710,14 @@ def childsPrefactors : BCHPrefactors where
   coefficients fold in these higher-order corrections; ours are pure
   leading-order. -/
 def bchTightPrefactors : BCHPrefactors where
-  γ₁ := 260 / 1000000    -- ≈ 0.000260 (Childs: 0.0047, ~18× tighter)
-  γ₂ := 662 / 1000000    -- ≈ 0.000662 (Childs: 0.0057, ~9× tighter)
+  γ₁ := 260 / 1000000    -- ceiling of |β₁(p*)| ≈ 0.0002595 (Childs: 0.0047, ~18× tighter)
+  γ₂ := 663 / 1000000    -- ceiling of |β₂(p*)| ≈ 0.0006624 (Childs: 0.0057, ~8.6× tighter)
   γ₃ := 0                -- exactly 0 (Childs: 0.0046)
-  γ₄ := 132 / 1000000    -- ≈ 0.000132 (Childs: 0.0074, ~56× tighter)
-  γ₅ := 376 / 1000000    -- ≈ 0.000376 (Childs: 0.0097, ~26× tighter)
-  γ₆ := 1127 / 1000000   -- ≈ 0.001127 (Childs: 0.0097, ~9× tighter)
+  γ₄ := 132 / 1000000    -- ceiling of |β₄(p*)| ≈ 0.0001317 (Childs: 0.0074, ~56× tighter)
+  γ₅ := 376 / 1000000    -- ceiling of |β₅(p*)| ≈ 0.0003757 (Childs: 0.0097, ~26× tighter)
+  γ₆ := 1128 / 1000000   -- ceiling of |β₆(p*)| ≈ 0.0011272 (Childs: 0.0097, ~8.6× tighter)
   γ₇ := 0                -- exactly 0 (Childs: 0.0173)
-  γ₈ := 442 / 1000000    -- ≈ 0.000442 (Childs: 0.0284, ~64× tighter)
+  γ₈ := 442 / 1000000    -- ceiling of |β₈(p*)| ≈ 0.0004416 (Childs: 0.0284, ~64× tighter)
   nonneg₁ := by norm_num
   nonneg₂ := by norm_num
   nonneg₃ := by norm_num
