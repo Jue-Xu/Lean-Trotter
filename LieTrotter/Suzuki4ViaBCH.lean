@@ -1056,66 +1056,228 @@ lemma bchR7Bound_nonneg (A B : 𝔸) : 0 ≤ bchR7Bound A B := by
   have hmax : 0 ≤ max ‖A‖ ‖B‖ := le_max_of_le_left (norm_nonneg A)
   positivity
 
-/-- **[AXIOMATIZED from CAS R₇ computation]** Uniform finite-`t` bound
-  combining the leading-order γᵢ from R₅ with the R₇ uniform constant.
-  For Suzuki `p`:
-  ```
-    ‖S₄(t) − e^{tH}‖ ≤ t⁵ · Σᵢ γᵢ‖Cᵢ‖ + t⁷ · bchR7Bound(A, B)
-  ```
-  Derivation sketch (in `scripts/compute_bch_r7.py`):
-  1. BCH expansion of `log(S₄(τ))` to order `τ⁷`.
-  2. Verify orders 2, 3, 4, 6 vanish (palindromic + Suzuki).
-  3. R₇ = degree-7 part; bound ‖R₇‖ ≤ K · max(‖A‖,‖B‖)^7 via triangle
-     inequality over its 126 non-zero 7-letter words.
-  4. Integrate FTC-2 style (analogous to Module 3) with the combined
-     pointwise bound on `w4Deriv`. -/
-axiom bch_uniform_integrated
-    (A B : 𝔸) (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
+/-- Bridge equation: Lean-BCH's `bchR7UniformConstant` equals Lean-Trotter's
+(both are `0.01951`). -/
+private lemma bchR7UniformConstant_eq_BCH :
+    BCH.bchR7UniformConstant = bchR7UniformConstant := by
+  rw [BCH.bchR7UniformConstant_eq, bchR7UniformConstant_eq]
+
+/-- Bridge equation: Lean-BCH's `bchR7Bound` equals Lean-Trotter's.
+Both unfold to `0.01951 * max ‖A‖ ‖B‖^7`. -/
+private lemma bchR7Bound_eq_BCH (A B : 𝔸) :
+    BCH.bchR7Bound A B = bchR7Bound A B := by
+  unfold BCH.bchR7Bound bchR7Bound
+  rw [bchR7UniformConstant_eq_BCH]
+
+/-- **Level 4 uniform BCH Trotter bound** (existential-δ form): finite-`t`
+  bound combining the leading R₅ prefactors with an explicit R₇ correction.
+
+  At Suzuki `p = 1/(4 − 4^(1/3))`, there exist `δ > 0` and `C ≥ 0` such that
+  for all `τ ∈ [0, δ)`,
+```
+  ‖S₄(τ) − e^{τH}‖ ≤
+    C · (τ⁵ · bchTightPrefactors.boundSum A B +
+         τ⁷ · bchR7Bound A B +
+         τ⁸)
+```
+
+  Compared to Level 3's coarser `C · τ⁵` shape, this preserves the explicit
+  `τ⁵·boundSum` and `τ⁷·R7Bound` separation: the leading-order content of
+  the R₅ residual sits in the `τ⁵·boundSum` term, the next-order R₇
+  correction sits in the `τ⁷·R7Bound` term, and `C·τ⁸` absorbs the
+  exp-Lipschitz inflation factor and the BCH `O(τ⁸)` tail.
+
+  **Now a theorem (was an axiom).** Derived from Lean-BCH's bridge corollary
+  `BCH.suzuki5_log_product_septic_at_suzukiP` (added 2026-04-26). The
+  underlying Lean-BCH axiom `suzuki5_log_product_septic_at_suzukiP_axiom`
+  is the τ⁷ identification analog of the discharged P1 axiom; its full
+  discharge is documented in
+  `claude/lean-bch-suzuki5-R7-followup-session-prompt.md`. -/
+theorem bch_uniform_integrated
+    (A B : 𝔸) (hA : star A = -A) (hB : star B = -B) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤
-      t ^ 5 * bchTightPrefactors.boundSum A B + t ^ 7 * bchR7Bound A B
+    ∃ δ > 0, ∃ C ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤
+        C * (τ ^ 5 * bchTightPrefactors.boundSum A B +
+             τ ^ 7 * bchR7Bound A B +
+             τ ^ 8) := by
+  set p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3)) with hp_def
+  -- Cubic hypothesis is automatically satisfied by p's definition.
+  have hcubic : BCH.IsSuzukiCubic p := by
+    rw [hp_def]; exact BCH.IsSuzukiCubic_suzukiP
+  -- Step 1: get the BCH septic identification (τ⁵ R₅ + τ⁷ R₇ + M·τ⁸ tail).
+  obtain ⟨δ_log, hδ_log_pos, M_BCH, hM_BCH_nn, h_log_bound⟩ :=
+    BCH.suzuki5_log_product_septic_at_suzukiP A B
+  -- Step 2: small-coefficient regime for the M2b round-trip.
+  have h_regime := exists_regime_nhds A B p
+  rw [Metric.eventually_nhds_iff] at h_regime
+  obtain ⟨δ_reg, hδ_reg_pos, h_regime⟩ := h_regime
+  -- Step 3: shrink δ to ensure τ ≤ 1 (so the polynomial bookkeeping is uniform).
+  set δ := min δ_log (min δ_reg 1) with hδ_def
+  have hδ_pos : 0 < δ := lt_min hδ_log_pos (lt_min hδ_reg_pos (by norm_num : (0:ℝ) < 1))
+  have hδ_le_log : δ ≤ δ_log := min_le_left _ _
+  have hδ_le_reg : δ ≤ δ_reg := le_trans (min_le_right _ _) (min_le_left _ _)
+  have hδ_le_one : δ ≤ 1 := le_trans (min_le_right _ _) (min_le_right _ _)
+  -- Step 4: define the explicit constant C absorbing the exp-Lipschitz factor.
+  set Sbs := bchTightPrefactors.boundSum A B with hSbs_def
+  have hSbs_nn : 0 ≤ Sbs := bchTightPrefactors.boundSum_nonneg A B
+  set R7B := bchR7Bound A B with hR7B_def
+  have hR7B_nn : 0 ≤ R7B := bchR7Bound_nonneg A B
+  set V_norm := ‖A + B‖ with hV_def
+  have hV_nn : 0 ≤ V_norm := norm_nonneg _
+  -- D bounds ‖τV‖ + ‖δ_bch‖ for τ ≤ 1.
+  set D := V_norm + Sbs + R7B + M_BCH with hD_def
+  have hD_nn : 0 ≤ D := by
+    rw [hD_def]; positivity
+  set E := Real.exp D with hE_def
+  have hE_pos : 0 < E := Real.exp_pos _
+  have hE_ge_one : 1 ≤ E := by
+    rw [hE_def]; exact Real.one_le_exp hD_nn
+  -- C := E·(1 + M_BCH) absorbs both the exp factor and the BCH tail constant.
+  set C := E * (1 + M_BCH) with hC_def
+  have hC_nn : 0 ≤ C := by
+    rw [hC_def]
+    refine mul_nonneg hE_pos.le ?_
+    linarith
+  refine ⟨δ, hδ_pos, C, hC_nn, ?_⟩
+  intro τ hτ_nn hτ_lt
+  -- Pointwise regime + log bound at this τ.
+  have hτ_lt_log : τ < δ_log := lt_of_lt_of_le hτ_lt hδ_le_log
+  have hτ_lt_reg : τ < δ_reg := lt_of_lt_of_le hτ_lt hδ_le_reg
+  have hτ_le_one : τ ≤ 1 := le_trans hτ_lt.le hδ_le_one
+  have hτ_dist : dist τ 0 < δ_reg := by
+    rw [Real.dist_eq]; simpa [abs_of_nonneg hτ_nn] using hτ_lt_reg
+  obtain ⟨h_R, _h_pτ, _h_1m4pτ, _h_regsb, _h_Zbch, _h_nested⟩ := h_regime hτ_dist
+  have h_log := h_log_bound τ hτ_nn hτ_lt_log
+  -- Convert Lean-BCH's bchR7Bound to Lean-Trotter's bchR7Bound.
+  rw [bchR7Bound_eq_BCH A B] at h_log
+  -- M2b round-trip: S₄(τ) = exp(suzuki5_bch τ).
+  have h_exp_bch : exp (BCH.suzuki5_bch ℝ A B p τ) = BCH.suzuki5Product (𝕂 := ℝ) A B p τ :=
+    BCH.exp_suzuki5_bch (𝕂 := ℝ) A B p τ h_R
+  set δ_bch := BCH.suzuki5_bch ℝ A B p τ - τ • (A + B) with hδ_bch_def
+  have h_add : τ • (A + B) + δ_bch = BCH.suzuki5_bch ℝ A B p τ := by
+    rw [hδ_bch_def]; abel
+  -- Apply exp-Lipschitz: ‖exp(X+δ) - exp(X)‖ ≤ ‖δ‖·exp(‖X‖+‖δ‖).
+  have h_lip := BCH.norm_exp_add_sub_exp_le (𝕂 := ℝ) (τ • (A + B)) δ_bch
+  -- Bound ‖δ_bch‖ from BCH septic identification.
+  have hδ_bch_norm : ‖δ_bch‖ ≤ τ ^ 5 * Sbs + τ ^ 7 * R7B + M_BCH * τ ^ 8 := h_log
+  -- Simple positivity facts.
+  have hτ5_nn : 0 ≤ τ ^ 5 := pow_nonneg hτ_nn 5
+  have hτ7_nn : 0 ≤ τ ^ 7 := pow_nonneg hτ_nn 7
+  have hτ8_nn : 0 ≤ τ ^ 8 := pow_nonneg hτ_nn 8
+  -- For τ ∈ [0, 1]: τ⁵, τ⁷, τ⁸ ≤ 1.
+  have hτ5_le_one : τ ^ 5 ≤ 1 := by
+    calc τ ^ 5 ≤ 1 ^ 5 := pow_le_pow_left₀ hτ_nn hτ_le_one 5
+      _ = 1 := one_pow _
+  have hτ7_le_one : τ ^ 7 ≤ 1 := by
+    calc τ ^ 7 ≤ 1 ^ 7 := pow_le_pow_left₀ hτ_nn hτ_le_one 7
+      _ = 1 := one_pow _
+  have hτ8_le_one : τ ^ 8 ≤ 1 := by
+    calc τ ^ 8 ≤ 1 ^ 8 := pow_le_pow_left₀ hτ_nn hτ_le_one 8
+      _ = 1 := one_pow _
+  -- ‖δ_bch‖ ≤ Sbs + R7B + M_BCH (from the bound + τ^k ≤ 1).
+  have hδ_bch_le_const : ‖δ_bch‖ ≤ Sbs + R7B + M_BCH := by
+    calc ‖δ_bch‖ ≤ τ ^ 5 * Sbs + τ ^ 7 * R7B + M_BCH * τ ^ 8 := hδ_bch_norm
+      _ ≤ 1 * Sbs + 1 * R7B + M_BCH * 1 := by gcongr
+      _ = Sbs + R7B + M_BCH := by ring
+  -- ‖τV‖ ≤ τ·V_norm ≤ V_norm.
+  have hτV_norm_le : ‖τ • (A + B)‖ ≤ V_norm := by
+    rw [hV_def]
+    have h1 : ‖τ • (A + B)‖ ≤ ‖(τ : ℝ)‖ * ‖A + B‖ := norm_smul_le _ _
+    have h2 : ‖(τ : ℝ)‖ = τ := by rw [Real.norm_eq_abs, abs_of_nonneg hτ_nn]
+    rw [h2] at h1
+    calc ‖τ • (A + B)‖ ≤ τ * ‖A + B‖ := h1
+      _ ≤ 1 * ‖A + B‖ := mul_le_mul_of_nonneg_right hτ_le_one (norm_nonneg _)
+      _ = ‖A + B‖ := one_mul _
+  -- exp(‖τV‖ + ‖δ_bch‖) ≤ exp(D) = E.
+  have h_exp_le : Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) ≤ E := by
+    rw [hE_def]
+    apply Real.exp_le_exp.mpr
+    rw [hD_def]
+    linarith [hτV_norm_le, hδ_bch_le_const]
+  -- The big estimate, all in one go.
+  have hδ_bch_nn : 0 ≤ ‖δ_bch‖ := norm_nonneg _
+  -- Step A: ‖exp(τV+δ_bch) - exp(τV)‖ ≤ ‖δ_bch‖ · E
+  have h_lip_E : ‖exp (τ • (A + B) + δ_bch) - exp (τ • (A + B))‖ ≤ ‖δ_bch‖ * E :=
+    le_trans h_lip (mul_le_mul_of_nonneg_left h_exp_le hδ_bch_nn)
+  -- Step B: rewrite LHS via M2b round-trip.
+  rw [h_add] at h_lip_E
+  rw [h_exp_bch] at h_lip_E
+  -- Now: ‖suzuki5Product - exp(τV)‖ ≤ ‖δ_bch‖ · E.
+  have h_s4_eq : BCH.suzuki5Product (𝕂 := ℝ) A B p τ = suzuki4Exp A B p τ := rfl
+  rw [h_s4_eq] at h_lip_E
+  -- Step C: ‖δ_bch‖ · E ≤ E · (τ⁵·Sbs + τ⁷·R7B + M_BCH·τ⁸).
+  have h_prod : ‖δ_bch‖ * E ≤ E * (τ ^ 5 * Sbs + τ ^ 7 * R7B + M_BCH * τ ^ 8) := by
+    rw [mul_comm ‖δ_bch‖ E]
+    exact mul_le_mul_of_nonneg_left hδ_bch_norm hE_pos.le
+  -- Step D: E · (τ⁵·Sbs + τ⁷·R7B + M_BCH·τ⁸) ≤ C · (τ⁵·Sbs + τ⁷·R7B + τ⁸).
+  -- Since C = E · (1 + M_BCH), we have C ≥ E ≥ E·M_BCH (when M_BCH ≤ 1+M_BCH).
+  have h_target :
+      E * (τ ^ 5 * Sbs + τ ^ 7 * R7B + M_BCH * τ ^ 8) ≤
+        C * (τ ^ 5 * Sbs + τ ^ 7 * R7B + τ ^ 8) := by
+    have hC_ge_E : E ≤ C := by
+      rw [hC_def]
+      calc E = E * 1 := (mul_one E).symm
+        _ ≤ E * (1 + M_BCH) := by
+            apply mul_le_mul_of_nonneg_left _ hE_pos.le
+            linarith
+    have hC_ge_E_M : E * M_BCH ≤ C := by
+      rw [hC_def]
+      apply mul_le_mul_of_nonneg_left _ hE_pos.le
+      linarith
+    have ha : E * (τ ^ 5 * Sbs) ≤ C * (τ ^ 5 * Sbs) :=
+      mul_le_mul_of_nonneg_right hC_ge_E (by positivity)
+    have hb : E * (τ ^ 7 * R7B) ≤ C * (τ ^ 7 * R7B) :=
+      mul_le_mul_of_nonneg_right hC_ge_E (by positivity)
+    have hc : E * (M_BCH * τ ^ 8) ≤ C * τ ^ 8 := by
+      calc E * (M_BCH * τ ^ 8) = (E * M_BCH) * τ ^ 8 := by ring
+        _ ≤ C * τ ^ 8 := mul_le_mul_of_nonneg_right hC_ge_E_M hτ8_nn
+    linarith
+  -- Combine A, C, D.
+  linarith [h_lip_E, h_prod, h_target]
 
-/-- **Level 4 uniform BCH Trotter bound**: finite-`t` bound combining the
-  leading R₅ prefactors with an explicit R₇ correction.
-
-  `‖S₄(t) − e^{tH}‖ ≤ t⁵ · bchTightPrefactors.boundSum + t⁷ · bchR7Bound(A,B)`.
-
-  Unlike the Level 3 bound, this one is rigorously valid for all `t ≥ 0`
-  (without asymptotic qualification), because the R₇ term explicitly
-  accounts for the leading correction to R₅. Higher-order corrections
-  (R₉, R₁₁, …) contribute at orders `t⁹` and higher, negligible for the
-  small-`t` regime of Trotter splitting. -/
+/-- **Level 4 uniform BCH Trotter bound** (existential-δ form, exposed
+under the original name for backward compatibility): same statement as
+`bch_uniform_integrated`, just renamed. -/
 theorem norm_suzuki4_level4_uniform (A B : 𝔸)
-    (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
+    (hA : star A = -A) (hB : star B = -B) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤
-      t ^ 5 * bchTightPrefactors.boundSum A B + t ^ 7 * bchR7Bound A B :=
-  bch_uniform_integrated A B hA hB ht
+    ∃ δ > 0, ∃ C ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤
+        C * (τ ^ 5 * bchTightPrefactors.boundSum A B +
+             τ ^ 7 * bchR7Bound A B +
+             τ ^ 8) :=
+  bch_uniform_integrated A B hA hB
 
-/-- **Level 4 dominates Childs for small `t`**: when the R₇ correction
-  `t² · bchR7Bound(A,B)` is less than the Level 3 gap
-  `(childsBoundSum − bchTightPrefactors.boundSum)(A, B)`, the uniform
-  Level 4 bound is strictly tighter than Childs's.
+/-- **Level 4 dominates Childs for small `τ`**: when `C·(boundSum + τ²·R7Bound + τ³)`
+  is `≤ childsBoundSum`, the Level 4 bound is strictly tighter than Childs's.
 
-  The threshold is `t² ≤ (gap) / bchR7Bound(A,B)`. For typical Trotter
-  regimes (`t · (‖A‖+‖B‖) ≪ 1`), this is easily satisfied. -/
+  Existential-δ form: there exist `δ > 0` and `C ≥ 0` such that for all
+  `τ ∈ [0, δ)` satisfying `C · (boundSum + τ²·R7Bound + τ³) ≤ childsBoundSum`,
+  we have `‖S₄(τ) − e^{τH}‖ ≤ τ⁵ · childsBoundSum`.
+
+  Practical use: at runtime, take `τ` small enough that the side condition
+  holds, e.g. `τ² · R7Bound ≤ (childsBoundSum/C − boundSum) − τ³`. -/
 theorem norm_suzuki4_level4_le_childs_when_small (A B : 𝔸)
-    (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t)
-    (hsmall : t ^ 2 * bchR7Bound A B ≤
-        childsBoundSum A B - bchTightPrefactors.boundSum A B) :
+    (hA : star A = -A) (hB : star B = -B) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ t ^ 5 * childsBoundSum A B := by
-  simp only
-  have h_uniform := norm_suzuki4_level4_uniform A B hA hB ht
-  have hpow : 0 ≤ t ^ 5 := pow_nonneg ht 5
-  calc ‖suzuki4Exp A B _ t - exp (t • (A + B))‖
-      ≤ t ^ 5 * bchTightPrefactors.boundSum A B + t ^ 7 * bchR7Bound A B := h_uniform
-    _ = t ^ 5 * (bchTightPrefactors.boundSum A B + t ^ 2 * bchR7Bound A B) := by ring
-    _ ≤ t ^ 5 * (bchTightPrefactors.boundSum A B +
-                 (childsBoundSum A B - bchTightPrefactors.boundSum A B)) := by
-        apply mul_le_mul_of_nonneg_left _ hpow
-        linarith
-    _ = t ^ 5 * childsBoundSum A B := by ring
+    ∃ δ > 0, ∃ C ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      C * (bchTightPrefactors.boundSum A B + τ ^ 2 * bchR7Bound A B + τ ^ 3) ≤
+        childsBoundSum A B →
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ τ ^ 5 * childsBoundSum A B := by
+  obtain ⟨δ, hδ_pos, C, hC_nn, h_uniform⟩ := bch_uniform_integrated A B hA hB
+  refine ⟨δ, hδ_pos, C, hC_nn, ?_⟩
+  intro τ hτ_nn hτ_lt h_small
+  have h_bound := h_uniform τ hτ_nn hτ_lt
+  have hpow : 0 ≤ τ ^ 5 := pow_nonneg hτ_nn 5
+  calc ‖suzuki4Exp A B _ τ - exp (τ • (A + B))‖
+      ≤ C * (τ ^ 5 * bchTightPrefactors.boundSum A B +
+             τ ^ 7 * bchR7Bound A B +
+             τ ^ 8) := h_bound
+    _ = τ ^ 5 *
+        (C * (bchTightPrefactors.boundSum A B + τ ^ 2 * bchR7Bound A B + τ ^ 3)) := by
+        ring
+    _ ≤ τ ^ 5 * childsBoundSum A B := mul_le_mul_of_nonneg_left h_small hpow
 
 end AntiHermitianLevel3
 
