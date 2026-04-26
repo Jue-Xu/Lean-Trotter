@@ -80,19 +80,26 @@ Our formalization proves the following hierarchy of results:
     four formalized order-$t^5$ bounds for
     $\norm{S_4(t) - e^{t(A+B)}}$, culminating in a provably
     strictly tighter (9$\times$--64$\times$ per coefficient)
-    replacement of Childs's~2021 heuristic prefactors, together with a
-    uniform finite-$t$ bound obtained by extending the CAS computation to
-    order~$\tau^7$.
+    replacement of Childs's~2021 heuristic prefactors, together with an
+    existential-$\delta$ finite-$t$ bound obtained by extending the CAS
+    computation to order~$\tau^7$.
 \end{enumerate}
 
 The entire development comprises 31 Lean source files totaling over 11\,400 lines,
-with zero \texttt{sorry} axioms. Three BCH-interface axioms remain, all
-encoding five-factor palindromic BCH log-expansion facts for the $S_4$
-integrator at orders $t^5$ and $t^7$; the three-factor symmetric BCH
-identities and the two-factor palindromic quintic remainder are imported
-directly from the companion
-\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project (fully
-sorry-free as of revision~\texttt{c71d8f2}).
+with zero \texttt{sorry} axioms and zero own theorem-level BCH-interface
+axioms on the Lean-Trotter side. The three former BCH-interface axioms
+(\texttt{bch\_w4Deriv\_quintic\_level2},
+\texttt{bch\_w4Deriv\_level3\_tight},
+\texttt{bch\_uniform\_integrated})
+are now theorems composing Lean-BCH bridge corollaries with
+exp-Lipschitz lifts. Two transitive private axioms remain inside the
+companion \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project:
+the three-factor symmetric BCH quintic Taylor bridge (B1.c, supports L2/L3)
+and the new five-factor palindromic septic identification (R$_7$,
+supports L4). All other Lean-BCH content is fully sorry-free; the
+three-factor symmetric BCH cubic identities and the two-factor
+palindromic quintic remainder are theorems specialized to
+$\mathbb{K} = \mathbb{R}$ and imported directly.
 Axiom inspection confirms that the headline theorems (Lie--Trotter,
 Strang, commutator scaling, and the abstract $S_4$ $O(t^5)$ identity)
 depend only on the standard foundational axioms \texttt{[propext,
@@ -115,8 +122,8 @@ Our main contributions are:
 
   \item \emph{CAS-assisted BCH bounds for Suzuki $S_4$}: four machine-checked
     bounds---including a rigorously tighter replacement for the
-    Childs (2021) prefactors and a uniform finite-$t$ bound via an
-    order-$\tau^7$ correction---with all CAS output verified by Lean
+    Childs (2021) prefactors and an existential-$\delta$ finite-$t$ bound
+    via an order-$\tau^7$ correction---with all CAS output verified by Lean
     numerical sanity checks.
 
   \item Identification and filling of several \emph{gaps in \Mathlib}, notably

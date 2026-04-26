@@ -16,8 +16,8 @@ The development comprises over 11\,400 lines with zero \texttt{sorry} axioms
     captures signed cancellations invisible to the sum-of-norms form;
   \item A fourth-order Suzuki $S_4$ track with four CAS-assisted
     BCH-based bounds, including a strictly tighter replacement
-    (9$\times$--64$\times$) of Childs's 2021 heuristic prefactors and a
-    uniform finite-$t$ bound via an explicit $\tau^7$ correction.
+    (9$\times$--64$\times$) of Childs's 2021 heuristic prefactors and an
+    existential-$\delta$ finite-$t$ bound via an explicit $\tau^7$ correction.
 \end{itemize}
 
 The Duhamel approach to commutator scaling---avoiding ODE uniqueness in favor
@@ -33,17 +33,20 @@ Several extensions are natural:
     \leanref{ExpBounds.lean}{129}{exp\_sub\_one\_sub\_bound\_real})
     are general-purpose lemmas suitable for upstreaming to \Mathlib.
 
-  \item \emph{Closing the three BCH-interface axioms.}
-    The Suzuki~$S_4$ track relies on three axioms encoding the
-    five-factor palindromic BCH log-expansion at orders $t^5$ and $t^7$.
-    These can be closed by extending the companion
-    \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project from
-    its current coverage (three-factor symmetric BCH plus two-factor
-    palindromic quintic remainder) to the five-factor palindromic case.
-    A fourth axiom (the order-4 Taylor-coefficient identity
-    \texttt{bch\_iteratedDeriv\_s4Func\_order4}) was retired via a
-    three-slice chain that composes Lean-BCH's two-factor quintic payoff
-    with a generic Taylor-match-from-norm lemma and
+  \item \emph{Closing the two transitive Lean-BCH-private axioms.}
+    Lean-Trotter no longer carries any own theorem-level BCH-interface
+    axioms. The Suzuki~$S_4$ track now depends transitively on two
+    private axioms inside the companion
+    \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project:
+    the three-factor symmetric BCH quintic Taylor bridge
+    (\texttt{symmetric\_bch\_quintic\_sub\_poly\_axiom}, supports L2/L3)
+    and the new five-factor palindromic septic identification
+    (\texttt{suzuki5\_log\_product\_septic\_at\_suzukiP\_axiom},
+    supports L4). Both have full multi-week discharge roadmaps in the
+    project's \texttt{claude/} directory. The order-4 Taylor-coefficient
+    identity \texttt{bch\_iteratedDeriv\_s4Func\_order4} was retired
+    earlier via a three-slice chain that composes Lean-BCH's two-factor
+    quintic payoff with a generic Taylor-match-from-norm lemma and
     \Mathlib's \texttt{iteratedDeriv} API; a Trotter-native
     operator-algebra alternative (via
     \texttt{scripts/compute\_sumQuadCorr\_factored.py}) remains as a
