@@ -613,6 +613,141 @@ def main():
     else:
         print(f"\n  ✗ Non-zero terms at degrees {deg_lt_6} — BCH identity FAILS!")
 
+    # ----------------------------------------------------------------
+    # Step 7: Parametric RHS solver
+    # ----------------------------------------------------------------
+    print("\n" + "=" * 70)
+    print("Step 7: Parametric RHS solver — find c₁, c₂, ... such that")
+    print("        LHS_full = c₁·basis_1 + c₂·basis_2 + ...")
+    print("=" * 70)
+
+    # Candidate basis: all "natural" degree-5+ building blocks.
+    # Each is a polynomial in {a, b, ea, eb}; we'll solve for rational coefficients.
+    H1 = sub(G1, scale(a5, sp.Rational(1, 120)))  # H₁ = G₁ - (1/120)a⁵
+    H2 = sub(G2, scale(b5, sp.Rational(1, 120)))
+
+    # Build the basis dict: name → NCPoly
+    # Include all natural "degree-5+" building blocks in {a, b, ea, eb}.
+    basis = {
+        # Degree-5+ singles
+        'G1': G1, 'G2': G2,
+        # Cross-quartic
+        'aF2': mul(a, F2), 'F1b': mul(F1, b),
+        'F2a': mul(F2, a), 'bF1': mul(b, F1),
+        # Cross-mixed-cubic
+        'D1E2': mul(D1, E2), 'E1D2': mul(E1, D2),
+        'E2D1': mul(E2, D1), 'D2E1': mul(D2, E1),
+        # P-related (P starts at deg 2)
+        'PX': mul(P, X), 'XP': mul(X, P),
+        'P_sq_a': mul(mul(P, P), a), 'aP_sq': mul(a, mul(P, P)),
+        'bP_sq': mul(b, mul(P, P)), 'P_sq_b': mul(mul(P, P), b),
+        'P3': mul(P, mul(P, P)),
+        # z·Y + Y·z (Y = F1+F2+Q5)
+        'zY': mul(z, Y), 'Yz': mul(Y, z),
+        # D-D-D triples (deg 6)
+        'D1D2D1': mul(D1, mul(D2, D1)), 'D2D1D2': mul(D2, mul(D1, D2)),
+        # Sandwiches with a, b in middle/edges
+        'aD2a': mul(mul(a, D2), a), 'bD1b': mul(mul(b, D1), b),
+        'aD2b': mul(mul(a, D2), b), 'bD1a': mul(mul(b, D1), a),
+        'D1bD2': mul(mul(D1, b), D2), 'D2aD1': mul(mul(D2, a), D1),
+        'D1aD2': mul(mul(D1, a), D2), 'D2bD1': mul(mul(D2, b), D1),
+        # E with single var (degree 4 each, but combined deg 5+)
+        'aE2a': mul(mul(a, E2), a), 'bE1b': mul(mul(b, E1), b),
+        'aE2b': mul(mul(a, E2), b), 'bE1a': mul(mul(b, E1), a),
+        'aaE2': mul(mul(a, a), E2), 'E1bb': mul(E1, mul(b, b)),
+        'E2aa': mul(E2, mul(a, a)), 'bbE1': mul(mul(b, b), E1),
+        # D with squares (deg 4)
+        'aaD2': mul(mul(a, a), D2), 'D1bb': mul(D1, mul(b, b)),
+        'bbD1': mul(mul(b, b), D1), 'D2aa': mul(D2, mul(a, a)),
+        # D-cross with ab/ba
+        'D1ab': mul(D1, mul(a, b)), 'abD2': mul(mul(a, b), D2),
+        'D1ba': mul(D1, mul(b, a)), 'baD2': mul(mul(b, a), D2),
+        'abD1': mul(mul(a, b), D1), 'D2ab': mul(D2, mul(a, b)),
+        'baD1': mul(mul(b, a), D1), 'D2ba': mul(D2, mul(b, a)),
+        # Triple cross D-D-D with vars
+        'D1D2a': mul(mul(D1, D2), a), 'aD1D2': mul(a, mul(D1, D2)),
+        'bD1D2': mul(b, mul(D1, D2)), 'D1D2b': mul(mul(D1, D2), b),
+        # z² · D, D · z² etc.
+        'zzD1': mul(mul(z, z), D1), 'D1zz': mul(D1, mul(z, z)),
+        'zzD2': mul(mul(z, z), D2), 'D2zz': mul(D2, mul(z, z)),
+        'zD1z': mul(mul(z, D1), z), 'zD2z': mul(mul(z, D2), z),
+        'zE1z': mul(mul(z, E1), z), 'zE2z': mul(mul(z, E2), z),
+    }
+
+    print(f"\n  Basis size: {len(basis)} candidate terms.")
+    print(f"  LHS_full target: {num_terms(LHS_full)} non-zero monomials.")
+
+    # Build a linear system: for each monomial m in {a, b, ea, eb}, the equation
+    #   LHS_full[m] = sum_k c_k · basis[k][m]
+    # over all c_k. Each monomial → one equation.
+
+    # Collect all monomials that appear in LHS_full or any basis element
+    all_monomials = set(LHS_full.keys())
+    for poly in basis.values():
+        all_monomials.update(poly.keys())
+    all_monomials = sorted(all_monomials)
+
+    # Build matrix M (rows = monomials, cols = basis elements + LHS column)
+    # Equation: sum_k c_k · basis[k][m] = LHS_full[m]
+    coeff_names = list(basis.keys())
+    n_vars = len(coeff_names)
+    n_eqs = len(all_monomials)
+
+    print(f"  Linear system: {n_eqs} equations, {n_vars} unknowns.")
+
+    # Build augmented matrix A | b where A[i][j] = basis_j[m_i], b[i] = LHS[m_i]
+    # Use sympy.Matrix
+    rows = []
+    rhs_col = []
+    for m in all_monomials:
+        row = []
+        for name in coeff_names:
+            row.append(basis[name].get(m, sp.Integer(0)))
+        rows.append(row)
+        rhs_col.append(LHS_full.get(m, sp.Integer(0)))
+
+    A = sp.Matrix(rows)
+    b_vec = sp.Matrix(rhs_col)
+
+    print(f"  Matrix shape: {A.shape}")
+    print(f"  Solving Ax = b...")
+    aug = A.row_join(b_vec)
+    rref, pivots = aug.rref()
+    print(f"  RREF computed. Pivots: {pivots}")
+
+    # Check if system is consistent: any row with all-zero LHS but non-zero RHS = inconsistent
+    is_consistent = True
+    for i in range(rref.rows):
+        if all(rref[i, j] == 0 for j in range(n_vars)) and rref[i, n_vars] != 0:
+            is_consistent = False
+            break
+    if is_consistent:
+        print(f"  ✓ System is consistent. Computing solution...")
+        # Extract solution: free variables → 0; pivot variables determined.
+        coeffs = [sp.Integer(0)] * n_vars
+        for piv_idx, col in enumerate(pivots):
+            if col < n_vars:  # Skip pivot in RHS column (would mean inconsistent)
+                coeffs[col] = rref[piv_idx, n_vars]
+
+        print("\n  Solution (RHS = sum of c_i · basis_i):")
+        for name, c in zip(coeff_names, coeffs):
+            if c != 0:
+                print(f"    {c}  ·  {name}")
+
+        # Verify
+        rhs_built = npz()
+        for name, c in zip(coeff_names, coeffs):
+            rhs_built = add(rhs_built, scale(basis[name], c))
+        diff = sub(LHS_full, rhs_built)
+        if is_zero(diff):
+            print("\n  ✓ VERIFIED: LHS_full = sum of c_i · basis_i (exact ring identity).")
+        else:
+            print(f"\n  ✗ Mismatch — {num_terms(diff)} residual terms (non-pivot vars matter):")
+            print_poly(diff, "diff", limit=15)
+    else:
+        print("  ✗ System is INCONSISTENT — basis is insufficient.")
+        print("    Need more candidate building blocks.")
+
 
 if __name__ == "__main__":
     main()
