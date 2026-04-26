@@ -6,11 +6,11 @@ package «lie-trotter» where
     ⟨`autoImplicit, false⟩
   ]
 
-require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git"
-
 require «lean-bch» from git
-  "https://github.com/Jue-Xu/Lean-BCH.git" @ "309ddef"
+  "https://github.com/Jue-Xu/Lean-BCH.git" @ "cf5eea3"
+
+require mathlib from git
+  "https://github.com/leanprover-community/mathlib4.git" @ "06a46dae"
 
 @[default_target]
 lean_lib «LieTrotter» where
