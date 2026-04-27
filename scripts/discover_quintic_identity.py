@@ -614,6 +614,99 @@ def main():
         print(f"\n  ✗ Non-zero terms at degrees {deg_lt_6} — BCH identity FAILS!")
 
     # ----------------------------------------------------------------
+    # Step 6.5: Extract deg-4 + deg-5 substituted contributions for the
+    # sextic_pure_identity discovery. The identity is:
+    #
+    #   ½·W_subst[4] + ⅓·y³_subst[4] - C₃_subst[4] - ¼·z⁴_subst[4] - C₄ = 0
+    #     (deg-4 cancellation, this IS quintic_pure_identity in Lean)
+    #
+    #   ½·W_subst[5] + ⅓·y³_subst[5] - ¼·y⁴_subst[5] + ⅕·y⁵_subst[5]
+    #     - C₃_subst[5] - C₄_subst[5] - C₅ = 0
+    #     (deg-5 cancellation, this is the NEW sextic_pure_identity)
+    #
+    # These are pure {a, b} polynomial identities at fixed degree, which
+    # noncomm_ring CAN handle in Lean (after scalar clearing).
+    # ----------------------------------------------------------------
+    print("\n" + "=" * 70)
+    print("Step 6.5: Extract deg-4 and deg-5 contributions for sextic_pure_identity")
+    print("=" * 70)
+
+    def deg_part(p, deg):
+        """Extract the degree-d part of polynomial p (in {a, b})."""
+        return defaultdict(lambda: sp.Integer(0),
+                           {w: sp.simplify(c) for w, c in p.items()
+                            if len(w) == deg and sp.simplify(c) != 0})
+
+    def fmt_pure_poly(p, name, max_print=12):
+        items = sorted(p.items(), key=lambda x: x[0])
+        items = [(w, c) for w, c in items if sp.simplify(c) != 0]
+        print(f"  {name}: {len(items)} non-zero pure {{a,b}} terms.")
+        for i, (w, c) in enumerate(items):
+            if i >= max_print:
+                print(f"    ... ({len(items) - max_print} more)")
+                break
+            ws = ''.join('a' if l == 0 else 'b' for l in w)
+            print(f"    {sp.simplify(c)}  ·  {ws}")
+
+    # Compute substituted W, y3, y4, y5
+    W_subst_full = subst_full(W)
+    y3_subst_full = subst_full(y3)
+    y4_subst_full = subst_full(y4)
+    y5_subst_full = subst_full(y5)
+
+    # Degree-4 contributions
+    print("\n--- DEGREE 4 contributions (for quintic_pure_identity) ---")
+    W4 = deg_part(W_subst_full, 4)
+    y3_4 = deg_part(y3_subst_full, 4)
+    fmt_pure_poly(W4, "½·W_subst[4]·2 (= W_subst[4])")
+    fmt_pure_poly(y3_4, "y³_subst[4]")
+    print(f"  C₃_subst[4]: {num_terms(deg_part(C3, 4))} terms (should be 0, C₃ is deg 3).")
+    print(f"  C₄ pure deg 4: {num_terms(C4)} terms.")
+
+    # The quintic_pure_identity says:
+    #   ½·W_subst[4] + ⅓·y³_subst[4] - ¼·z⁴ - C₄ = 0
+    z4 = mul(z, z3)
+    test_d4 = sub(sub(sub(add(scale(W4, sp.Rational(1, 2)),
+                              scale(y3_4, sp.Rational(1, 3))),
+                          scale(z4, sp.Rational(1, 4))),
+                      C3),
+                  C4)  # Should this be 0? Note C3 deg 4 = 0, so adding/subtracting C3 doesn't matter at deg 4.
+    test_d4 = deg_part(test_d4, 4)
+    print(f"\n  Verify: ½·W_subst[4] + ⅓·y³_subst[4] - ¼·z⁴ - C₄ at deg 4:")
+    print(f"    {num_terms(test_d4)} non-zero terms (should be 0).")
+    if num_terms(test_d4) > 0:
+        fmt_pure_poly(test_d4, "RESIDUAL", max_print=20)
+
+    # Degree-5 contributions
+    print("\n--- DEGREE 5 contributions (for sextic_pure_identity) ---")
+    W5 = deg_part(W_subst_full, 5)
+    y3_5 = deg_part(y3_subst_full, 5)
+    y4_5 = deg_part(y4_subst_full, 5)
+    y5_5 = deg_part(y5_subst_full, 5)
+    fmt_pure_poly(W5, "W_subst[5]")
+    fmt_pure_poly(y3_5, "y³_subst[5]")
+    fmt_pure_poly(y4_5, "y⁴_subst[5]")
+    fmt_pure_poly(y5_5, "y⁵_subst[5]")
+    print(f"  C₅ pure deg 5: {num_terms(C5)} terms.")
+
+    # The sextic_pure_identity says:
+    #   ½·W_subst[5] + ⅓·y³_subst[5] - ¼·y⁴_subst[5] + ⅕·y⁵_subst[5] - C₅ = 0
+    test_d5 = sub(add(add(sub(add(scale(W5, sp.Rational(1, 2)),
+                                  scale(y3_5, sp.Rational(1, 3))),
+                              scale(y4_5, sp.Rational(1, 4))),
+                          scale(y5_5, sp.Rational(1, 5))),
+                      npz()),  # placeholder
+                  C5)
+    test_d5 = deg_part(test_d5, 5)
+    print(f"\n  Verify sextic_pure_identity at deg 5:")
+    print(f"    ½·W_subst[5] + ⅓·y³_subst[5] - ¼·y⁴_subst[5] + ⅕·y⁵_subst[5] - C₅")
+    print(f"    = {num_terms(test_d5)} non-zero terms (should be 0).")
+    if num_terms(test_d5) > 0:
+        fmt_pure_poly(test_d5, "RESIDUAL", max_print=20)
+    else:
+        print("    ✓ sextic_pure_identity HOLDS at deg 5! Suitable for noncomm_ring.")
+
+    # ----------------------------------------------------------------
     # Step 7: Parametric RHS solver
     # ----------------------------------------------------------------
     print("\n" + "=" * 70)
