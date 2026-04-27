@@ -672,6 +672,85 @@ def main():
         'zzD2': mul(mul(z, z), D2), 'D2zz': mul(D2, mul(z, z)),
         'zD1z': mul(mul(z, D1), z), 'zD2z': mul(mul(z, D2), z),
         'zE1z': mul(mul(z, E1), z), 'zE2z': mul(mul(z, E2), z),
+        # E·F, F·E products (produce pure {a, b} deg-5 cross monomials)
+        'E1F2': mul(E1, F2), 'F1E2': mul(F1, E2),
+        'F2E1': mul(F2, E1), 'E2F1': mul(E2, F1),
+        # D·G, G·D products (deg 5+ pure)
+        'D1G2': mul(D1, G2), 'G1D2': mul(G1, D2),
+        'G2D1': mul(G2, D1), 'D2G1': mul(D2, G1),
+        # F·F products (deg 6 pure max, with deg-5 contributions)
+        'F1F2': mul(F1, F2), 'F2F1': mul(F2, F1),
+        # E·E with single var sandwich (deg 5)
+        'E1aE2': mul(mul(E1, a), E2), 'E1bE2': mul(mul(E1, b), E2),
+        'E2aE1': mul(mul(E2, a), E1), 'E2bE1': mul(mul(E2, b), E1),
+        'aE1E2': mul(a, mul(E1, E2)), 'E1E2a': mul(E1, mul(E2, a)),
+        'bE1E2': mul(b, mul(E1, E2)), 'E1E2b': mul(E1, mul(E2, b)),
+        'aE2E1': mul(a, mul(E2, E1)), 'E2E1a': mul(E2, mul(E1, a)),
+        'bE2E1': mul(b, mul(E2, E1)), 'E2E1b': mul(E2, mul(E1, b)),
+        # P^4 (pure ABABABAB-type contributions)
+        'P4': mul(mul(P, P), mul(P, P)),
+        # y^k powers directly (need y² and y³ for log series structure)
+        'y2': mul(y, y),
+        'y3': mul(y, mul(y, y)),
+        'y4': mul(mul(y, y), mul(y, y)),
+        'y5': mul(y, mul(mul(y, y), mul(y, y))),
+        # SANDWICH BASIS: a^k·D_m·a^l, structurally O(s^{k+l+1}) with deg-5 pure
+        # contributions covering interleaved {a,b} 5-letter words.
+        # Each "a^k D b^l a^m" gives a specific pure {a,b} deg-5 term.
+        # Naming: 'aaD2aa' = a²·D₂·a², deg 5 pure = -aabaa.
+        # i = 0 (D₁ middle): D₁ between b's → covers b^k·a·b^l type
+        'D1bbbb': mul(D1, mul(mul(b, b), mul(b, b))),
+        'bD1bbb': mul(b, mul(D1, mul(b, mul(b, b)))),
+        'bbD1bb': mul(mul(b, b), mul(D1, mul(b, b))),
+        'bbbD1b': mul(mul(b, b), mul(b, mul(D1, b))),
+        'bbbbD1': mul(mul(b, b), mul(b, mul(b, D1))),
+        # i = 1 (D₂ middle): covers a^k·b·a^l type
+        'D2aaaa': mul(D2, mul(mul(a, a), mul(a, a))),
+        'aD2aaa': mul(a, mul(D2, mul(a, mul(a, a)))),
+        'aaD2aa': mul(mul(a, a), mul(D2, mul(a, a))),
+        'aaaD2a': mul(mul(a, a), mul(a, mul(D2, a))),
+        'aaaaD2': mul(mul(a, a), mul(a, mul(a, D2))),
+        # Two-D sandwiches (e.g., a·D₂·a·D₂·a → ababa)
+        'aD2aD2a': mul(a, mul(D2, mul(a, mul(D2, a)))),
+        'D2aD2aD2': mul(D2, mul(a, mul(D2, mul(a, D2)))),
+        'bD1bD1b': mul(b, mul(D1, mul(b, mul(D1, b)))),
+        'D1bD1bD1': mul(D1, mul(b, mul(D1, mul(b, D1)))),
+        # Mixed alternations: a·D₂·a·D₂·b → ababb, etc.
+        'aD2aD2b': mul(a, mul(D2, mul(a, mul(D2, b)))),
+        'aD2bD1b': mul(a, mul(D2, mul(b, mul(D1, b)))),
+        'aD2bD2b': mul(a, mul(D2, mul(b, mul(D2, b)))),
+        'D2bD2aD2': mul(D2, mul(b, mul(D2, mul(a, D2)))),
+        # Asymmetric three-letter middle: aab, abb, baa, bba kind
+        'aaD2ab': mul(mul(a, a), mul(D2, mul(a, b))),
+        'aD2aab': mul(a, mul(D2, mul(a, mul(a, b)))),
+        'abD2aa': mul(mul(a, b), mul(D2, mul(a, a))),
+        'baaD2b': mul(b, mul(mul(a, a), mul(D2, b))),
+        'bD2aab': mul(b, mul(D2, mul(a, mul(a, b)))),
+        'baD2ab': mul(b, mul(a, mul(D2, mul(a, b)))),
+        'baD2ba': mul(b, mul(a, mul(D2, mul(b, a)))),
+        # Asymmetric with D in middle and longer arms
+        'D2abba': mul(D2, mul(a, mul(b, mul(b, a)))),
+        'abbaD2': mul(mul(a, b), mul(b, mul(a, D2))),
+        'D2baab': mul(D2, mul(b, mul(a, mul(a, b)))),
+        'baabD2': mul(b, mul(a, mul(a, mul(b, D2)))),
+        # F-sandwich elements (cover a·b³·a and b·a³·b type via -1/6·a³ in F)
+        'aF2a': mul(a, mul(F2, a)),  # deg 5 pure: -⅙·abbba (covers abbba)
+        'bF1b': mul(b, mul(F1, b)),  # deg 5 pure: -⅙·baaab (covers baaab)
+        'aF2b': mul(a, mul(F2, b)),  # mixed
+        'bF1a': mul(b, mul(F1, a)),
+        # Sandwiches for 3-switch words (baaba, babaa, bbaba)
+        'baD2aa': mul(b, mul(a, mul(D2, mul(a, a)))),  # deg 5: -baaaa - babaa
+        'aaD2ba': mul(mul(a, a), mul(D2, mul(b, a))),
+        'bF1ba': mul(b, mul(F1, mul(b, a))),  # deg 5: includes -½·baaba
+        'abF1b': mul(mul(a, b), mul(F1, b)),
+        'bbD1ba': mul(mul(b, b), mul(D1, mul(b, a))),  # deg 5: -bbaba
+        'abD1ba': mul(mul(a, b), mul(D1, mul(b, a))),
+        'baD1ba': mul(mul(b, a), mul(D1, mul(b, a))),
+        'baF1b': mul(mul(b, a), mul(F1, b)),  # mixed
+        'abD2bb': mul(mul(a, b), mul(D2, mul(b, b))),
+        'bD1aab': mul(b, mul(D1, mul(a, mul(a, b)))),
+        'abD1aa': mul(mul(a, b), mul(D1, mul(a, a))),
+        'bD2aba': mul(b, mul(D2, mul(a, mul(b, a)))),
     }
 
     print(f"\n  Basis size: {len(basis)} candidate terms.")
@@ -747,6 +826,78 @@ def main():
     else:
         print("  ✗ System is INCONSISTENT — basis is insufficient.")
         print("    Need more candidate building blocks.")
+
+        # Diff-driven analysis: extract the inconsistency residual.
+        # In RREF, rows with all-zero LHS but non-zero RHS represent
+        # equations that LHS_full has a non-zero value at some monomial-direction
+        # that the basis can't reach.
+        print("\n  Inconsistency rows (these monomial-directions are unreachable):")
+        # Track which combinations of monomials are inconsistent.
+        # For each row in RREF that's inconsistent, the corresponding original
+        # equation row indices reveal which monomials it constrains.
+        # Compute via the row-reduction transformation: aug_after = T · aug_before
+        # We can find T by augmenting with identity and reducing.
+        I_aug = sp.eye(n_eqs)
+        big_aug = aug.row_join(I_aug)
+        big_rref, big_pivots = big_aug.rref()
+        n_inconsistent = 0
+        for i in range(big_rref.rows):
+            # Inconsistent row: all coefficient cols = 0, b col ≠ 0.
+            row_zero_in_A = all(big_rref[i, j] == 0 for j in range(n_vars))
+            if row_zero_in_A and big_rref[i, n_vars] != 0:
+                n_inconsistent += 1
+                if n_inconsistent <= 5:  # Print first 5 inconsistencies
+                    # Recover the linear combination of monomials
+                    print(f"    Inconsistency row {n_inconsistent}: ", end='')
+                    rhs_val = big_rref[i, n_vars]
+                    print(f"sum = {rhs_val}, contributing equations:")
+                    contribs = []
+                    for k in range(n_eqs):
+                        coef = big_rref[i, n_vars + 1 + k]
+                        if coef != 0:
+                            ms = ''.join(['a','b','A','B'][ll] for ll in all_monomials[k])
+                            contribs.append(f"{coef}·[{ms}]")
+                    if len(contribs) <= 8:
+                        print(f"      {' + '.join(contribs)}")
+                    else:
+                        print(f"      ({len(contribs)} monomials in linear combo)")
+                        for c in contribs[:5]:
+                            print(f"        {c}")
+                        print(f"        ... ({len(contribs)-5} more)")
+        print(f"  Total inconsistent rows: {n_inconsistent}")
+
+        # Compute the residual: the projection of LHS_full onto the orthogonal
+        # complement of the column space of A. We can do this by:
+        # - find a "best fit" coefficient set (pseudo-inverse or partial soln)
+        # - residual = LHS_full - sum c_i basis_i
+
+        # For a quick analysis, just find which monomials in LHS_full are NOT
+        # covered by the union of basis monomials.
+        basis_monomials = set()
+        for poly in basis.values():
+            basis_monomials.update(poly.keys())
+        lhs_monomials = set(LHS_full.keys())
+        uncovered = lhs_monomials - basis_monomials
+        print(f"\n  Monomials in LHS_full NOT covered by ANY basis element: {len(uncovered)}")
+        if uncovered:
+            for m in sorted(uncovered):
+                ms = ''.join(['a','b','A','B'][i] for i in m)
+                print(f"    {LHS_full[m]}  ·  {ms}")
+
+        # Alternative: solve the least-squares problem via QR or pseudo-inverse.
+        # But sympy's RREF gives us enough info. Let me extract a "best partial
+        # fit" by setting non-pivot variables to 0 and seeing what residual remains.
+        partial_coeffs = [sp.Integer(0)] * n_vars
+        for piv_idx, col in enumerate(pivots):
+            if col < n_vars:
+                partial_coeffs[col] = rref[piv_idx, n_vars]
+        partial_rhs = npz()
+        for name, c in zip(coeff_names, partial_coeffs):
+            partial_rhs = add(partial_rhs, scale(basis[name], c))
+        residual = sub(LHS_full, partial_rhs)
+        print(f"\n  Residual (LHS_full - partial_fit): {num_terms(residual)} non-zero terms.")
+        if num_terms(residual) <= 30:
+            print_poly(residual, "residual", limit=30)
 
 
 if __name__ == "__main__":
