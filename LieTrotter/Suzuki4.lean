@@ -193,7 +193,7 @@ The five Strang sub-steps have cubic errors, and the exact exponential targets
 commute (all scalar multiples of `A + B`), so their product = `exp((A+B)/n)`.
 -/
 
-set_option maxHeartbeats 800000 in
+set_option maxHeartbeats 250000 in
 include 𝕂 in
 theorem suzuki4_step_error (A B : 𝔸) (p : ℝ) (hp : 0 < p) (hp4 : p < 1 / 4)
     (n : ℕ) (hn : 0 < n) :
