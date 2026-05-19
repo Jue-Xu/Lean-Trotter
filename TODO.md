@@ -1,42 +1,41 @@
 # TODO
 
-## Remaining work (as of 2026-04-26)
+## Remaining work (as of 2026-05-19)
 
-The project has **0 sorries on the Lean-Trotter side**, **0 transitive
-`sorryAx`** (Lean-BCH closed its last sorry at rev `c71d8f2`), and **0
-own theorem-level axioms in `Suzuki4ViaBCH.lean`**. All three former
-axioms (`bch_w4Deriv_quintic_level2`, `bch_w4Deriv_level3_tight`,
-`bch_uniform_integrated`) are now theorems composing Lean-BCH bridge
-corollaries with exp-Lipschitz / triangle-inequality lifts. Transitive
-dependencies on Lean-BCH private axioms:
+The project has **0 sorries on the Lean-Trotter side**, **0 own
+theorem-level axioms in `Suzuki4ViaBCH.lean`**, and as of the Lean-BCH
+pin bump to `d455ff0` (2026-05-19) **0 transitive Lean-BCH axioms for
+all τ⁵ headlines**.
 
-| Lean-Trotter theorem | Transitive Lean-BCH axiom |
-|---|---|
-| `bch_w4Deriv_quintic_level2` | `BCH.symmetric_bch_quintic_sub_poly_axiom` (B1.c) |
-| `bch_w4Deriv_level3_tight` | `BCH.symmetric_bch_quintic_sub_poly_axiom` (B1.c) |
-| `bch_uniform_integrated` (NEW 2026-04-26) | `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` (R₇) |
+`#print axioms` on each headline returns only Lean's 3 standard
+foundational axioms `[propext, Classical.choice, Quot.sound]`:
 
-All other headline results (`lie_trotter`, `bch_iteratedDeriv_s4Func_order4`,
-`exists_norm_s4Func_sub_exp_le_t5`, etc.) depend only on Lean's 3 standard
-axioms. Lean-BCH is imported as a git dependency (`require lean-bch from
-git ... @ "<sha>"`).
+- `norm_suzuki4_childs_form_via_level3` ✓ (tight 4th-order, Childs form)
+- `norm_suzuki4_level3_bch` ✓ (tight γᵢ prefactors)
+- `norm_suzuki4_level2_bch` ✓ (unit-coefficient τ⁵ bound)
+- `bch_w4Deriv_level3_tight` ✓
+- `bch_w4Deriv_quintic_level2` ✓
+- `bch_iteratedDeriv_s4Func_order4` ✓
+- `exists_norm_s4Func_sub_exp_le_t5` ✓
+- `lie_trotter` ✓
 
-### Track A: Discharge the 2 remaining Lean-BCH axioms
+The B1.c quintic axiom (`BCH.symmetric_bch_quintic_sub_poly_axiom`) was
+discharged on the Lean-BCH side in May 2026; with the pin bump it no
+longer appears in any τ⁵ headline's dependency tree.
 
-Both axioms encode 5-factor palindromic BCH facts beyond Lean-BCH's
-current 2-factor coverage. Discharging them on the Lean-BCH side would
-make the entire pipeline depend only on Lean's standard 3.
+### Optional: L4 uniform refinement (gated by 2 Lean-BCH septic axioms)
+
+The L4 uniform bound `bch_uniform_integrated` (and downstream
+`norm_suzuki4_level4_uniform`) still transitively depends on the two
+surviving Lean-BCH septic stepping stones:
 
 | Lean-BCH axiom | Supports | Discharge roadmap |
 |---|---|---|
-| `BCH.symmetric_bch_quintic_sub_poly_axiom` (B1.c) | Levels 2 + 3 | `claude/lean-bch-B1c-session-prompt.md` (3-tier, ~2-3 weeks) |
-| `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` (R₇) | Level 4 | `claude/lean-bch-suzuki5-R7-followup-session-prompt.md` (~4-5 weeks) |
+| `BCH.symmetric_bch_septic_sub_poly_axiom` | L4 (`bch_uniform_integrated`) | Lean-BCH session 52+ matching-identity roadmap (multi-session) |
+| `BCH.norm_septic_match_residual_le_axiom` | L4 (`bch_uniform_integrated`) | Lean-BCH session 26+ roadmap |
 
-**Recommended order:**
-1. Discharge B1.c (Tier 1: sextic remainder; Tier 2: 8–10-term decomposition;
-   Tier 3: triangle-inequality assembly). Closes Levels 2 + 3.
-2. Discharge R₇ (sextic + symmetric BCH septic + R₇ Childs-basis
-   projection + per-summand bounds + assembly). Closes Level 4.
+These gate the τ⁷ uniform refinement. They do NOT affect the L1–L3
+tight 4th-order Trotter bounds — those are axiom-free.
 
 ### Track A.0 (retired): the original 3 Lean-Trotter `bch_w4Deriv_*` axioms
 

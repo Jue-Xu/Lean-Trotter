@@ -7,7 +7,7 @@ package «lie-trotter» where
   ]
 
 require «lean-bch» from git
-  "https://github.com/Jue-Xu/Lean-BCH.git" @ "cf5eea3"
+  "https://github.com/Jue-Xu/Lean-BCH.git" @ "d455ff0"
 
 require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git" @ "06a46dae"

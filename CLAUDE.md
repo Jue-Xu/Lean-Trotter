@@ -1,36 +1,37 @@
 # Lie–Trotter Product Formula — Lean 4 Formalization
 
-## Status (2026-04-26): 0 sorries, 0 own axioms, 2 transitive Lean-BCH-private axioms
+## Status (2026-05-19): 0 sorries, 0 own axioms, 0 transitive Lean-BCH axioms for τ⁵ headlines
 
-`#print axioms bch_iteratedDeriv_s4Func_order4`, `exists_norm_s4Func_sub_exp_le_t5`,
-and `lie_trotter` all return only `[propext, Classical.choice, Quot.sound]` —
-the standard Lean foundational axioms.
+**Tight 4th-order Trotter formula error bound is fully proved at the
+project level.** `#print axioms` on all τ⁵ headlines
+(`norm_suzuki4_childs_form_via_level3`, `norm_suzuki4_level3_bch`,
+`norm_suzuki4_level2_bch`, `bch_w4Deriv_level3_tight`,
+`bch_w4Deriv_quintic_level2`, `bch_iteratedDeriv_s4Func_order4`,
+`exists_norm_s4Func_sub_exp_le_t5`, `lie_trotter`) returns only
+`[propext, Classical.choice, Quot.sound]` — the standard Lean
+foundational axioms.
 
 All three formerly-axiomatized `bch_w4Deriv_*` / `bch_uniform_integrated`
-results are now theorems composing Lean-BCH bridge corollaries with
+results are theorems composing Lean-BCH bridge corollaries with
 exp-Lipschitz / triangle-inequality lifts:
 
-| Lean-Trotter theorem | Composes Lean-BCH bridge | Transitive axiom |
-|---|---|---|
-| `bch_w4Deriv_quintic_level2` | `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` | `BCH.symmetric_bch_quintic_sub_poly_axiom` (B1.c) |
-| `bch_w4Deriv_level3_tight` | `BCH.suzuki5_log_product_quintic_tight_at_suzukiP` | `BCH.symmetric_bch_quintic_sub_poly_axiom` (B1.c) |
-| `bch_uniform_integrated` (NEW 2026-04-26) | `BCH.suzuki5_log_product_septic_at_suzukiP` | `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` (R₇) |
+| Lean-Trotter theorem | Composes Lean-BCH bridge |
+|---|---|
+| `bch_w4Deriv_quintic_level2` | `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` |
+| `bch_w4Deriv_level3_tight` | `BCH.suzuki5_log_product_quintic_tight_at_suzukiP` |
+| `bch_uniform_integrated` | `BCH.suzuki5_log_product_septic_at_suzukiP` |
 
-**Axiom 3 retired (2026-04-26):** `bch_uniform_integrated` is now a
-theorem. The signature was changed from "uniform for all t ≥ 0"
-(mathematically false — exp factors dominate polynomial bounds for
-large t) to existential-δ "∃ δ > 0, ∃ C ≥ 0, ∀ t ∈ [0, δ),
-‖S₄(t) − exp(tH)‖ ≤ C·(t⁵·boundSum + t⁷·R7Bound + t⁸)" (mathematically
-correct; matches the FTC-2-derived shape with a single multiplier C
-absorbing the exp-Lipschitz inflation and BCH M·τ⁸ tail). Downstream
-`norm_suzuki4_level4_uniform` and `norm_suzuki4_level4_le_childs_when_small`
-inherit the existential-δ form.
+**The B1.c quintic axiom was discharged in Lean-BCH (May 10–11, 2026).**
+After pinning Lean-BCH at `d455ff0` (2026-05-19), all transitive
+dependencies through the Lean-BCH side resolve to proved theorems for
+the τ⁵ chain.
 
-The two remaining transitive Lean-BCH axioms — `B1.c` (3-factor
-symmetric BCH quintic Taylor bridge) and the new `R₇` (5-factor
-septic identification) — each have full discharge roadmaps:
-`claude/lean-bch-B1c-session-prompt.md` and
-`claude/lean-bch-suzuki5-R7-followup-session-prompt.md`.
+The `bch_uniform_integrated` L4 result still transitively depends on
+`BCH.symmetric_bch_septic_sub_poly_axiom` and
+`BCH.norm_septic_match_residual_le_axiom` (the two surviving Lean-BCH
+septic stepping stones). These gate the τ⁷ uniform refinement, not the
+core tight 4th-order bound — `norm_suzuki4_level3_bch` and
+`norm_suzuki4_childs_form_via_level3` are axiom-free.
 
 **Headline results:**
 1. **Lie–Trotter** (`lie_trotter`, `lie_trotter_error_rate`, O(1/n)) — fully proved.
@@ -74,12 +75,16 @@ results are now theorems (closed 2026-04-24/26).
 `bch_iteratedDeriv_s4Func_order4`, `exists_norm_s4Func_sub_exp_le_t5`, and
 `lie_trotter` depend only on the standard Lean foundational axioms.
 
-**Transitive Lean-BCH-private axioms** (2):
+**Transitive Lean-BCH-private axioms** (gated to L4 only):
 
 | Lean-BCH axiom | Used by | Path to close |
 |---|---|---|
-| `BCH.symmetric_bch_quintic_sub_poly_axiom` (B1.c) | L2, L3 (`bch_w4Deriv_quintic_level2`, `bch_w4Deriv_level3_tight`) | `claude/lean-bch-B1c-session-prompt.md` (3-tier roadmap, ~2-3 weeks) |
-| `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` (R₇) | L4 (`bch_uniform_integrated`) | `claude/lean-bch-suzuki5-R7-followup-session-prompt.md` (~4-5 weeks) |
+| `BCH.symmetric_bch_septic_sub_poly_axiom` | L4 (`bch_uniform_integrated`) | Lean-BCH session 52+ roadmap (multi-session, ongoing) |
+| `BCH.norm_septic_match_residual_le_axiom` | L4 (`bch_uniform_integrated`) | Lean-BCH session 26+ roadmap |
+
+The L1–L3 tight 4th-order bounds (`norm_suzuki4_childs_form_via_level3`,
+`norm_suzuki4_level3_bch`, `norm_suzuki4_level2_bch`) do NOT depend on
+either axiom — they are fully proved modulo Lean foundations only.
 
 **Retired axioms** (historical):
 - `bch_w4Deriv_quintic_level2` — theorem since 2026-04-24 (Lean-BCH bridge).
