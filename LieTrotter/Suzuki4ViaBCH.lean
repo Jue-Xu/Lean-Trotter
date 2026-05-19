@@ -6,9 +6,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 This module provides the integration skeleton connecting **Lean-Trotter**'s
 S₄ factorization (Task 1 in `Suzuki4StrangBlocks.lean`) with the **Lean-BCH**
-symmetric BCH cubic theorems. It axiomatizes the minimal Lean-BCH interface
-needed, then expresses each Strang block via its BCH expansion and sums the
-cubic terms, exploiting the Suzuki cubic cancellation (Task 2).
+symmetric BCH cubic theorems. It imports the Lean-BCH interface as thin
+aliases (historically these were axiomatized inline), expresses each Strang
+block via its BCH expansion, and sums the cubic terms, exploiting the
+Suzuki cubic cancellation (Task 2).
 
 ## Path B outline
 
@@ -28,12 +29,19 @@ Each strangBlock A B (c·t) = exp((c·t)·A/2) · exp((c·t)·B) · exp((c·t)·
 
 ## Status
 
-- **Axiomatized:** `symmetric_bch_cubic`, `exp_symmetric_bch_cubic`,
+- **Imported from Lean-BCH** (thin aliases / wrappers, formerly axioms):
+  `symmetric_bch_cubic`, `exp_symmetric_bch_cubic`,
   `norm_symmetric_bch_cubic_le`, `norm_symmetric_bch_cubic_sub_smul_le`.
 - **Proved:** `strangBlock_eq_exp_bchCubic` — reformulates Task 1's building
   block via the BCH interface.
 - **Proved:** `suzuki4_bchCubic_sum_bound` — the sum of cubic BCH terms
   across the 5 Strang blocks is `O(t⁵)` under Suzuki.
+- **Proved (formerly `bch_w4Deriv_*` axioms):**
+  `bch_w4Deriv_quintic_level2`, `bch_w4Deriv_level3_tight`,
+  `bch_uniform_integrated`, and `bch_iteratedDeriv_s4Func_order4`. Each
+  composes a Lean-BCH bridge corollary with exp-Lipschitz / triangle-
+  inequality lifts. See the top-of-file table in `CLAUDE.md` for the
+  exact Lean-BCH dependency of each.
 
 The full `norm_suzuki4_order5_via_strang_bch` theorem (telescoping + exp
 composition) requires BCH-level composition estimates (multi-exp BCH).
@@ -43,11 +51,11 @@ is available.
 
 ## Compatibility
 
-The axioms mirror the exact statements in Lean-BCH's `BCH/Basic.lean`
-(`symmetric_bch_cubic` definition, `exp_symmetric_bch`,
+The thin aliases below mirror the exact statements in Lean-BCH's
+`BCH/Basic.lean` (`symmetric_bch_cubic` definition, `exp_symmetric_bch`,
 `norm_symmetric_bch_cubic_le`, `norm_symmetric_bch_cubic_sub_smul_le`).
-Once Lean-BCH compiles fully, replacing the `axiom` declarations with
-`import BCH.Basic` + thin wrappers is mechanical.
+The historical inline `axiom` declarations have been replaced by
+`import BCH.Basic` + thin wrappers (Lean-BCH pin `d455ff0`, 2026-05-19).
 -/
 
 import LieTrotter.Suzuki4StrangBlocks
@@ -121,8 +129,8 @@ theorem norm_symmetric_bch_cubic_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 
   headline Trotter error bounds** (`norm_suzuki4_childs_form_via_level3`,
   `norm_suzuki4_level2_bch`, `norm_suzuki4_level3_bch`,
   `norm_suzuki4_level4_uniform`), which derive their prefactors from the
-  separate `bch_w4Deriv_*` axioms encoding pointwise residuals on the
-  full 5-factor product. -/
+  separate `bch_w4Deriv_*` theorems (formerly axioms) encoding pointwise
+  residuals on the full 5-factor product. -/
 theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
     (hc : |c| ≤ 1) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     ‖symmetric_bch_cubic (c • a) (c • b) - c ^ 3 • symmetric_bch_cubic a b‖ ≤
@@ -273,11 +281,11 @@ existing `CommutatorScaling.lean` infrastructure plus `norm_exp_le`.
 ## Shortcut path: BCH-implied h4 ⟹ unconditional Childs-form bound
 
 The full composition bound in the roadmap above is substantial; a shorter
-route to the S₄ O(t⁵) result is to axiomatize the single BCH consequence
-we actually need for the existing CAPSTONE: the order-4 vanishing of
+route to the S₄ O(t⁵) result is the single BCH consequence we actually need
+for the existing CAPSTONE: the order-4 vanishing of
 `iteratedDeriv (s4Func A B p) at 0`.
 
-Mathematical justification for the axiom:
+Mathematical justification:
 
 For Suzuki palindromic p, the BCH log of `s4Func(τ)` has only odd τ-powers:
   `log(s4Func(τ)) = τ·H + τ³·R₃ + τ⁵·R₅ + O(τ⁷)`
@@ -286,8 +294,10 @@ Under `IsSuzukiCubic p` (which is the defining Suzuki order-4 condition),
 of `exp` gives `τ⁴` coefficient of `s4Func(τ)` equal to `H⁴/24`, so
 `iteratedDeriv 4 (s4Func A B p) 0 = 4!·(H⁴/24) = H⁴ = (A+B)⁴`.
 
-This is exactly the h4 identity. Once Lean-BCH exposes the BCH expansion
-for palindromic compositions, this axiom is replaced by a theorem.
+This is exactly the h4 identity, now a Lean theorem
+`bch_iteratedDeriv_s4Func_order4` via the SLICE 1+2+3 chain (single-step
+BCH O(|τ|⁵) bound + generic Taylor-match-from-norm + the Mathlib identity
+`iteratedDeriv_exp_smul_mul_at_zero`).
 -/
 
 /-- **[THEOREM (was axiom)]** For Suzuki palindromic `p`, the 4th iterated
@@ -445,15 +455,12 @@ lemma childsBoundSum_le_bchFourFoldSum (A B : 𝔸) :
   `K·τ⁶` term encapsulates higher-order BCH corrections.
 
   **Now a theorem (was an axiom).** Derived directly from Lean-BCH's
-  bridge corollary `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic`
-  (rev `7ba3962`, branch `trotter-5factor-palindromic`), which itself
-  currently rests on the scoped private axiom
-  `BCH.suzuki5_R5_identification_axiom` — the Tier-2 symbolic 5-factor
-  BCH composition identification. `#print axioms bch_w4Deriv_quintic_level2`
-  therefore reports exactly
-  `{propext, Classical.choice, Quot.sound, BCH.suzuki5_R5_identification_axiom}`.
-  The axiom has a documented discharge roadmap (Tiers 1-3) in
-  Lean-BCH's `BCH/Suzuki5Quintic.lean`. -/
+  bridge corollary `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic`.
+  As of Lean-BCH pin `d455ff0` (2026-05-19), the upstream B1.c quintic
+  axiom (`BCH.symmetric_bch_quintic_sub_poly_axiom`) that underwrote the
+  bridge has been discharged, so `#print axioms bch_w4Deriv_quintic_level2`
+  reports only the standard Lean foundational axioms
+  `[propext, Classical.choice, Quot.sound]`. -/
 theorem bch_w4Deriv_quintic_level2
     (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
     ∃ δ > (0 : ℝ), ∃ K ≥ (0 : ℝ), ∀ τ : ℝ, 0 ≤ τ → τ < δ →
@@ -779,16 +786,15 @@ variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸
 
   **Now a theorem (was an axiom).** Derived directly from Lean-BCH's
   tight bridge corollary
-  `BCH.suzuki5_log_product_quintic_tight_at_suzukiP` (rev `dd28fd3`,
-  branch `trotter-5factor-palindromic`). The Lean-BCH proof combines
-  the headline τ⁵ identification (which rests on the private axiom
-  `BCH.suzuki5_R5_identification_axiom`) with six rigorously-proved
-  per-i numerical bounds `|βᵢ(suzukiP)| ≤ γᵢ` on the tight rational
-  interval `41449/100000 < suzukiP < 41450/100000` via `nlinarith`.
+  `BCH.suzuki5_log_product_quintic_tight_at_suzukiP`. The Lean-BCH proof
+  combines the headline τ⁵ identification with six rigorously-proved per-i
+  numerical bounds `|βᵢ(suzukiP)| ≤ γᵢ` on the tight rational interval
+  `41449/100000 < suzukiP < 41450/100000` via `nlinarith`.
 
-  `#print axioms bch_w4Deriv_level3_tight` therefore reports exactly
-  `{propext, Classical.choice, Quot.sound, BCH.suzuki5_R5_identification_axiom}`,
-  the same single Lean-BCH axiom as `bch_w4Deriv_quintic_level2`. -/
+  As of Lean-BCH pin `d455ff0` (2026-05-19), the upstream B1.c quintic
+  axiom that previously gated this bridge has been discharged, so
+  `#print axioms bch_w4Deriv_level3_tight` reports only the standard Lean
+  foundational axioms `[propext, Classical.choice, Quot.sound]`. -/
 theorem bch_w4Deriv_level3_tight (A B : 𝔸) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
     ∃ δ > (0 : ℝ), ∃ K ≥ (0 : ℝ), ∀ τ : ℝ, 0 ≤ τ → τ < δ →
@@ -1088,11 +1094,13 @@ private lemma bchR7Bound_eq_BCH (A B : 𝔸) :
   exp-Lipschitz inflation factor and the BCH `O(τ⁸)` tail.
 
   **Now a theorem (was an axiom).** Derived from Lean-BCH's bridge corollary
-  `BCH.suzuki5_log_product_septic_at_suzukiP` (added 2026-04-26). The
-  underlying Lean-BCH axiom `suzuki5_log_product_septic_at_suzukiP_axiom`
-  is the τ⁷ identification analog of the discharged P1 axiom; its full
-  discharge is documented in
-  `claude/lean-bch-suzuki5-R7-followup-session-prompt.md`. -/
+  `BCH.suzuki5_log_product_septic_at_suzukiP` (added 2026-04-26). The former
+  `suzuki5_log_product_septic_at_suzukiP_axiom` is itself now a theorem
+  upstream; the τ⁷ chain has been refactored to depend on two deeper
+  Lean-BCH septic stepping stones (`symmetric_bch_septic_sub_poly_axiom`,
+  `norm_septic_match_residual_le_axiom`). These are the only transitive
+  Lean-BCH private axioms gating this L4 uniform refinement; the τ⁵
+  headlines (L1–L3) are axiom-free. -/
 theorem bch_uniform_integrated
     (A B : 𝔸) (hA : star A = -A) (hB : star B = -B) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))

@@ -168,12 +168,16 @@ Several lemmas are ready for upstreaming (~20-50 lines each):
 ## Recommended path forward
 
 **Short term (1-2 weeks):**
-- **Track A (next):** extend Lean-BCH to 5-factor palindromic quintic remainder
-  to close `bch_w4Deriv_quintic_level2` and the leading order of
-  `bch_w4Deriv_level3_tight`. 3 axioms → 2 (or 1, depending on projection work).
 - **Track D:** start Mathlib PR for `norm_exp_le` (see cleanup checklist below).
+- **Track E:** start drafting arXiv companion / Zulip announcement now that
+  the τ⁵ Trotter headlines are axiom-free.
 
 **Medium term (1-3 months):**
+- **Track A (optional L4):** if the τ⁷ uniform refinement is wanted on the
+  Lean-Trotter side, the two surviving Lean-BCH septic axioms
+  (`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`)
+  still need to be discharged upstream. Both have multi-session Lean-BCH
+  roadmaps (sessions 52+ / 26+); not on the Lean-Trotter critical path.
 - **Track E:** polish paper; submit to arXiv.
 - **Track D:** open Mathlib Zulip thread; prepare first PR (`norm_exp_le`).
 - **Track C:** pick one extension (multi-operator S₄ recommended; physics-relevant).
@@ -214,37 +218,36 @@ Several lemmas are ready for upstreaming (~20-50 lines each):
   ```
   Telescopes into a sum of pairwise C1-type bounds. Estimate: ~150 lines. Reuses all existing infrastructure.
 
-- [~] **Fourth-order Suzuki formula (H1)** — Substantially progressed, one gap remains (h4).
+- [x] **Fourth-order Suzuki formula (H1)** — ✅ Done, axiom-free for τ⁵ headlines.
 
-  **Status (2026-04-22):**
+  **Status (2026-05-19):** All τ⁵ headlines (L1 Childs reproduction, L2 unit
+  bound, L3 tight γᵢ) depend only on the standard Lean foundational axioms.
+  Closure path:
   - ✅ Infrastructure: prodExpList framework, multinomial formulas up to order 4,
     Phase 5 Taylor-reduction + Leibniz bridges, CAPSTONE theorem.
-  - ✅ h2 PROVED UNCONDITIONAL (`iteratedDeriv_s4Func_order2_eq_sq`)
+  - ✅ h2 PROVED UNCONDITIONAL (`iteratedDeriv_s4Func_order2_eq_sq`).
   - ✅ h3 PROVED under `IsSuzukiCubic p` via factored-form operator identity
     `sumTripleCorr_s4DList_eq_factored`.
-  - ✅ Strengthened CAPSTONE `norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing`
-    takes only IsSuzukiCubic + w4Func order-4 vanishing.
+  - ✅ h4 PROVED via the Lean-BCH SLICE 1+2+3 chain (Track A.2, retired).
   - ✅ Task 1 (`suzuki4Exp_eq_strangProduct`): S₄ = 5 Strang blocks.
   - ✅ Task 2 (`suzuki4_coeff_cube_sum_zero`): 4p³+(1-4p)³=0 under Suzuki.
-  - ✅ Task 3 (Suzuki4ViaBCH.lean): BCH-interface axioms + Level 1 Childs bound
-    + Level 2 rigorous BCH bound with explicit unit prefactors.
-  - 🔴 **Remaining: h4** (`iteratedDeriv 4 (s4Func A B p) 0 = (A+B)^4`).
+  - ✅ Task 3 (Suzuki4ViaBCH.lean): the 3 former `bch_w4Deriv_*` axioms are
+    now theorems composing Lean-BCH bridge corollaries (May 2026).
 
-  **Two paths for h4:**
-  - **Path A (native)**: prove `sumQuadCorr_s4DList = 0` under Suzuki; blocked
-    by `module` tactic timeout on quartic expansion.
-  - **Path B (via Lean-BCH)**: wait for Lean-BCH's quintic BCH to complete
-    (`quintic_pure_identity` nsmul gap), then replace the 7 BCH-interface
-    axioms in `Suzuki4ViaBCH.lean` with imports. This gives h4 automatically
-    via `bch_iteratedDeriv_s4Func_order4`.
+  **Path B (native Trotter h4)** — superseded but kept as a nice-to-have.
+  See "Track B (superseded)" above for the engineering details of the
+  open `sumQuadCorr_s4DList = 0` proof, which would remove the transitive
+  Lean-BCH dep entirely (currently a non-blocker since both bridges
+  resolve to theorems).
 
-  **Currently usable results (modulo BCH axioms):**
-  - `norm_suzuki4_order5_via_bch_axiom`: existential S₄ O(t⁵) under IsSuzukiCubic.
-  - `norm_suzuki4_childs_form_via_level3`: reproduces Childs 2021 Prop pf4_bound_2term
-    with exact coefficients 0.0047-0.0284, derived from the Level 3 bound via the
-    Lean-proved termwise inequality γᵢ ≤ αᵢ (no heuristic axiomatization).
+  **Headline results (axiom-free):**
+  - `norm_suzuki4_childs_form_via_level3`: reproduces Childs 2021 Prop
+    pf4_bound_2term with exact coefficients 0.0047-0.0284, derived from the
+    Level 3 bound via the Lean-proved termwise inequality γᵢ ≤ αᵢ (no
+    heuristic axiomatization).
   - `norm_suzuki4_level2_bch`: rigorous BCH-derived bound with explicit unit
-    coefficients on 8 four-fold commutators (no Childs heuristic required).
+    coefficients on 8 four-fold commutators.
+  - `norm_suzuki4_level3_bch`: tight γᵢ prefactors.
 
 - [x] **Truncated BCH bounds ([Lean-BCH](https://github.com/Jue-Xu/Lean-BCH))** — ✅ Complete (0 sorry's before Suzuki extension).
   Proved: `exp_bch`, `norm_bch_sub_add_sub_bracket_le` (H1), `norm_symmetric_bch_sub_add_le` (H2), Lie bracket bridge (M1).

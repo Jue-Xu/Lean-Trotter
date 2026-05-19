@@ -18,6 +18,18 @@ Both formulas are also proved for **any finite number of operators** $A_1, \ldot
 
 **Complete.** All theorems proved, 0 `sorry`s, full build passes.
 
+**Tight 4th-order Trotter (Childs (2021) form) is fully proved at the project
+level as of 2026-05-19.** `#print axioms` on every τ⁵ headline
+(`norm_suzuki4_childs_form_via_level3`, `norm_suzuki4_level3_bch`,
+`norm_suzuki4_level2_bch`, `bch_iteratedDeriv_s4Func_order4`,
+`exists_norm_s4Func_sub_exp_le_t5`, `lie_trotter`, `symmetric_lie_trotter`)
+reports only Lean's three foundational axioms
+`[propext, Classical.choice, Quot.sound]`. The Lean-BCH dependency (pin
+`d455ff0`) is the source of truth for the BCH-side bridge corollaries that
+underwrite these headlines. The optional L4 uniform refinement
+(`norm_suzuki4_level4_uniform`) still transitively depends on two surviving
+Lean-BCH septic axioms — see `CLAUDE.md` for details.
+
 ### Main results
 
 #### Convergence theorems (total error after $n$ steps)
@@ -67,22 +79,28 @@ LieTrotter/
 └── Suzuki4ViaBCH.lean     — BCH-interface axioms + Level 1 (Childs) + Level 2 bounds
 ```
 
-### S₄ fourth-order bound (conditional on BCH axioms)
+### S₄ fourth-order bound (axiom-free for τ⁵; L4 still gated)
 
-`Suzuki4ViaBCH.lean` provides two forms of Childs's 4th-order Trotter error
-bound `‖S₄(t) - exp(tH)‖ ≤ t⁵ · (4-fold commutator sum)`, each modulo a BCH
-axiom that will become a theorem once the companion
-[Lean-BCH](https://github.com/Jue-Xu/Lean-BCH) project's quintic BCH
-expansion is finished:
+`Suzuki4ViaBCH.lean` provides three forms of Childs's 4th-order Trotter
+error bound `‖S₄(t) - exp(tH)‖ ≤ t⁵ · (4-fold commutator sum)`, all
+**now fully proved** (`#print axioms` reports only Lean's standard 3) by
+composing Lean-BCH bridge corollaries with exp-Lipschitz / triangle-
+inequality lifts on the Lean-Trotter side:
 
 - **Level 1** (`norm_suzuki4_childs_form_via_level3`): reproduces Childs et al.
   (2021) Prop pf4_bound_2term with his exact coefficients 0.0047–0.0284,
   derived from the CAS-certified Level 3 bound plus the Lean-proved
   termwise inequality γᵢ ≤ αᵢ (no heuristic axiomatization).
 - **Level 2** (`norm_suzuki4_level2_bch`): rigorous BCH-derived bound with
-  explicit unit coefficients on the 8 Childs 4-fold commutators, depending
-  only on the primitive claim `|βᵢ(Suzuki-p)| ≤ 1` for BCH quintic expansion
-  coefficients.
+  explicit unit coefficients on the 8 Childs 4-fold commutators.
+- **Level 3** (`norm_suzuki4_level3_bch`): tight γᵢ prefactors at Suzuki `p`.
+
+The companion [Lean-BCH](https://github.com/Jue-Xu/Lean-BCH) project (pin
+`d455ff0`, 2026-05-19) provides the underlying 5-factor palindromic BCH
+machinery. The optional **L4 uniform refinement**
+(`norm_suzuki4_level4_uniform`, with an extra `t⁷ · bchR7Bound` correction)
+still transitively depends on two surviving Lean-BCH septic axioms; the
+core L1–L3 τ⁵ bounds do not.
 
 ## Building
 

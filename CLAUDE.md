@@ -40,13 +40,17 @@ core tight 4th-order bound — `norm_suzuki4_level3_bch` and
    bound `norm_strang_comm_scaling_tight`) — fully proved.
 4. **S₄ O(t⁵) abstract form** (`norm_suzuki4_fifth_order`,
    `norm_suzuki4_childs_form`) — closed with explicit residual-bound hypothesis.
-5. **S₄ BCH-derived bounds** — closed given the 3 `bch_w4Deriv_*` axioms below:
-   - L1 `norm_suzuki4_childs_form_via_level3`: recovers Childs (2021) bound
-     (coefficients 0.0047–0.0284) from the CAS-certified Level 3 bound plus
-     the Lean-proved termwise inequality γᵢ ≤ αᵢ. No heuristic axiom.
-   - L2 `norm_suzuki4_level2_bch`: rigorous BCH bound with unit coefficients.
-   - L3 `norm_suzuki4_level3_bch`: tight γᵢ prefactors.
-   - L4 `norm_suzuki4_level4_uniform`: finite-t uniform bound with R₅ + R₇.
+5. **S₄ BCH-derived bounds** — L1–L3 axiom-free; L4 still gated by 2 Lean-BCH
+   septic axioms:
+   - L1 `norm_suzuki4_childs_form_via_level3` (axiom-free): recovers Childs
+     (2021) bound (coefficients 0.0047–0.0284) from the CAS-certified Level 3
+     bound plus the Lean-proved termwise inequality γᵢ ≤ αᵢ. No heuristic axiom.
+   - L2 `norm_suzuki4_level2_bch` (axiom-free): rigorous BCH bound with unit
+     coefficients.
+   - L3 `norm_suzuki4_level3_bch` (axiom-free): tight γᵢ prefactors.
+   - L4 `norm_suzuki4_level4_uniform`: finite-t uniform bound with R₅ + R₇
+     (transitively gated by `BCH.symmetric_bch_septic_sub_poly_axiom` and
+     `BCH.norm_septic_match_residual_le_axiom`; see table below).
 6. **h2 + h3 unconditional** (`iteratedDeriv_s4Func_order2_eq_sq`,
    `iteratedDeriv_s4Func_order3_eq_cb` under `IsSuzukiCubic p`).
 7. **h4 (`bch_iteratedDeriv_s4Func_order4`)**: NOW A THEOREM (2026-04-23/24),
@@ -100,7 +104,7 @@ scaling constant from a speculative `10⁴·|c|³·s⁵` to the rigorous
 `2·10⁷·|c|³·s⁵` (downstream `suzuki4_bchCubic_sum_bound`: `50000·s⁵ → 10⁸·s⁵`).
 This bump is confined to the Path-B composition roadmap
 (`norm_suzuki4_order5_via_strang_bch`). It does NOT affect the L1–L4 headline
-prefactors, which come from the independent `bch_w4Deriv_*` axioms.
+prefactors, which come from the (now-theorem) `bch_w4Deriv_*` bridges.
 
 See `TODO.md` for the full breakdown of remaining work.
 
@@ -182,8 +186,9 @@ BCH bridge + closure of `bch_iteratedDeriv_s4Func_order4` (added 2026-04-23/24):
 - `Suzuki4BchBound.lean` — **SLICE 1**: single-step O(|τ|⁵) bound via
   Lean-BCH M6 + `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`.
 - `TaylorMatch.lean` — **SLICE 2**: generic Taylor-match-from-norm lemma.
-- `Suzuki4ViaBCH.lean` — **SLICE 3** wiring + 3 remaining BCH-interface axioms
-  + L1-L4 BCH bounds.
+- `Suzuki4ViaBCH.lean` — **SLICE 3** wiring + L1–L4 BCH bounds. The 3 former
+  `bch_w4Deriv_*` axioms are now theorems composing Lean-BCH bridge
+  corollaries (see top-of-file table).
 
 Top-level: `LieTrotter.lean` (root import), `lakefile.lean`, `lean-toolchain`,
 `CLAUDE.md` (this file), `CHANGELOG.md` (lab notes), `TODO.md` (remaining work).
@@ -419,13 +424,17 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 
 ---
 
-### Track 7 — S₄ Commutator-Scaling (In Progress)
+### Track 7 — S₄ Fourth-Order Bound (Tight 4th-order Trotter, ✅ axiom-free for τ⁵)
 
 #### Task L: Fourth-Order Suzuki Commutator-Scaling
 
 **Goal:** Prove the genuine O(t⁵) S₄ bound with smaller prefactors than Childs et al. (Proposition 7), whose 8-term bound with coefficients 0.0047–0.0284 is labeled "heuristic" (not proven tight).
 
-#### Modular architecture (Modules 1-3 complete; Module 4 outstanding)
+**Status:** All τ⁵ headlines (L1–L3, including the Childs reproduction) are
+axiom-free as of 2026-05-19 (Lean-BCH pin `d455ff0`). L4 uniform refinement
+remains gated by 2 surviving Lean-BCH septic axioms (see top-of-file table).
+
+#### Modular architecture (all modules complete)
 
 | Module | Statement | Status |
 |--------|-----------|--------|
@@ -480,7 +489,7 @@ The leading coefficient $\|D\|/6$ is always $\le$ the standard bound by the tria
 - `LieTrotter/Suzuki4ChildsForm.lean` (~223 lines) — Childs Prop pf4_bound_2term + conditional reduction
 - `LieTrotter/Suzuki4OrderFive.lean` (~427 lines) — `norm_suzuki4_fifth_order` (alternative-form research target, 1 sorry)
 
-**Current architecture (S₄ O(t⁵), all closed except transitive Lean-BCH sorry):**
+**Current architecture (S₄ O(t⁵), axiom-free for τ⁵ headlines):**
 
 ```
 Module 1 (HasDerivAt for 12-factor w₄) ✅
@@ -498,8 +507,15 @@ CAPSTONE via h2 + h3 + h4 ✅
                 SLICE 2: Taylor-match-from-norm — sorry-free
                 SLICE 3: wire + iteratedDeriv_exp_smul_mul_at_zero — sorry-free
                 Lean-BCH base: `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`
-                (closed upstream at rev `c71d8f2`, 2026-04-24).
+                (closed upstream at rev `c71d8f2`, 2026-04-24; further
+                discharges at rev `d455ff0`, 2026-05-19 — see top-of-file
+                bridge table).
 ```
+
+`#print axioms` on `norm_suzuki4_childs_form_via_level3`,
+`norm_suzuki4_level3_bch`, `norm_suzuki4_level2_bch`,
+`bch_iteratedDeriv_s4Func_order4`, `exists_norm_s4Func_sub_exp_le_t5`,
+and `lie_trotter` returns only `[propext, Classical.choice, Quot.sound]`.
 
 **Tighter Trotter-native bounds (existing, fully proved):**
 - `norm_suzuki4_comm_scaling`: O(t³) via 5-S₂ telescoping (norm-of-sum).
@@ -636,8 +652,8 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/Suzuki4OrderFive.lean` | 0 (S₄ O(t⁵) with explicit residual hypothesis — closed) |
 | `LieTrotter/Suzuki4BchBound.lean` | 0 (SLICE 1 — single-step BCH O(|τ|⁵), since 2026-04-24) |
 | `LieTrotter/TaylorMatch.lean` | 0 (SLICE 2 — generic Taylor-match-from-norm) |
-| `LieTrotter/Suzuki4ViaBCH.lean` | 0 (SLICE 3 wiring + L1-L4 BCH bounds; 3 `bch_w4Deriv_*` axioms) |
-| **Total** | **0** sorries, **0** transitive `sorryAx` (Lean-BCH closed at rev `c71d8f2`) |
+| `LieTrotter/Suzuki4ViaBCH.lean` | 0 (SLICE 3 wiring + L1–L4 BCH bounds; `bch_w4Deriv_*` are theorems) |
+| **Total** | **0** sorries, **0** transitive `sorryAx` for τ⁵ headlines (Lean-BCH pin `d455ff0`, 2026-05-19) |
 
 ## Design Decisions
 

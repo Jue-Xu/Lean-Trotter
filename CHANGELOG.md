@@ -4,6 +4,49 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-05-19: Lean-BCH pin bump cf5eea3 → d455ff0 — τ⁵ headlines now axiom-free
+
+**What:** Bumped the Lean-BCH dependency pin in `lakefile.lean` from
+`cf5eea3` (Apr 26, 2026) to `d455ff0` (May 19, 2026). The new pin
+includes the Lean-BCH side discharge of B1.c
+(`BCH.symmetric_bch_quintic_sub_poly_axiom`) completed on the upstream
+`T2-F7e` arc — the parent axiom was replaced by a polynomial-only
+sub-axiom in `6ffcacb` (2026-05-10) and that polynomial-norm axiom was
+itself discharged in `eae9ffc` (2026-05-11) via a `Finset.sum` refactor
+that closed the per-term enumeration.
+
+**Impact:** After the bump, `#print axioms` on all τ⁵ Lean-Trotter
+headlines returns only the standard Lean foundational axioms
+`[propext, Classical.choice, Quot.sound]`:
+
+* `norm_suzuki4_childs_form_via_level3` — tight 4th-order Trotter
+  (Childs (2021) Prop pf4_bound_2term form, coefficients 0.0047–0.0284)
+* `norm_suzuki4_level3_bch` — tight γᵢ prefactors
+* `norm_suzuki4_level2_bch` — unit-coefficient τ⁵ bound
+* `bch_w4Deriv_level3_tight`, `bch_w4Deriv_quintic_level2`
+* `bch_iteratedDeriv_s4Func_order4` (h4)
+* `exists_norm_s4Func_sub_exp_le_t5`
+* `lie_trotter`, `symmetric_lie_trotter`
+
+**The tight 4th-order Trotter formula error bound is now fully proved
+at the project level.**
+
+**Remaining transitive axioms (gated to L4 uniform refinement only).**
+The optional `bch_uniform_integrated` (and downstream
+`norm_suzuki4_level4_uniform`) still depend on two surviving Lean-BCH
+septic stepping stones — `BCH.symmetric_bch_septic_sub_poly_axiom` and
+`BCH.norm_septic_match_residual_le_axiom`. These gate the τ⁷ uniform
+refinement, not the core tight 4th-order Trotter bound.
+
+**Doc refresh:** This commit also refreshes the top status blocks in
+`CLAUDE.md` and `TODO.md`; the body audits (Track 7 status header,
+prefactor-bookkeeping note, the Recommended-path-forward roadmap, the
+S₄ section in README.md, and the docstrings inside
+`LieTrotter/Suzuki4ViaBCH.lean`) followed in a separate doc-only pass
+to remove residual "axiom" labels on the now-proved bridges.
+
+---
+
 ## 2026-04-23: Childs-heuristic axiom retired (axiom count 5 → 4)
 
 **What:** Removed the `bch_childs_pointwise_residual` axiom that directly
