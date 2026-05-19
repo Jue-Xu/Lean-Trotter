@@ -106,3 +106,29 @@ locally, the commutator $\comm{h_j}{h_k}$ vanishes for distant terms.
 Our formalized bounds could serve as certified building blocks for verified
 resource estimation in quantum algorithms, once combined with gate-count
 analysis for individual exponentials.
+
+\subsection{Trust base and remaining axioms}
+\label{sec:axiom-status}
+
+Lean-Trotter carries zero own theorem-level BCH-interface axioms.
+Axiom inspection (\texttt{\#print axioms}) on every headline $\tau^5$
+result---\texttt{lie\_trotter}, \texttt{symmetric\_lie\_trotter}, the
+commutator-scaling bounds, the abstract $S_4$ $O(t^5)$ identity
+(\texttt{bch\_iteratedDeriv\_s4Func\_order4}), and Levels~1--3 of the
+Suzuki $S_4$ track---returns only \Lean's standard foundational
+axioms \texttt{[propext, Classical.choice, Quot.sound]}. The Level 4
+finite-$t$ uniform refinement~\eqref{eq:level4} is the sole result
+whose trust base extends beyond \Lean's foundations: it transitively
+depends on two private axioms inside the companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project,
+\texttt{symmetric\_bch\_septic\_sub\_poly\_axiom} (the symmetric BCH
+septic Taylor bridge) and
+\texttt{norm\_septic\_match\_residual\_le\_axiom} (the matching
+residual between the explicit Childs-7-basis $R_7$ polynomial and
+the degree-7 part of the five-factor palindromic BCH log at
+Suzuki~$p$). Both have multi-session discharge roadmaps upstream:
+they extend the B1.c template that closed the analogous $\tau^5$
+axiom (Lean-BCH revision \texttt{d455ff0}, May 2026) by one BCH
+order. Until they are discharged, L4 is the only result that
+imports trust from outside the \Lean kernel; everything tighter
+through L3 is verified end-to-end.
