@@ -85,25 +85,36 @@ Our formalization proves the following hierarchy of results:
     computation to order~$\tau^7$.
 \end{enumerate}
 
-The entire development comprises 31 Lean source files totaling over 11\,400 lines,
+The entire development comprises 31 Lean source files totaling over 11\,800 lines,
 with zero \texttt{sorry} axioms and zero own theorem-level BCH-interface
 axioms on the Lean-Trotter side. The three former BCH-interface axioms
 (\texttt{bch\_w4Deriv\_quintic\_level2},
 \texttt{bch\_w4Deriv\_level3\_tight},
 \texttt{bch\_uniform\_integrated})
 are now theorems composing Lean-BCH bridge corollaries with
-exp-Lipschitz lifts. Two transitive private axioms remain inside the
-companion \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project:
-the three-factor symmetric BCH quintic Taylor bridge (B1.c, supports L2/L3)
-and the new five-factor palindromic septic identification (R$_7$,
-supports L4). All other Lean-BCH content is fully sorry-free; the
-three-factor symmetric BCH cubic identities and the two-factor
-palindromic quintic remainder are theorems specialized to
-$\mathbb{K} = \mathbb{R}$ and imported directly.
-Axiom inspection confirms that the headline theorems (Lie--Trotter,
-Strang, commutator scaling, and the abstract $S_4$ $O(t^5)$ identity)
-depend only on the standard foundational axioms \texttt{[propext,
-Classical.choice, Quot.sound]}.
+exp-Lipschitz lifts. As of Lean-BCH revision \texttt{d455ff0}
+(2026-05-19), the upstream B1.c quintic axiom has been discharged, so
+all $\tau^5$ Suzuki~$S_4$ headlines---together with the standard
+Lie--Trotter, Strang, and commutator-scaling theorems---depend only
+on the standard foundational axioms \texttt{[propext, Classical.choice,
+Quot.sound]}. In particular, axiom inspection on
+\texttt{norm\_suzuki4\_childs\_form\_via\_level3} (Level~1 Childs
+reproduction), \texttt{norm\_suzuki4\_level3\_bch} (Level~3 tight
+$\gamma_i$ prefactors), \texttt{norm\_suzuki4\_level2\_bch} (Level~2
+unit-coefficient $\tau^5$ bound), the abstract $S_4$ $O(t^5)$ identity
+(\texttt{bch\_iteratedDeriv\_s4Func\_order4}), and \texttt{lie\_trotter}
+returns the three foundational axioms only. Two transitive private
+axioms remain inside the companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project---both
+septic stepping stones
+(\texttt{symmetric\_bch\_septic\_sub\_poly\_axiom},
+\texttt{norm\_septic\_match\_residual\_le\_axiom}). They gate only
+the optional Level~4 finite-$t$ uniform refinement with an explicit
+$\tau^7$ correction, not the core tight 4th-order bound. All other
+Lean-BCH content is fully sorry-free; the three-factor symmetric BCH
+cubic identities, the two-factor palindromic quintic remainder, and
+the five-factor palindromic quintic identification are theorems
+specialized to $\mathbb{K} = \mathbb{R}$ and imported directly.
 Our \Lean formalization is available at
 \href{https://github.com/Jue-Xu/Lean-Trotter}{\texttt{github.com/Jue-Xu/Lean-Trotter}}.
 Our main contributions are:

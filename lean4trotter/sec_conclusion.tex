@@ -4,8 +4,13 @@
 We have presented the first machine-checked formalization of the Lie--Trotter
 product formula, together with its higher-order extensions and
 commutator-scaling error bounds, in Lean~4 with the \Mathlib library.
-The development comprises over 11\,400 lines with zero \texttt{sorry} axioms
-(and three BCH-interface axioms confined to the Suzuki~$S_4$ track) and covers:
+The development comprises over 11\,800 lines with zero \texttt{sorry} axioms
+and zero own theorem-level BCH-interface axioms. The tight 4th-order
+Trotter bound (Levels~1--3) is fully proved at the project level
+(\texttt{\#print axioms} returns only \texttt{[propext, Classical.choice,
+Quot.sound]} on each $\tau^5$ headline); two transitive Lean-BCH
+septic axioms gate only the optional Level~4 finite-$t$ uniform
+refinement. The development covers:
 \begin{itemize}
   \item First-order Lie--Trotter convergence at rate $O(1/n)$;
   \item Symmetric Strang splitting at rate $O(1/n^2)$;
@@ -33,34 +38,36 @@ Several extensions are natural:
     \leanref{ExpBounds.lean}{129}{exp\_sub\_one\_sub\_bound\_real})
     are general-purpose lemmas suitable for upstreaming to \Mathlib.
 
-  \item \emph{Closing the two transitive Lean-BCH-private axioms.}
-    Lean-Trotter no longer carries any own theorem-level BCH-interface
-    axioms. The Suzuki~$S_4$ track now depends transitively on two
-    private axioms inside the companion
-    \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project:
-    the three-factor symmetric BCH quintic Taylor bridge
-    (\texttt{symmetric\_bch\_quintic\_sub\_poly\_axiom}, supports L2/L3)
-    and the new five-factor palindromic septic identification
-    (\texttt{suzuki5\_log\_product\_septic\_at\_suzukiP\_axiom},
-    supports L4). Both have full multi-week discharge roadmaps in the
-    project's \texttt{claude/} directory. The order-4 Taylor-coefficient
-    identity \texttt{bch\_iteratedDeriv\_s4Func\_order4} was retired
-    earlier via a three-slice chain that composes Lean-BCH's two-factor
-    quintic payoff with a generic Taylor-match-from-norm lemma and
-    \Mathlib's \texttt{iteratedDeriv} API; a Trotter-native
-    operator-algebra alternative (via
+  \item \emph{Closing the two surviving Lean-BCH-side axioms.}
+    Lean-Trotter carries zero own theorem-level BCH-interface axioms,
+    and the upstream B1.c quintic axiom that previously gated Levels
+    L2/L3 has been discharged (Lean-BCH revision~\texttt{d455ff0},
+    2026-05-19). The remaining transitive dependency is on two private
+    \emph{septic} axioms inside the companion
+    \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project,
+    \texttt{symmetric\_bch\_septic\_sub\_poly\_axiom} and
+    \texttt{norm\_septic\_match\_residual\_le\_axiom}; both gate
+    only the optional Level~4 finite-$t$ uniform bound with explicit
+    $\tau^7$ correction, not the tight 4th-order bound itself. Both
+    have multi-session Lean-BCH discharge roadmaps. The order-4
+    Taylor-coefficient identity \texttt{bch\_iteratedDeriv\_s4Func\_order4}
+    was retired earlier via a three-slice chain that composes
+    Lean-BCH's two-factor quintic payoff with a generic
+    Taylor-match-from-norm lemma and \Mathlib's \texttt{iteratedDeriv}
+    API; a Trotter-native operator-algebra alternative (via
     \texttt{scripts/compute\_sumQuadCorr\_factored.py}) remains as a
-    nice-to-have that would remove the transitive dependence on Lean-BCH
-    for the order-4 identity specifically.
+    nice-to-have that would remove the transitive dependence on
+    Lean-BCH for the order-4 identity specifically.
 
   \item \emph{Baker--Campbell--Hausdorff formula.}
-    The three-factor symmetric BCH identities and the two-factor
-    palindromic quintic remainder are already formalized and imported
-    from the Lean-BCH companion project (fully sorry-free as of
-    revision~\texttt{c71d8f2}). Extending to five-factor palindromic
-    BCH at orders $t^5$ and $t^7$, or to the general $n$-factor case,
+    The three-factor symmetric BCH identities, the two-factor
+    palindromic quintic remainder, and the five-factor palindromic
+    quintic identification are already formalized and imported from
+    the Lean-BCH companion project (revision~\texttt{d455ff0},
+    2026-05-19). Discharging the two surviving septic stepping stones
     would complete the BCH-interface chain and automatically eliminate
-    the remaining Suzuki~$S_4$ axioms.
+    the remaining transitive dependency from the Suzuki~$S_4$ Level~4
+    bound.
 
   \item \emph{Specialization to quantum systems.}
     Connecting our abstract bounds to concrete gate-count estimates for

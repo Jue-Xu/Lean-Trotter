@@ -192,16 +192,18 @@ The script emits a Lean snippet for the
 \begin{equation}
   \norm{S_4(t) - e^{t(A+B)}} \;\le\; t^5 \cdot \sum_{i=1}^{8} \gamma_i\, \norm{C_i}
 \end{equation}
-is stated conditional on a single \texttt{axiom}
-(\texttt{bch\_w4Deriv\_level3\_tight}) asserting the BCH-derived pointwise
-residual. This axiom is a clean interface---every step of its derivation is
-implemented symbolically in the script---and will be replaced by a theorem
-once the companion
-\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH}
-project's five-factor palindromic quintic expansion is formalized. (The
-\emph{two}-factor palindromic quintic is already available in Lean-BCH
-and is used to retire the separate order-4 Taylor-coefficient axiom; see
-\cref{sec:caveats}.)
+is now \emph{fully proved} at the project level: \texttt{\#print axioms
+norm\_suzuki4\_level3\_bch} returns only \texttt{[propext,
+Classical.choice, Quot.sound]}. The intermediate bridge theorem
+\texttt{bch\_w4Deriv\_level3\_tight}---historically axiomatized as the
+BCH-derived pointwise residual---is now a theorem composing the
+five-factor palindromic quintic identification from the companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project
+(\texttt{suzuki5\_log\_product\_quintic\_tight\_at\_suzukiP}, revision
+\texttt{d455ff0}) with the per-$i$ numerical bounds
+$\abs{\beta_i(\text{suzukiP})} \le \gamma_i$ proved by \texttt{nlinarith}
+on the tight rational interval $41449/100000 < \text{suzukiP} <
+41450/100000$.
 
 A companion theorem \texttt{norm\_suzuki4\_level3\_le\_childs}
 formally verifies that the BCH-derived bound dominates Childs's:
@@ -292,16 +294,12 @@ symmetric profile ($K_3, K_4$ peak) reflects palindromic structure.}
 \paragraph{The Level 4 existential-$\delta$ bound.}
 Combining the $R_5$ coefficients $\gamma_i$ with the $R_7$ uniform
 constant $K$, we obtain a finite-$t$ bound on a small interval
-$[0, \delta)$:
-\claude{REWRITE: the previous draft claimed this bound holds ``for all
-$t \ge 0$ without asymptotic qualification''. That claim is false in a
+$[0, \delta)$. The existential-$\delta$ shape is unavoidable in a
 general normed algebra: $\norm{S_4(t)}$ and $\norm{e^{t(A+B)}}$ both
-grow as $\exp(t \cdot \mathrm{const})$, so their difference can grow
-exponentially while the right-hand side is polynomial. The corrected
-bound is existential in $\delta$: there exist a small-$t$ interval and
-a multiplier $C$ absorbing the exp-Lipschitz inflation. The
-mathematical content (rigorous separation of $R_5$ leading + $R_7$
-correction + $O(t^8)$ tail) is preserved.}
+grow as $\exp(t \cdot \mathrm{const})$, so a polynomial right-hand
+side can only dominate their difference once the exp-Lipschitz
+inflation factor $C$ is absorbed into the bound on a small-$t$
+interval.
 \begin{equation}\label{eq:level4}
 \begin{aligned}
   &\exists\, \delta > 0,\ \exists\, C \ge 0,\ \forall\, t \in [0, \delta), \\
@@ -317,7 +315,7 @@ correction + $O(t^8)$ tail) is preserved.}
 The multiplier $C$ absorbs the exp-Lipschitz inflation
 $\exp(\norm{tH} + \norm{\delta_{\mathrm{bch}}})$ from lifting the BCH
 log identification to $S_4$; the $t^8$ tail absorbs the higher-order
-remainder of the BCH expansion (R_9, R_{11}, \ldots). For the small-$t$
+remainder of the BCH expansion ($R_9, R_{11}, \ldots$). For the small-$t$
 regime of Trotter splitting these are negligible; if desired the same
 pipeline can extend the CAS to arbitrary order with correspondingly
 smaller corrections.
@@ -330,10 +328,11 @@ and the bound
 \end{equation}
 encoded as \leanref{Suzuki4ViaBCH.lean}{1005}{bchR7Bound}.
 The Lean-BCH bridge corollary
-\texttt{suzuki5\_log\_product\_septic\_at\_suzukiP} (which rests on a
-single private axiom in Lean-BCH for the $\tau^7$ Childs-7-basis
-identification) composes with exp-Lipschitz on the Lean-Trotter side to
-yield the theorem
+\texttt{suzuki5\_log\_product\_septic\_at\_suzukiP} (now a theorem
+upstream, with its $\tau^7$ Childs-7-basis identification factored
+through two deeper Lean-BCH septic stepping stones described in
+\cref{sec:caveats}) composes with exp-Lipschitz on the Lean-Trotter
+side to yield the theorem
 \begin{leancode}
 theorem norm_suzuki4_level4_uniform (A B : 𝔸)
     (hA : star A = -A) (hB : star B = -B) :
@@ -370,6 +369,24 @@ inequality. For typical Trotter regimes $t \cdot (\norm{A} + \norm{B}) \le 0.1$,
 the multiplier $C \approx 1$ (since the exp-Lipschitz inflation
 $\exp(t \cdot \mathrm{const})$ is close to 1), and the Level 4 bound is
 \emph{orders of magnitude} tighter than Childs's.
+
+\paragraph{Why Level 4 matters.}
+L1--L3 are leading-order statements; L4 is the bound one actually
+plugs a specific $t$ into for resource estimation. Feeding the eight
+commutator norms $\norm{C_i}$, the operator norms $\norm{A}, \norm{B}$,
+and a chosen step size $t < \delta$ into \cref{eq:level4} returns a
+certified numerical upper bound on $\norm{S_4(t) - e^{t(A+B)}}$, and
+the 9--64$\times$ tightening of the leading coefficient then propagates
+directly into fewer Trotter steps---hence fewer quantum gates---for a
+given target accuracy. The existential-$\delta$ qualification is not a
+defect: in a general normed algebra both $\norm{S_4(t)}$ and
+$\norm{e^{t(A+B)}}$ grow as $\exp(t \cdot \mathrm{const})$, so no
+polynomial-in-$t$ bound can hold uniformly for all $t \ge 0$; the
+multiplier $C$ absorbs that exponential inflation on the small-$t$
+interval where it is close to~1. Beyond the immediate numerical
+payoff, L4 demonstrates that the CAS-assisted BCH pipeline
+\emph{iterates}: an analogous $R_9$ extension is mechanical and would
+shrink the $t^8$ tail term by another two BCH orders.
 
 \subsection{Summary of the three BCH-based bounds}
 \label{sec:summary-levels}
@@ -414,10 +431,14 @@ $\exp(t \cdot \mathrm{const})$ is close to 1), and the Level 4 bound is
 in increasing rigor / tightness. Theorem name in L1 abbreviates
 \texttt{norm\_suzuki4\_childs\_form\_via\_level3}. L1 is a
 \emph{corollary} of L3---no heuristic axiomatization on Trotter's
-side---while L2/L3/L4 are now Lean theorems composing the corresponding
-Lean-BCH bridge corollaries with exp-Lipschitz lifts; their transitive
-dependency is on Lean-BCH-private axioms (B1.c for L2/L3, the
-\texttt{suzuki5\_log\_product\_septic\_at\_suzukiP\_axiom} for L4).}
+side---while L2/L3/L4 are Lean theorems composing the corresponding
+Lean-BCH bridge corollaries with exp-Lipschitz lifts. As of Lean-BCH
+revision \texttt{d455ff0} (2026-05-19), L1/L2/L3 are axiom-free
+(\texttt{\#print axioms} returns only the standard foundational axioms).
+L4 transitively depends on two surviving Lean-BCH septic axioms
+(\texttt{symmetric\_bch\_septic\_sub\_poly\_axiom},
+\texttt{norm\_septic\_match\_residual\_le\_axiom}) that gate the
+$\tau^7$ extension only.}
 \label{tab:levels}
 \end{table}
 
@@ -438,50 +459,56 @@ tightest in the Childs basis; however, any valid projection is strictly
 smaller than Childs's on all 8 coordinates.
 
 \paragraph{Caveat 2: Dependence on Lean-BCH-private axioms.}
-\claude{REWRITE: previous draft listed three Lean-Trotter own axioms.
-All three are now theorems composing Lean-BCH bridge corollaries with
-exp-Lipschitz / triangle-inequality lifts. The remaining transitive
-dependencies are two private axioms inside Lean-BCH itself (B1.c and
-the new septic R$_7$ axiom).}
-Lean-Trotter no longer carries any own theorem-level BCH-interface
-axioms. The L2, L3, L4 theorems now compose, on the Lean-Trotter side,
-the Lean-BCH bridge corollaries
-\texttt{suzuki5\_log\_product\_quintic\_of\_IsSuzukiCubic},
-\texttt{suzuki5\_log\_product\_quintic\_tight\_at\_suzukiP}, and
-\texttt{suzuki5\_log\_product\_septic\_at\_suzukiP}
-respectively, each via an exp-Lipschitz lift. Axiom inspection
-(\texttt{\#print axioms norm\_suzuki4\_level\textit{N}\_*}) shows that
-all three depend transitively on private axioms inside the companion
+Lean-Trotter carries zero own theorem-level BCH-interface axioms. The
+L1, L2, L3 bounds are \emph{fully proved at the project level}:
+\texttt{\#print axioms norm\_suzuki4\_childs\_form\_via\_level3},
+\texttt{\#print axioms norm\_suzuki4\_level2\_bch}, and \texttt{\#print
+axioms norm\_suzuki4\_level3\_bch} each return only \texttt{[propext,
+Classical.choice, Quot.sound]} as of Lean-BCH revision~\texttt{d455ff0}
+(2026-05-19), which discharged the previous B1.c quintic axiom upstream.
+The L2, L3 theorems compose, on the Lean-Trotter side, the Lean-BCH
+bridge corollaries
+\texttt{suzuki5\_log\_product\_quintic\_of\_IsSuzukiCubic} and
+\texttt{suzuki5\_log\_product\_quintic\_tight\_at\_suzukiP}, each via
+an exp-Lipschitz lift; L1 is a corollary of L3 via the Lean-proved
+termwise inequality $\gamma_i \le \alpha_i$. The optional L4 finite-$t$
+uniform refinement composes the new bridge corollary
+\texttt{suzuki5\_log\_product\_septic\_at\_suzukiP}, which still
+transitively depends on two private axioms inside the companion
 \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project:
 \begin{itemize}[leftmargin=1.2em, nosep]
-  \item \texttt{BCH.symmetric\_bch\_quintic\_sub\_poly\_axiom} (B1.c):
-    the three-factor symmetric BCH quintic Taylor bridge (supports L2 and L3).
-  \item \texttt{BCH.suzuki5\_log\_product\_septic\_at\_suzukiP\_axiom}
-    (R$_7$, NEW): the five-factor palindromic septic identification
-    extending L3 by one BCH order (supports L4).
+  \item \texttt{BCH.symmetric\_bch\_septic\_sub\_poly\_axiom}:
+    the symmetric BCH septic Taylor bridge---supplies the deg-7
+    remainder bound on the three-factor symmetric BCH expansion.
+  \item \texttt{BCH.norm\_septic\_match\_residual\_le\_axiom}:
+    bounds the matching residual between the explicit Childs-7-basis
+    R$_7$ polynomial and the deg-7 part of the five-factor palindromic
+    BCH log at Suzuki~$p$.
 \end{itemize}
-The previously axiomatized order-4 Taylor-coefficient identity
+These two stepping stones gate only the $\tau^7$ uniform extension
+(L4), not the core tight 4th-order bound. The previously axiomatized
+order-4 Taylor-coefficient identity
 \texttt{bch\_iteratedDeriv\_s4Func\_order4}, which supports the abstract
 $O(t^5)$ existence bound, is now a theorem via a three-slice chain
 that composes a single-step $O(\abs{\tau}^5)$ bound from Lean-BCH
 (\texttt{norm\_s4Func\_sub\_exp\_le\_of\_IsSuzukiCubic} composed with the
 opaque-RHS corollary
-\texttt{suzuki5\_bch\_M4b\_RHS\_le\_t5\_of\_IsSuzukiCubic} at Lean-BCH
-rev~\texttt{c71d8f2}), a generic Taylor-match-from-norm lemma
+\texttt{suzuki5\_bch\_M4b\_RHS\_le\_t5\_of\_IsSuzukiCubic}), a generic
+Taylor-match-from-norm lemma
 (\leanref{TaylorMatch.lean}{1}{iteratedDeriv\_eq\_of\_norm\_le\_pow}),
-and \Mathlib's
-\texttt{iteratedDeriv\_exp\_smul\_mul\_at\_zero}. Axiom inspection
-confirms that this theorem and the other headline results
-(Lie--Trotter, Strang, single-step $S_4$ bound) depend only on
-\texttt{[propext, Classical.choice, Quot.sound]}, with no transitive
-\texttt{sorryAx}. The four three-factor symmetric-BCH-cubic identities
-previously axiomatized here (the \texttt{symmetric\_bch\_cubic} family)
-are likewise theorems derived from the corresponding Lean-BCH theorems
-specialized to $\mathbb{K} = \mathbb{R}$. The $\gamma_i$ and $K$ values
-are ``machine-checked mathematically'' (via the Python scripts, whose
-output is reproducible); the residual Lean-BCH axioms each have
-documented multi-week discharge roadmaps in the project's
-\texttt{claude/} directory.
+and \Mathlib's \texttt{iteratedDeriv\_exp\_smul\_mul\_at\_zero}. Axiom
+inspection confirms that this theorem and the other headline results
+(Lie--Trotter, Strang, single-step $S_4$ bound, all of L1/L2/L3)
+depend only on \texttt{[propext, Classical.choice, Quot.sound]}, with
+no transitive \texttt{sorryAx}. The four three-factor
+symmetric-BCH-cubic identities previously axiomatized here (the
+\texttt{symmetric\_bch\_cubic} family) are likewise theorems derived
+from the corresponding Lean-BCH theorems specialized to
+$\mathbb{K} = \mathbb{R}$. The $\gamma_i$ and $K$ values are
+``machine-checked mathematically'' (via the Python scripts, whose
+output is reproducible); the two surviving Lean-BCH septic axioms each
+have documented multi-session discharge roadmaps in the upstream
+\texttt{BCH/} directory.
 
 \subsection{Summary}
 
@@ -511,12 +538,11 @@ over a decade. Four bounds are formalized:
 \end{itemize}
 
 Both the Lean formalization and the CAS computation are reproducible from
-the project repository. The axiomatized steps (BCH expansion, residual
-bounds) are single, well-defined mathematical claims that will become
-theorems once the five-factor palindromic BCH expansion is fully
-formalized in the companion
-\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project---at which
-point all four levels become fully Lean-verified without any remaining
-axioms. The three-factor symmetric BCH interface on which L3/L4 depend
-is already imported from Lean-BCH as a git dependency and is no longer
+the project repository. Levels L1, L2, L3 are now fully Lean-verified
+without any project-side axioms (Lean-BCH revision \texttt{d455ff0}, see
+\cref{sec:caveats}); only Level~4's $\tau^7$ uniform extension still
+depends on two surviving Lean-BCH-private septic axioms that will be
+closed as the upstream B1.c discharge template is extended one BCH
+order higher. The three-factor symmetric BCH interface on which L3/L4
+depend is imported from Lean-BCH as a git dependency and is no longer
 axiomatized on the Trotter side.

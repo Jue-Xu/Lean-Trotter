@@ -113,12 +113,18 @@ technique that sidesteps ODE uniqueness theory. For the $S_4$
 integrator, CAS-assisted Baker--Campbell--Hausdorff expansion yields
 four order-$t^5$ bounds, including a provably strictly tighter
 refinement of Childs et al.'s (2021) heuristic prefactors.
-The formalization spans over 11\,400 lines with zero \texttt{sorry}
-axioms and zero own theorem-level BCH-interface axioms; two
-private axioms remain inside the companion
-\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project (the
-three-factor symmetric BCH quintic Taylor bridge and the new
-five-factor palindromic septic identification).
+The formalization spans over 11\,800 lines with zero \texttt{sorry}
+axioms and zero own theorem-level BCH-interface axioms. The tight
+fourth-order Trotter bound (Levels~1--3) is fully proved at the
+project level: \texttt{\#print axioms} on each $\tau^5$ headline
+returns only the standard Lean foundational axioms
+\texttt{[propext, Classical.choice, Quot.sound]}. Two private axioms
+remain inside the companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project
+(\texttt{symmetric\_bch\_septic\_sub\_poly\_axiom} and
+\texttt{norm\_septic\_match\_residual\_le\_axiom}); they gate only the
+optional Level~4 finite-$t$ uniform refinement with the explicit
+$\tau^7$ correction, not the core tight 4th-order bound.
 \end{abstract}
 
 \tableofcontents
