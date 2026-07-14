@@ -55,3 +55,4 @@ import LieTrotter.Suzuki4StrangBlocks
 import LieTrotter.TaylorMatch
 import LieTrotter.Suzuki4BchBound
 import LieTrotter.Suzuki4ViaBCH
+import LieTrotter.Suzuki4Convergence
