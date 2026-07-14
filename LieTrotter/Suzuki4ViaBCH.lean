@@ -443,6 +443,7 @@ lemma childsBoundSum_le_bchFourFoldSum (A B : 𝔸) :
   have hC8 := norm_nonneg (childsComm₈ A B)
   nlinarith
 
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 /-- **Level 2 BCH τ⁵ identification (primitive bound)**. Under
   `IsSuzukiCubic p`, there exist `δ > 0` and `K ≥ 0` such that for all
   `τ ∈ [0, δ)`,
@@ -468,6 +469,7 @@ theorem bch_w4Deriv_quintic_level2
         τ ^ 5 * BCH.bchFourFoldSum A B + K * τ ^ 6 :=
   BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic A B p hcubic
 
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 /-- **Level 2 BCH-derived Trotter bound**: under `IsSuzukiCubic p`, the
   Suzuki S₄ product approximates `exp(t•(A+B))` to order `t⁵` on a
   neighborhood of zero:
@@ -741,6 +743,7 @@ def BCHPrefactors.boundSum (γ : BCHPrefactors) (A B : 𝔸) : ℝ :=
   γ.γ₅ * ‖childsComm₅ A B‖ + γ.γ₆ * ‖childsComm₆ A B‖ +
   γ.γ₇ * ‖childsComm₇ A B‖ + γ.γ₈ * ‖childsComm₈ A B‖
 
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 lemma BCHPrefactors.boundSum_nonneg (γ : BCHPrefactors) (A B : 𝔸) :
     0 ≤ γ.boundSum A B := by
   unfold BCHPrefactors.boundSum
@@ -754,6 +757,7 @@ lemma childsPrefactors_boundSum_eq (A B : 𝔸) :
   unfold BCHPrefactors.boundSum childsBoundSum childsPrefactors
   ring
 
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 /-- **Key comparison**: the tight BCH prefactors produce a strictly smaller
   bound than Childs's (by construction, they are half of Childs's). -/
 lemma bchTightPrefactors_le_childs (A B : 𝔸) :
@@ -771,8 +775,13 @@ lemma bchTightPrefactors_le_childs (A B : 𝔸) :
 
 section AntiHermitianLevel3
 
-variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
+-- NOTE: the star-structure variables are already in scope from the enclosing
+-- `AntiHermitian` section; re-declaring them here duplicated every instance
+-- argument in the signatures below. The L1–L3 τ⁵ bounds do not use them at
+-- all (they go through BCH + exp-Lipschitz, never the anti-Hermitian
+-- isometry), so each is introduced with an explicit `omit`.
 
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 /-- **Level 3 BCH τ⁵ identification with tight prefactors**. At Suzuki
   `p = 1/(4 − 4^(1/3))`, there exist `δ > 0` and `K ≥ 0` such that for
   all `τ ∈ [0, δ)`,
@@ -817,6 +826,7 @@ theorem bch_w4Deriv_level3_tight (A B : 𝔸) :
   rw [hbs_eq] at this
   exact this
 
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 /-- **Level 3 BCH-derived Trotter bound with explicit tighter prefactors**:
   at Suzuki `p = 1/(4 − 4^(1/3))`, there exist `δ > 0` and `C ≥ 0` such
   that for all `τ ∈ [0, δ)`,
@@ -937,6 +947,7 @@ theorem norm_suzuki4_level3_bch (A B : 𝔸) :
   rw [h_s4_eq] at h_final'
   exact h_final'
 
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 /-- **Level 3 dominates Level 1 (Childs)** (pointwise): for any `τ ≥ 0`,
   `τ⁵·bchTightPrefactors.boundSum ≤ τ⁵·childsBoundSum`. -/
 theorem norm_suzuki4_level3_le_childs_pointwise (A B : 𝔸)
@@ -945,6 +956,7 @@ theorem norm_suzuki4_level3_le_childs_pointwise (A B : 𝔸)
   apply mul_le_mul_of_nonneg_left (bchTightPrefactors_le_childs A B)
   positivity
 
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 /-- **Childs 2021 bound, derived from Level 3**:
   at Suzuki `p = 1/(4 − 4^(1/3))`, there exist `δ > 0` and `C ≥ 0` such
   that for all `τ ∈ [0, δ)`,
