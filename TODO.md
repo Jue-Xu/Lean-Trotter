@@ -1,6 +1,6 @@
 # TODO
 
-## Remaining work (as of 2026-05-19)
+## Remaining work (as of 2026-07-14)
 
 The project has **0 sorries on the Lean-Trotter side**, **0 own
 theorem-level axioms in `Suzuki4ViaBCH.lean`**, and as of the Lean-BCH
@@ -17,7 +17,12 @@ foundational axioms `[propext, Classical.choice, Quot.sound]`:
 - `bch_w4Deriv_quintic_level2` ✓
 - `bch_iteratedDeriv_s4Func_order4` ✓
 - `exists_norm_s4Func_sub_exp_le_t5` ✓
+- `suzuki4_total_error_quartic` ✓ (S₄ total error O(1/n⁴), NEW 2026-07-14)
+- `suzuki4_convergence_quartic` ✓ (S₄ convergence, NEW 2026-07-14)
 - `lie_trotter` ✓
+
+The convergence hierarchy is now complete: `lie_trotter` (O(1/n)) →
+`symmetric_lie_trotter` (O(1/n²)) → `suzuki4_convergence_quartic` (O(1/n⁴)).
 
 The B1.c quintic axiom (`BCH.symmetric_bch_quintic_sub_poly_axiom`) was
 discharged on the Lean-BCH side in May 2026; with the pin bump it no
@@ -126,9 +131,22 @@ the transitive Lean-BCH dep for h4 — a nice-to-have, not a blocker.
   Opens Childs's multi-operator Trotter framework (physics applications).
 - [ ] **Higher-order Suzuki (S₆, S₈).** Recursive Suzuki hierarchy. Each step
   reuses palindromic + cubic-cancellation structure. Very ambitious.
-- [ ] **Total-error convergence theorem for S₄.** Current L3/L4 give step error
-  `O(t⁵)`; a total-error theorem `(S₄(1/n))^n → exp(A+B)` at `O(1/n⁴)` would
-  parallel the existing `lie_trotter` and `symmetric_lie_trotter` theorems.
+- [x] **Total-error convergence theorem for S₄.** ✅ Done 2026-07-14,
+  `LieTrotter/Suzuki4Convergence.lean` (0 sorries, axiom-free).
+  `suzuki4_total_error_quartic`: `‖S₄(t/n)ⁿ − exp(t(A+B))‖ ≤ C/n⁴` for `n ≥ N`;
+  `suzuki4_convergence_quartic`: `S₄(t/n)ⁿ → exp(t(A+B))`. Compounds the
+  SLICE-1 step bound `exists_norm_s4Func_sub_exp_le_t5` via telescoping
+  (`norm_pow_sub_pow_le'`) plus a new growth bound `norm_suzuki4Exp_le`.
+  Completes the hierarchy O(1/n) → O(1/n²) → O(1/n⁴). Hypothesis is only
+  `IsSuzukiCubic p`; the `*_suzukiP` corollaries are hypothesis-free.
+
+- [x] **`suzuki4Step` bridge + O(1/n⁴) upgrade.** ✅ Done 2026-07-14 (same file).
+  `suzuki4Step_eq_suzuki4Exp : suzuki4Step ℝ A B p n = suzuki4Exp A B p (1/n)`,
+  reusing `suzuki4Exp_eq_strangProduct` for the four junction merges — only the
+  scalar identity `strangStep(c,n) = strangBlock(c/n)` was new. Yields
+  `suzuki4Step_total_error_quartic` and `suzuki4Step_convergence_quartic`,
+  which upgrade `suzuki4_error_rate_sq` / `suzuki4_convergence` (O(1/n²)) to
+  O(1/n⁴) on the *same* object.
 
 ### Track D: Mathlib contributions
 
@@ -168,9 +186,13 @@ Several lemmas are ready for upstreaming (~20-50 lines each):
 ## Recommended path forward
 
 **Short term (1-2 weeks):**
+- **Track E:** update the manuscript to feature the new O(1/n⁴) total-error
+  convergence theorem (`suzuki4_convergence_quartic`) alongside the tight
+  step bound — the paper can now claim a complete verified hierarchy
+  O(1/n) → O(1/n²) → O(1/n⁴), not just a step-error bound. Then arXiv.
 - **Track D:** start Mathlib PR for `norm_exp_le` (see cleanup checklist below).
-- **Track E:** start drafting arXiv companion / Zulip announcement now that
-  the τ⁵ Trotter headlines are axiom-free.
+- **Track E:** Zulip announcement now that the τ⁵ Trotter headlines are
+  axiom-free and S₄ convergence is closed.
 
 **Medium term (1-3 months):**
 - **Track A (optional L4):** if the τ⁷ uniform refinement is wanted on the

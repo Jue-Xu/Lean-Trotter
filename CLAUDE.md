@@ -1,15 +1,19 @@
 # Lie–Trotter Product Formula — Lean 4 Formalization
 
-## Status (2026-05-19): 0 sorries, 0 own axioms, 0 transitive Lean-BCH axioms for τ⁵ headlines
+## Status (2026-07-14): 0 sorries, 0 own axioms, 0 transitive Lean-BCH axioms for τ⁵ headlines
 
-**Tight 4th-order Trotter formula error bound is fully proved at the
-project level.** `#print axioms` on all τ⁵ headlines
-(`norm_suzuki4_childs_form_via_level3`, `norm_suzuki4_level3_bch`,
-`norm_suzuki4_level2_bch`, `bch_w4Deriv_level3_tight`,
-`bch_w4Deriv_quintic_level2`, `bch_iteratedDeriv_s4Func_order4`,
-`exists_norm_s4Func_sub_exp_le_t5`, `lie_trotter`) returns only
-`[propext, Classical.choice, Quot.sound]` — the standard Lean
+**Tight 4th-order Trotter formula error bound AND its O(1/n⁴) total-error
+convergence theorem are fully proved at the project level.** `#print axioms`
+on all τ⁵ headlines (`norm_suzuki4_childs_form_via_level3`,
+`norm_suzuki4_level3_bch`, `norm_suzuki4_level2_bch`,
+`bch_w4Deriv_level3_tight`, `bch_w4Deriv_quintic_level2`,
+`bch_iteratedDeriv_s4Func_order4`, `exists_norm_s4Func_sub_exp_le_t5`,
+`suzuki4_convergence_quartic`, `suzuki4_total_error_quartic`, `lie_trotter`)
+returns only `[propext, Classical.choice, Quot.sound]` — the standard Lean
 foundational axioms.
+
+**The convergence hierarchy is complete:** `lie_trotter` (O(1/n)) →
+`symmetric_lie_trotter` (O(1/n²)) → `suzuki4_convergence_quartic` (O(1/n⁴)).
 
 All three formerly-axiomatized `bch_w4Deriv_*` / `bch_uniform_integrated`
 results are theorems composing Lean-BCH bridge corollaries with
@@ -40,6 +44,13 @@ core tight 4th-order bound — `norm_suzuki4_level3_bch` and
    bound `norm_strang_comm_scaling_tight`) — fully proved.
 4. **S₄ O(t⁵) abstract form** (`norm_suzuki4_fifth_order`,
    `norm_suzuki4_childs_form`) — closed with explicit residual-bound hypothesis.
+4b. **S₄ total-error convergence, O(1/n⁴)** (`suzuki4_convergence_quartic`,
+   `suzuki4_total_error_quartic`, `Suzuki4Convergence.lean`, 2026-07-14) —
+   fully proved, axiom-free. `‖S₄(t/n)ⁿ − exp(t(A+B))‖ ≤ C/n⁴` and
+   `S₄(t/n)ⁿ → exp(t(A+B))`, under only `IsSuzukiCubic p`. Needs **no
+   C*-algebra / anti-Hermitian structure** — holds in any complete normed
+   algebra with `NormOneClass`. The `*_suzukiP` corollaries discharge even the
+   cubic hypothesis at `p = 1/(4−4^{1/3})`, so they are hypothesis-free.
 5. **S₄ BCH-derived bounds** — L1–L3 axiom-free; L4 still gated by 2 Lean-BCH
    septic axioms:
    - L1 `norm_suzuki4_childs_form_via_level3` (axiom-free): recovers Childs
@@ -48,6 +59,11 @@ core tight 4th-order bound — `norm_suzuki4_level3_bch` and
    - L2 `norm_suzuki4_level2_bch` (axiom-free): rigorous BCH bound with unit
      coefficients.
    - L3 `norm_suzuki4_level3_bch` (axiom-free): tight γᵢ prefactors.
+   - **Hypotheses (2026-07-14):** L1–L3 need **no star structure** — they hold in
+     any complete normed algebra with `NormOneClass`. The C*-algebra typeclasses
+     they used to carry were vestigial auto-included section variables (now
+     `omit`-ted). Only L4 genuinely requires anti-Hermitian `A, B` in a
+     C*-algebra (it carries `star A = -A`, `star B = -B` explicitly).
    - L4 `norm_suzuki4_level4_uniform`: finite-t uniform bound with R₅ + R₇
      (transitively gated by `BCH.symmetric_bch_septic_sub_poly_axiom` and
      `BCH.norm_septic_match_residual_le_axiom`; see table below).
@@ -189,6 +205,17 @@ BCH bridge + closure of `bch_iteratedDeriv_s4Func_order4` (added 2026-04-23/24):
 - `Suzuki4ViaBCH.lean` — **SLICE 3** wiring + L1–L4 BCH bounds. The 3 former
   `bch_w4Deriv_*` axioms are now theorems composing Lean-BCH bridge
   corollaries (see top-of-file table).
+
+S₄ total-error convergence (added 2026-07-14):
+
+- `Suzuki4Convergence.lean` — compounds the SLICE 1 step bound into
+  `‖S₄(t/n)ⁿ − exp(t(A+B))‖ ≤ C/n⁴` (`suzuki4_total_error_quartic`) and
+  `S₄(t/n)ⁿ → exp(t(A+B))` (`suzuki4_convergence_quartic`). Also proves the
+  growth bound `norm_suzuki4Exp_le` (`‖S₄(τ)‖ ≤ exp(|τ|·s4Rate)`) by reusing
+  Lean-BCH's `norm_suzuki5Product_sub_one_le` rather than re-grinding the
+  11-factor product; and bridges the two S₄ spellings
+  (`suzuki4Step_eq_suzuki4Exp`) so the O(1/n²) bound of `Suzuki4.lean` is
+  upgraded to O(1/n⁴) on the same object (`suzuki4Step_*_quartic`).
 
 Top-level: `LieTrotter.lean` (root import), `lakefile.lean`, `lean-toolchain`,
 `CLAUDE.md` (this file), `CHANGELOG.md` (lab notes), `TODO.md` (remaining work).
@@ -477,6 +504,11 @@ remains gated by 2 surviving Lean-BCH septic axioms (see top-of-file table).
 | SLICE 3. `bch_iteratedDeriv_s4Func_order4` | h4 as a theorem (prev. axiom) | ✅ Proved |
 | L5. `norm_suzuki4_childs_via_residual` | Conditional Childs-form bound (8 explicit 4-fold commutators) | ✅ Proved |
 | L5'. `norm_suzuki4_childs_form_via_level3` | Childs Prop pf4_bound_2term reproduced from Level 3 | ✅ Proved (replaces retired Childs-heuristic axiom) |
+| L6. `norm_suzuki4Exp_le` | Growth bound `‖S₄(τ)‖ ≤ exp(\|τ\|·s4Rate A B p)` (via Lean-BCH 11-factor peel) | ✅ Proved |
+| L7. `suzuki4_total_error_quartic` | **Total error `‖S₄(t/n)ⁿ − exp(t(A+B))‖ ≤ C/n⁴`** | ✅ Proved (axiom-free) |
+| L8. `suzuki4_convergence_quartic` | **`S₄(t/n)ⁿ → exp(t(A+B))`** | ✅ Proved (axiom-free) |
+| L9. `suzuki4Step_eq_suzuki4Exp` | Bridge `suzuki4Step ℝ A B p n = suzuki4Exp A B p (1/n)` (via `suzuki4Exp_eq_strangProduct`) | ✅ Proved |
+| L10. `suzuki4Step_{total_error,convergence}_quartic` | **O(1/n⁴) for `suzuki4Step`** — upgrades `suzuki4_error_rate_sq` (O(1/n²)) on the *same* object | ✅ Proved (axiom-free) |
 
 **Files:**
 - `LieTrotter/Suzuki4HasDerivAt.lean` (~136 lines) — Module 1
@@ -653,6 +685,7 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 | `LieTrotter/Suzuki4BchBound.lean` | 0 (SLICE 1 — single-step BCH O(|τ|⁵), since 2026-04-24) |
 | `LieTrotter/TaylorMatch.lean` | 0 (SLICE 2 — generic Taylor-match-from-norm) |
 | `LieTrotter/Suzuki4ViaBCH.lean` | 0 (SLICE 3 wiring + L1–L4 BCH bounds; `bch_w4Deriv_*` are theorems) |
+| `LieTrotter/Suzuki4Convergence.lean` | 0 (S₄ total error O(1/n⁴) + convergence, since 2026-07-14) |
 | **Total** | **0** sorries, **0** transitive `sorryAx` for τ⁵ headlines (Lean-BCH pin `d455ff0`, 2026-05-19) |
 
 ## Design Decisions
@@ -686,6 +719,8 @@ Expected: `Build completed successfully` with only lint warnings about unused se
 13. **Norm-of-difference vs sum-of-norms for tighter bounds**: The standard Strang bound uses $\|\text{PartA}\| + \|\text{PartB}\|$ (triangle inequality). By extracting the common $\tau^2/2$ prefactor as the *effective double commutator* $D = [B,[B,A']] - [A',[A',B]]$ and bounding $\|D\|$ directly, we get a tighter leading coefficient. The remainder is bounded using the triple FTC (iterated one more level). Trade-off: introduces an $O(t^{p+1})$ correction term, but the leading coefficient is provably $\le$ the standard bound and strictly tighter with partial cancellation. This principle extends to any order.
 
 14. **`module` tactic for smul algebra in non-commutative rings**: When `abel` fails on goals involving `smul_sub` with negated scalar terms (e.g., `(-τ)` vs `(-1 * τ)`), the `module` tactic handles the scalar-module structure correctly. Used in `StrangCommutatorScalingTight.lean` for the algebraic decomposition proofs.
+
+15. **Auto-included instance binders hide real generality; trust the linter, and work leaf-first.** L1–L3 carried five C*-algebra typeclasses for months purely because they sat inside a `section` whose `variable` line declared them — Lean auto-includes any instance binder mentioning an included variable, so they landed in every signature unused. Two traps when cleaning this up: (a) a *caller* can look like it uses an instance when it only passes it to a callee that doesn't need it either (L2 was not flagged until its bridges were freed) — so `omit` from the leaves upward and re-run the linter after each round; (b) nested sections can re-declare the same `variable` line, silently doubling every instance argument (`AntiHermitianLevel3` inside `AntiHermitian`). `#check @thm` is the ground truth for what a theorem actually assumes; the doc comment is not.
 
 ---
 

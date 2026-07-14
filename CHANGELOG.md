@@ -4,6 +4,128 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-07-14: S₄ total-error convergence — O(1/n⁴), axiom-free
+
+**What:** New file `LieTrotter/Suzuki4Convergence.lean` (~230 lines,
+0 sorries). Closes the last structural gap in the S₄ track: every other
+integrator here had both a single-step error bound *and* a compounded
+convergence theorem; S₄ had only the step bound.
+
+**New results (all `[propext, Classical.choice, Quot.sound]` only):**
+
+| Theorem | Statement |
+|---|---|
+| `norm_suzuki4Exp_le` | `‖S₄(τ)‖ ≤ exp(\|τ\|·s4Rate A B p)` |
+| `suzuki4_total_error_quartic` | `‖S₄(t/n)ⁿ − exp(t(A+B))‖ ≤ C/n⁴` for `n ≥ N` |
+| `suzuki4_convergence_quartic` | `S₄(t/n)ⁿ → exp(t(A+B))` |
+| `suzuki4_product_formula` | unit-time form: `S₄(1/n)ⁿ → exp(A+B)` |
+| `suzuki4_{convergence,total_error}_quartic_suzukiP` | same, at `p = 1/(4−4^{1/3})`, **no hypotheses** |
+| `suzuki4Step_eq_suzuki4Exp` | bridge: `suzuki4Step ℝ A B p n = suzuki4Exp A B p (1/n)` |
+| `suzuki4Step_total_error_quartic` | **O(1/n⁴) for `suzuki4Step`** — upgrades `suzuki4_error_rate_sq` |
+| `suzuki4Step_convergence_quartic` | **O(1/n⁴) convergence for `suzuki4Step`** |
+
+This completes the hierarchy `lie_trotter` (O(1/n)) → `symmetric_lie_trotter`
+(O(1/n²)) → `suzuki4_convergence_quartic` (O(1/n⁴)).
+
+**The `suzuki4Step` bridge.** `Suzuki4.lean` builds S₄ from five `strangStep`s
+(each with a built-in `1/n`) and bounds it at O(1/n²) — the generic rate available
+*without* the cubic condition. `suzuki4Exp` builds the same operator as 11
+exponentials in a free step size `τ`. `suzuki4Step_eq_suzuki4Exp` identifies them,
+so `suzuki4Step_{total_error,convergence}_quartic` restate the new results for the
+*same* object, making the O(1/n²) → O(1/n⁴) improvement explicit rather than a
+comparison across two definitions.
+
+Cheaper than expected: `suzuki4Exp_eq_strangProduct` (Suzuki4StrangBlocks.lean)
+already performs the four junction merges of adjacent same-operator exponentials,
+so the bridge reduces to the scalar identity `strangStep(c,n) = strangBlock(c/n)`
+(`strangStep_eq_strangBlock`, 4 lines) plus `simp only`.
+
+Note `suzuki4_error_rate_sq` is stated over a general `RCLike 𝕂` and so displays
+`suzuki4Step ℝ A B (↑p) n` at `𝕂 = ℝ`; that coercion is `RCLike.ofReal`, which is
+definitionally the identity on `ℝ`. Verified: the quartic theorems typecheck
+directly against the coerced term, so the upgrade is genuinely about the same term.
+
+---
+
+## 2026-07-14: L1–L3 freed of vestigial C*-algebra hypotheses
+
+**What:** `Suzuki4ViaBCH.lean` — the three τ⁵ headline bounds now hold in **any**
+complete normed algebra with `NormOneClass`, with no star structure at all.
+
+Before: `norm_suzuki4_level2_bch`, `norm_suzuki4_level3_bch`, and
+`norm_suzuki4_childs_form_via_level3` all carried
+`[StarRing] [ContinuousStar] [CStarRing] [Nontrivial] [StarModule ℝ]` — and L3/L1
+carried them **twice**, because `section AntiHermitianLevel3` (line 772) is nested
+inside `section AntiHermitian` and re-declared the identical `variable` line.
+After: signatures are `[NormedRing 𝔸] [NormedAlgebra ℝ 𝔸] [NormOneClass 𝔸]
+[CompleteSpace 𝔸]` only. Axioms unchanged (all three still
+`[propext, Classical.choice, Quot.sound]`).
+
+**How it was found.** Lean's `unusedSectionVars` linter reported the star classes
+as never used in those proofs — they were auto-included section variables, not
+genuine hypotheses. Removed the duplicate `variable` line and added
+`omit [StarRing 𝔸] … in` to the L2/L3 bridges (`bch_w4Deriv_quintic_level2`,
+`bch_w4Deriv_level3_tight`), the three headline bounds,
+`norm_suzuki4_level3_le_childs_pointwise`, and two prefactor-arithmetic helpers
+(`BCHPrefactors.boundSum_nonneg`, `bchTightPrefactors_le_childs`) that the
+headlines call.
+
+**The cascade.** L2 was *not* initially flagged by the linter, which looked like a
+counterexample. It wasn't: L2 "used" the star instances only by passing them to
+`bch_w4Deriv_quintic_level2`, which didn't need them either. Freeing the bridges
+first made L2's usage evaporate. Likewise, omitting from the headlines exposed two
+more call sites (`boundSum_nonneg`, `bchTightPrefactors_le_childs`) as
+`synthInstanceFailed`; freeing those closed it out. Lesson: with auto-included
+instance binders, "is this hypothesis used?" must be answered leaf-first — a
+caller can appear to use an instance purely because its callee's signature
+demands one it doesn't need.
+
+**L4 is genuinely anti-Hermitian, and stays that way.**
+`norm_suzuki4_level4_uniform` carries explicit `star A = -A`, `star B = -B`
+hypotheses and really does use the C*-algebra isometry. The linter does not flag
+it, correctly. So the hypothesis split is real: **L1–L3 general normed algebra,
+L4 C*-algebra.** Recorded in the manuscript (§5.6 and the `tab:levels` caption).
+
+**Why it matters.** The tight 4th-order Trotter bound — the paper's central
+result — now applies to arbitrary bounded generators, not just the skew-adjoint
+generators of unitary dynamics.
+
+**Proof (three ingredients, no new machinery):**
+1. **Step error** — `exists_norm_s4Func_sub_exp_le_t5` (SLICE 1, axiom-free):
+   `‖S₄(τ) − exp(τ(A+B))‖ ≤ C₀·|τ|⁵` for `|τ| < δ`. Take `τ = t/n`;
+   the threshold `N > |t|/δ` puts the step size inside the BCH regime.
+2. **Growth bound** — `norm_suzuki4Exp_le`. Rather than grinding the
+   11-factor product by hand, reuse Lean-BCH's `norm_suzuki5Product_sub_one_le`
+   (which already performs the peel) plus `sum_arg_norms_le_bound`, then convert
+   `‖S₄ − 1‖ ≤ exp R − 1` into `‖S₄‖ ≤ exp R` via `NormOneClass`. `s4Func` and
+   `suzuki5Product` are defeq (`s4Func_eq_suzuki5Product`), as are `s4Func` and
+   `suzuki4Exp` (new `s4Func_eq_suzuki4Exp`, `rfl`).
+3. **Telescoping** — `norm_pow_sub_pow_le'` (Task A2). The damping factor
+   collapses to a constant: `max(‖S₄(t/n)‖,‖exp((t/n)(A+B))‖)^{n−1}
+   ≤ exp(|t/n|·K)ⁿ = exp(|t|·K)`. Hence `n · O(n⁻⁵) = O(n⁻⁴)`.
+
+**Design notes:**
+- Stated for `suzuki4Exp` (the object the L1–L3 headline bounds use, already
+  certified as five Strang blocks by `suzuki4Exp_eq_strangProduct`), not for
+  `suzuki4Step`, which carries its own built-in `1/n`.
+- Hypothesis is only `IsSuzukiCubic p`. **No C*-algebra / anti-Hermitian
+  structure needed** — unlike the L1–L3 tight-prefactor bounds, this holds in
+  any complete normed algebra with `NormOneClass`. The `suzukiP` corollaries
+  discharge even that hypothesis via `BCH.IsSuzukiCubic_suzukiP`.
+- The existential `∃ N` (rather than `∀ n > 0`) is forced by the single-step
+  bound's regime `|τ| < δ`; it is the honest asymptotic form.
+- The constant is the crude `C₀·|t|⁵·exp(|t|·K)`, not a tight prefactor —
+  tight constants are the content of L1–L3; a convergence theorem is about
+  the *rate*.
+
+**Lean gotchas hit:**
+- `field_simp` fully closed the `n·(C₀·(|t|/n)⁵)·E = C₀·|t|⁵·E/n⁴` goal, so the
+  customary trailing `ring` errored with "no goals".
+- `div_lt_iff₀` orients as `a < c * b`, not `b * c`; needed a closing
+  `_ = ε * (N₂+1) := by ring` step (`div_lt_iff₀'` would also work).
+
+---
+
 ## 2026-05-19: Lean-BCH pin bump cf5eea3 → d455ff0 — τ⁵ headlines now axiom-free
 
 **What:** Bumped the Lean-BCH dependency pin in `lakefile.lean` from
