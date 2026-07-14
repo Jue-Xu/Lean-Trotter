@@ -4,7 +4,7 @@
 We have presented the first machine-checked formalization of the Lie--Trotter
 product formula, together with its higher-order extensions and
 commutator-scaling error bounds, in Lean~4 with the \Mathlib library.
-The development comprises over 11\,800 lines with zero \texttt{sorry} axioms
+The development comprises over 12\,100 lines with zero \texttt{sorry} axioms
 and zero own theorem-level BCH-interface axioms. The tight 4th-order
 Trotter bound (Levels~1--3) is fully proved at the project level
 (\texttt{\#print axioms} returns only \texttt{[propext, Classical.choice,
@@ -22,8 +22,15 @@ refinement. The development covers:
   \item A fourth-order Suzuki $S_4$ track with four CAS-assisted
     BCH-based bounds, including a strictly tighter replacement
     (9$\times$--64$\times$) of Childs's 2021 heuristic prefactors and an
-    existential-$\delta$ finite-$t$ bound via an explicit $\tau^7$ correction.
+    existential-$\delta$ finite-$t$ bound via an explicit $\tau^7$ correction;
+  \item Fourth-order Suzuki convergence at rate $O(1/n^4)$, obtained by
+    compounding the single-step $O(t^5)$ bound over $n$ steps.
 \end{itemize}
+The first, second, and fourth-order convergence theorems together form a
+complete verified hierarchy $O(1/n) \to O(1/n^2) \to O(1/n^4)$: for each
+integrator the development supplies both a single-step error bound and the
+compounded statement that the $n$-step product converges to $e^{t(A+B)}$ at the
+corresponding rate.
 
 The Duhamel approach to commutator scaling---avoiding ODE uniqueness in favor
 of the fundamental theorem of calculus---may be of independent interest as a

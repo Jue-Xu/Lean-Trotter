@@ -83,9 +83,16 @@ Our formalization proves the following hierarchy of results:
     replacement of Childs's~2021 heuristic prefactors, together with an
     existential-$\delta$ finite-$t$ bound obtained by extending the CAS
     computation to order~$\tau^7$.
+
+  \item \textbf{Fourth-order convergence of $S_4$} (\cref{sec:s4-convergence}):
+    compounding the single-step $O(t^5)$ bound over $n$ steps gives
+    $\norm{(S_4(t/n))^n - e^{t(A+B)}} \le C/n^4$ for $n$ beyond an explicit
+    threshold, and hence $(S_4(t/n))^n \to e^{t(A+B)}$. Together with items~1
+    and~2 this completes a verified convergence hierarchy
+    $O(1/n) \to O(1/n^2) \to O(1/n^4)$.
 \end{enumerate}
 
-The entire development comprises 31 Lean source files totaling over 11\,800 lines,
+The entire development comprises 32 Lean source files totaling over 12\,100 lines,
 with zero \texttt{sorry} axioms and zero own theorem-level BCH-interface
 axioms on the Lean-Trotter side. The three former BCH-interface axioms
 (\texttt{bch\_w4Deriv\_quintic\_level2},

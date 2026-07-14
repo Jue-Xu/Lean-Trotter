@@ -44,7 +44,9 @@ constructed recursively: the fourth-order formula
   S_4(t) = S_2(pt)^2\,S_2\bigl((1-4p)t\bigr)\,S_2(pt)^2
   \qquad \text{with } p = \frac{1}{4 - 4^{1/3}}
 \]
-achieves $O(t^5)$ local error.
+achieves $O(t^5)$ local error and, under the cubic condition
+$4p^3 + (1-4p)^3 = 0$ that this $p$ satisfies, $O(1/n^4)$ global
+convergence (\cref{sec:s4-convergence}).
 
 Both formulas generalize to multiple operators $A_1, \ldots, A_m$.
 The first-order product $(e^{A_1/n} \cdots e^{A_m/n})^n$ converges at rate

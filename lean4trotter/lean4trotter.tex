@@ -112,8 +112,11 @@ commutator-scaling error bounds obtained via a new Duhamel/FTC
 technique that sidesteps ODE uniqueness theory. For the $S_4$
 integrator, CAS-assisted Baker--Campbell--Hausdorff expansion yields
 four order-$t^5$ bounds, including a provably strictly tighter
-refinement of Childs et al.'s (2021) heuristic prefactors.
-The formalization spans over 11\,800 lines with zero \texttt{sorry}
+refinement of Childs et al.'s (2021) heuristic prefactors; compounding
+the single-step bound over $n$ steps yields a machine-checked
+$O(1/n^4)$ convergence theorem, completing a verified hierarchy
+$O(1/n) \to O(1/n^2) \to O(1/n^4)$.
+The formalization spans over 12\,100 lines with zero \texttt{sorry}
 axioms; the tight 4th-order Trotter bound is fully proved down to
 \Lean's standard foundational axioms, while a finite-$t$ uniform
 refinement at order $\tau^7$ still depends on two private axioms

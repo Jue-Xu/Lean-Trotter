@@ -34,7 +34,7 @@ enabling parallel development and independent verification.
 \leansrc{StrangCommutatorScalingTight.lean} & 559 & Tighter Strang via norm-of-difference $D$ \\
 \midrule
 \multicolumn{3}{@{}l}{\textit{Suzuki $S_4$ track (\cref{sec:suzuki4})}} \\
-\leansrc{Suzuki4.lean}                    & 466  & $S_4$ definition and basic $O(1/n^2)$ \\
+\leansrc{Suzuki4.lean}                    & 466  & $S_4$ definition; generic $O(1/n^2)$ rate \\
 \leansrc{Suzuki4FullDuhamel.lean}         & 445  & $S_4$ $O(t^3)$ via 5-$S_2$ telescoping \\
 \leansrc{Suzuki4CommutatorScaling.lean}   & 90   & \texttt{suzuki4Exp} definition \\
 \leansrc{Suzuki4Deriv.lean}               & 96   & Derivative scaffolding \\
@@ -51,12 +51,17 @@ enabling parallel development and independent verification.
 \leansrc{Suzuki4BchBound.lean}            & 495  & SLICE~1: single-step $O(\abs{\tau}^5)$ via Lean-BCH M6 \\
 \leansrc{TaylorMatch.lean}                & 331  & SLICE~2: generic Taylor-match-from-norm \\
 \leansrc{Suzuki4ViaBCH.lean}              & 1\,294 & SLICE~3 wiring + L1/L2/L3/L4 BCH-derived bounds \\
+\leansrc{Suzuki4Convergence.lean}         & 380  & Total error $O(1/n^4)$ + convergence (\cref{sec:s4-convergence}) \\
 \midrule
-\textbf{Total} & \textbf{11\,806} & \textbf{0 \texttt{sorry} axioms,
+\textbf{Total} & \textbf{12\,186} & \textbf{0 \texttt{sorry} axioms,
 0 own theorem-level BCH-interface axioms} \\
 \bottomrule
 \end{tabular}
-\caption{Source files in the formalization, grouped by track.}
+\caption{Source files in the formalization, grouped by track.
+\texttt{Suzuki4.lean} carries the generic $O(1/n^2)$ rate, which holds for
+all $n$ with an explicit constant and no cubic condition;
+\texttt{Suzuki4Convergence.lean} upgrades the \emph{same} object to $O(1/n^4)$
+under the Suzuki cubic condition (\cref{sec:s4-convergence}).}
 \label{tab:files}
 \end{table}
 

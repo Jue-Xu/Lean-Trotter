@@ -438,9 +438,100 @@ revision \texttt{d455ff0} (2026-05-19), L1/L2/L3 are axiom-free
 L4 transitively depends on two surviving Lean-BCH septic axioms
 (\texttt{symmetric\_bch\_septic\_sub\_poly\_axiom},
 \texttt{norm\_septic\_match\_residual\_le\_axiom}) that gate the
-$\tau^7$ extension only.}
+$\tau^7$ extension only.
+Hypotheses also differ: L1--L3 hold in any complete normed algebra with
+$\norm{1} = 1$, whereas L4 requires anti-Hermitian $A, B$ in a
+C\textsuperscript{*}-algebra (\cref{sec:s4-convergence}).}
 \label{tab:levels}
 \end{table}
+
+\subsection{From step error to convergence:
+  \texorpdfstring{$O(1/n^4)$}{O(1/n4)}}
+\label{sec:s4-convergence}
+
+Levels~1--4 all bound the \emph{single-step} error
+$\norm{S_4(t) - e^{t(A+B)}}$. What a simulation pays for, however, is the
+\emph{total} error after $n$ steps of size $t/n$, and the two are separated by
+the telescoping amplification of \cref{sec:bg-trotter}: a step error of order
+$\tau^{k+1}$ compounds to a total error of order $1/n^{k}$. Formalizing that
+passage completes the hierarchy---the first-order and Strang formulas already
+carry total-error theorems (\cref{sec:assembly,sec:strang}), whereas $S_4$
+carried only a step bound.
+
+\paragraph{The bound.}
+Let $p$ satisfy the Suzuki cubic condition $4p^3 + (1-4p)^3 = 0$, as the
+standard $p = 1/(4 - 4^{1/3})$ does. Then for all $A, B$ in a complete normed
+algebra and every evolution time $t$, there exist a constant $C > 0$ and a
+threshold $N$ such that
+\begin{equation}\label{eq:s4-quartic}
+  \norm{\bigl(S_4(t/n)\bigr)^n - e^{t(A+B)}} \;\le\; \frac{C}{n^4}
+  \qquad \text{for all } n \ge N,
+\end{equation}
+and consequently $\bigl(S_4(t/n)\bigr)^n \to e^{t(A+B)}$ as $n \to \infty$
+(\leanref{Suzuki4Convergence.lean}{155}{suzuki4\_total\_error\_quartic},
+\leanref{Suzuki4Convergence.lean}{254}{suzuki4\_convergence\_quartic}).
+Both are axiom-free. At the standard $p$ the cubic hypothesis is discharged
+internally, leaving a statement with no hypotheses beyond the ambient algebra
+(\leanref{Suzuki4Convergence.lean}{308}{suzuki4\_convergence\_quartic\_suzukiP}).
+
+\paragraph{Proof.}
+Telescoping (\cref{sec:telescoping}) gives
+$\norm{X^n - Y^n} \le n\,\norm{X-Y}\,\max(\norm{X},\norm{Y})^{n-1}$
+with $X = S_4(t/n)$ and $Y = e^{(t/n)(A+B)}$, and two ingredients feed it.
+The step error $\norm{X-Y} \le C_0\,\abs{t/n}^5$ is the single-step BCH bound
+(\leanref{Suzuki4BchBound.lean}{385}{exists\_norm\_s4Func\_sub\_exp\_le\_t5}),
+valid once $\abs{t/n} < \delta$---which is exactly what the threshold $N$
+enforces. The damping factor is a \emph{constant}: writing $K$ for the sum of
+the magnitudes of the eleven $S_4$ coefficients weighted by $\norm{A}$ and
+$\norm{B}$, we prove $\norm{S_4(\tau)} \le e^{\abs{\tau} K}$
+(\leanref{Suzuki4Convergence.lean}{106}{norm\_suzuki4Exp\_le}), whence
+\[
+  \max(\norm{X},\norm{Y})^{n-1} \;\le\; \bigl(e^{\abs{t/n}\,K}\bigr)^{n}
+  \;=\; e^{\abs{t}\,K},
+\]
+independent of $n$. The exponential target composes exactly,
+$\bigl(e^{(t/n)(A+B)}\bigr)^n = e^{t(A+B)}$, so no error enters from that side,
+and the pieces combine to
+$n \cdot C_0 \abs{t}^5 n^{-5} \cdot e^{\abs{t} K} = O(1/n^4)$.
+
+\paragraph{Scope of the bound.}
+\Cref{eq:s4-quartic} is weaker in \emph{form} than the first-order bound of
+\cref{sec:assembly}, which holds for every $n \ge 1$ with the explicit constant
+$C = 2\norm{A}\norm{B}e^{\norm{A}+\norm{B}} + 1$. Here both $C$ and $N$ are
+existential: $N$ marks where the step size enters the BCH regime
+$\abs{\tau} < \delta$, and $C$ is inherited from the constants of the
+single-step BCH chain, which the present Lean-BCH interface does not expose
+explicitly. The trade is deliberate. The generic $O(1/n^2)$ rate for $S_4$
+(\leanref{Suzuki4.lean}{376}{suzuki4\_error\_rate\_sq}) holds for all $n$ with
+an explicit constant and \emph{no} cubic condition; fourth order is precisely
+what the extra hypothesis $4p^3 + (1-4p)^3 = 0$ buys.
+
+\paragraph{No star structure is needed.}
+\Cref{eq:s4-quartic} and the Level~1--3 step bounds alike hold in \emph{any}
+complete normed algebra with $\norm{1} = 1$: they reach $S_4$ through BCH and
+an exp-Lipschitz estimate, and never invoke the anti-Hermitian isometry
+$\norm{e^{sX}} = 1$. Their Lean statements assume only \texttt{NormedRing},
+\texttt{NormedAlgebra} $\mathbb{R}$, \texttt{NormOneClass} and
+\texttt{CompleteSpace}. Among the $S_4$ results, only the Level~4 uniform bound
+genuinely requires the C\textsuperscript{*}/anti-Hermitian setting---it carries
+the hypotheses $A^* = -A$ and $B^* = -B$ explicitly---as does the Duhamel track
+of \cref{sec:commutator}, where the isometry is what makes the FTC argument
+close. The tight 4th-order Trotter bound is therefore available for arbitrary
+bounded generators, not only for the skew-adjoint generators of unitary
+dynamics.
+
+\paragraph{One operator, two spellings.}
+$S_4$ enters the development twice: as five Strang steps with a built-in $1/n$
+(\texttt{suzuki4Step}, the object carrying the generic $O(1/n^2)$ rate), and as
+eleven exponentials in a free step size $\tau$ (\texttt{suzuki4Exp}, the object
+the BCH chain bounds). They are the same operator
+(\leanref{Suzuki4Convergence.lean}{353}{suzuki4Step\_eq\_suzuki4Exp}); the four
+junction merges of adjacent same-operator exponentials are supplied by the
+five-block factorization of \cref{sec:bch-expansion}. Consequently
+\eqref{eq:s4-quartic} transfers verbatim to \texttt{suzuki4Step}
+(\leanref{Suzuki4Convergence.lean}{363}{suzuki4Step\_total\_error\_quartic}), so
+the improvement from $O(1/n^2)$ to $O(1/n^4)$ is recorded on one and the same
+object rather than inferred across two definitions.
 
 \subsection{Remaining caveats}
 \label{sec:caveats}
