@@ -55,7 +55,9 @@ The thin aliases below mirror the exact statements in Lean-BCH's
 `BCH/Basic.lean` (`symmetric_bch_cubic` definition, `exp_symmetric_bch`,
 `norm_symmetric_bch_cubic_le`, `norm_symmetric_bch_cubic_sub_smul_le`).
 The historical inline `axiom` declarations have been replaced by
-`import BCH.Basic` + thin wrappers (Lean-BCH pin `d455ff0`, 2026-05-19).
+`import BCH.Basic` + thin wrappers. The Lean-BCH pin `05e8c52`
+(2026-07-28) makes both the quintic and septic imported chains
+project-axiom-free.
 -/
 
 import LieTrotter.Suzuki4StrangBlocks
@@ -1106,13 +1108,10 @@ private lemma bchR7Bound_eq_BCH (A B : 𝔸) :
   exp-Lipschitz inflation factor and the BCH `O(τ⁸)` tail.
 
   **Now a theorem (was an axiom).** Derived from Lean-BCH's bridge corollary
-  `BCH.suzuki5_log_product_septic_at_suzukiP` (added 2026-04-26). The former
-  `suzuki5_log_product_septic_at_suzukiP_axiom` is itself now a theorem
-  upstream; the τ⁷ chain has been refactored to depend on two deeper
-  Lean-BCH septic stepping stones (`symmetric_bch_septic_sub_poly_axiom`,
-  `norm_septic_match_residual_le_axiom`). These are the only transitive
-  Lean-BCH private axioms gating this L4 uniform refinement; the τ⁵
-  headlines (L1–L3) are axiom-free. -/
+  `BCH.suzuki5_log_product_septic_at_suzukiP`. At Lean-BCH revision
+  `05e8c52` (2026-07-28), both former septic stepping stones are proved, so
+  this complete τ⁷ chain and the L4 uniform refinement have no
+  project-specific axiom dependency. -/
 theorem bch_uniform_integrated
     (A B : 𝔸) (hA : star A = -A) (hB : star B = -B) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))

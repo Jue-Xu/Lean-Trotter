@@ -361,9 +361,10 @@ Uses Lean-BCH's `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` (single-step bound at
 `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (Lean-BCH commit `4ea6357`),
 which encapsulates the polynomial bookkeeping inside the BCH library.
 
-**Status (2026-04-24):** SLICE 1 is now sorry-free on the Lean-Trotter side.
-The transitive sorry has migrated to Lean-BCH's `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`
-(an arithmetic-bookkeeping target on a single explicit polynomial).
+**Current status:** SLICE 1 and its Lean-BCH dependency
+`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` are fully proved. At the
+Lean-BCH `05e8c52` pin, this theorem's imported dependency chain is
+sorry-free and has no project-specific axiom dependency.
 -/
 
 /-! ### Single-step BCH-derived O(|τ|⁵) bound -/

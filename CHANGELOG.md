@@ -4,6 +4,47 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-07-28: Lean-BCH septic dependency is project-axiom-free
+
+**Author:** OpenAI Codex
+
+**What:** Updated the Lean-BCH dependency from `d455ff0` to the verified
+zero-project-axiom revision `05e8c52`. The direct Mathlib pin remains
+`06a46dae`; `lake update lean-bch` resolved the full Lean-BCH commit
+`05e8c52fdd3d75c4e0c0d3c32360bc4c11417bcf` without moving Mathlib.
+The public septic bridge type is unchanged, so no Lean-Trotter proof body
+needed modification. Comments in two source files were refreshed to remove
+stale descriptions of the former upstream septic axioms.
+
+**Verification:** On the 384-CPU, approximately 1.48-TiB server, the isolated
+target build `lake build LieTrotter.Suzuki4ViaBCH` completed 3,371 jobs with
+zero errors. Its first cache-populating run took about 6 h 11 min, including
+the approximately 4 h 12 min `BCH.Suzuki5Quintic` elaboration. After syncing
+the final comment-only source state and matching SHA-256 hashes, the exact
+target rerun completed in about 14 seconds. A complete `lake build` then
+completed 3,386 jobs with zero errors in about 38 seconds.
+
+`#print axioms` reports exactly `propext`, `Classical.choice`, and
+`Quot.sound` for all of:
+
+- `BCH.suzuki5_log_product_septic_at_suzukiP`
+- `norm_suzuki4_level3_bch`
+- `norm_suzuki4_childs_form_via_level3`
+- `bch_uniform_integrated`
+- `norm_suzuki4_level4_uniform`
+
+The source census finds no Lean-Trotter `axiom`, `sorry`, or `admit`
+declaration.
+
+**Scope:** This verifies the committed
+`origin/s4-total-error-convergence` baseline at `c583524` plus the dependency
+upgrade. The user's original Lean-Trotter checkout contains substantial
+uncommitted Lean and manuscript work, including overlapping edits to
+`Suzuki4ViaBCH.lean`; it was not modified. Preserve or commit that work before
+reconciling this isolated integration branch.
+
+**Signed:** OpenAI Codex
+
 ## 2026-07-14: S₄ total-error convergence — O(1/n⁴), axiom-free
 
 **What:** New file `LieTrotter/Suzuki4Convergence.lean` (~230 lines,
