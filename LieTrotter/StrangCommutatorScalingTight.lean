@@ -557,3 +557,47 @@ theorem norm_strang_comm_scaling_tight [StarRing 𝔸] [ContinuousStar 𝔸] [CS
         rw [integral_eq_sub_of_hasDerivAt hd (hg_int)]
         simp
     _ = ‖D‖ / 6 * t ^ 3 + T / 4 * t ^ 4 := by ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **The norm-of-difference leading coefficient never exceeds the sum-of-norms one.**
+
+With `A' = A/2` and the effective double commutator
+`D = [B,[B,A']] - [A',[A',B]]` of `norm_strang_comm_scaling_tight`,
+```
+  ‖D‖ ≤ ½‖[B,[B,A]]‖ + ¼‖[A,[A,B]]‖.
+```
+Since `[B,[B,A']] = ½[B,[B,A]]` and `[A',[A',B]] = ¼[A,[A,B]]` (bilinearity in
+`A' = A/2`), `D = ½[B,[B,A]] - ¼[A,[A,B]]` and the triangle inequality gives the
+bound. Dividing by `6`: the leading coefficient `‖D‖/6` of the tight bound is
+`≤ ‖[B,[B,A]]‖/12 + ‖[A,[A,B]]‖/24`, the coefficient of `norm_strang_comm_scaling`.
+So the norm-of-difference bound is **never weaker** than the sum-of-norms bound,
+and is strictly tighter exactly when the triangle inequality is slack (the two
+double commutators positively aligned). Pure `NormedAlgebra ℝ` — no C*-structure. -/
+theorem norm_D_le_sum_of_norms (A B : 𝔸) :
+    ‖(B * (B * ((1/2 : ℝ) • A) - ((1/2 : ℝ) • A) * B)
+        - (B * ((1/2 : ℝ) • A) - ((1/2 : ℝ) • A) * B) * B)
+      - (((1/2 : ℝ) • A) * (((1/2 : ℝ) • A) * B - B * ((1/2 : ℝ) • A))
+        - (((1/2 : ℝ) • A) * B - B * ((1/2 : ℝ) • A)) * ((1/2 : ℝ) • A))‖
+      ≤ ‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 2
+        + ‖A * (A * B - B * A) - (A * B - B * A) * A‖ / 4 := by
+  -- `[B,[B,A']] = ½·[B,[B,A]]` (one `A'`-factor per monomial).
+  have e1 : B * (B * ((1/2 : ℝ) • A) - ((1/2 : ℝ) • A) * B)
+              - (B * ((1/2 : ℝ) • A) - ((1/2 : ℝ) • A) * B) * B
+            = (1/2 : ℝ) • (B * (B * A - A * B) - (B * A - A * B) * B) := by
+    simp only [Algebra.mul_smul_comm, Algebra.smul_mul_assoc, mul_sub, sub_mul, smul_sub]
+  -- `[A',[A',B]] = ½·½·[A,[A,B]]` (two `A'`-factors per monomial).
+  have e2 : ((1/2 : ℝ) • A) * (((1/2 : ℝ) • A) * B - B * ((1/2 : ℝ) • A))
+              - (((1/2 : ℝ) • A) * B - B * ((1/2 : ℝ) • A)) * ((1/2 : ℝ) • A)
+            = (1/2 : ℝ) • (1/2 : ℝ) • (A * (A * B - B * A) - (A * B - B * A) * A) := by
+    simp only [Algebra.mul_smul_comm, Algebra.smul_mul_assoc, mul_sub, sub_mul, smul_sub]
+  rw [e1, e2]
+  calc ‖(1/2 : ℝ) • (B * (B * A - A * B) - (B * A - A * B) * B)
+          - (1/2 : ℝ) • (1/2 : ℝ) • (A * (A * B - B * A) - (A * B - B * A) * A)‖
+      ≤ ‖(1/2 : ℝ) • (B * (B * A - A * B) - (B * A - A * B) * B)‖
+        + ‖(1/2 : ℝ) • (1/2 : ℝ) • (A * (A * B - B * A) - (A * B - B * A) * A)‖ :=
+        norm_sub_le _ _
+    _ = ‖B * (B * A - A * B) - (B * A - A * B) * B‖ / 2
+          + ‖A * (A * B - B * A) - (A * B - B * A) * A‖ / 4 := by
+        rw [norm_smul, norm_smul, norm_smul,
+          show ‖(1/2 : ℝ)‖ = 1/2 from by rw [Real.norm_eq_abs]; norm_num]
+        ring
