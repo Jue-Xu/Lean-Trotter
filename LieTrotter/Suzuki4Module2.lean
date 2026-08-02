@@ -155,10 +155,10 @@ Provided in this file:
 - `suzuki4_diff_eq_exp_mul_relative`: factoring of S₄ - exp(tH)
 - `norm_suzuki4_diff_eq_norm_relative`: ‖S₄ - exp(tH)‖ = ‖w₄(t) - 1‖ (anti-Hermitian)
 
-**Remaining for Module 2 to fully bridge to FTC-2** (deferred to Module 2.5):
-- `Continuous (w4Deriv A B p)`: continuity of the extracted derivative
-  - Requires either explicit derivative form or smoothness arguments
-- `suzuki4_ftc2_repr`: explicit FTC-2 statement
+**Downstream completion of the FTC-2 bridge:**
+- `continuous_w4Deriv` is proved in `Suzuki4Module4.lean`
+- the integral/norm reduction is proved in `Suzuki4Module3.lean`
+Together these modules complete the bridge isolated here.
 
 **Module 3 (norm bound on residual)** can proceed with `‖w4Func t - 1‖`
 directly, using the relation above.

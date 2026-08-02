@@ -7,7 +7,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 The symmetric Lie-Trotter formula:
   `(exp(A/(2n)) exp(B/n) exp(A/(2n)))^n → exp(A+B)` as `n → ∞`
 
-with O(1/n²) convergence rate (second-order, optimal for symmetric splitting).
+with O(1/n²) convergence rate (the standard second-order symmetric splitting).
 -/
 
 import LieTrotter.Assembly

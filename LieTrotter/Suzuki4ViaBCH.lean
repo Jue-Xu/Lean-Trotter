@@ -347,7 +347,7 @@ theorem bch_iteratedDeriv_s4Func_order4
 /-- **w4Func order-4 vanishing from BCH** (given Suzuki):
   `iteratedDeriv 4 (w4Func A B p) 0 = 0`.
 
-  Combines the BCH h4 axiom with the Phase 5 bridge
+  Combines the proved BCH h4 theorem with the Phase 5 bridge
   `iteratedDeriv_w4Func_order4_zero_iff_of_order23` and our proved
   h2, h3 (where h3 needs IsSuzukiCubic). -/
 theorem bch_iteratedDeriv_w4Func_order4_eq_zero
@@ -359,7 +359,7 @@ theorem bch_iteratedDeriv_w4Func_order4_eq_zero
   exact (iteratedDeriv_w4Func_order4_zero_iff_of_order23 A B p h2 h3).mpr h4
 
 /-!
-## Unconditional S₄ O(t⁵) via BCH axiom
+## Unconditional S₄ O(t⁵) via the BCH theorem
 
 With `bch_iteratedDeriv_s4Func_order4` in hand, the strengthened CAPSTONE
 from `Suzuki4MultinomialExpand.lean` closes without any derivative-level
@@ -370,7 +370,7 @@ section AntiHermitian
 
 variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
 
-/-- **S₄ O(t⁵) from BCH**: unconditional modulo the axiomatized BCH h4. -/
+/-- **S₄ O(t⁵) from BCH**: unconditional via the proved BCH h4 theorem. -/
 theorem norm_suzuki4_order5_via_bch_axiom (A B : 𝔸)
     (hA : star A = -A) (hB : star B = -B) (p : ℝ) (hcubic : IsSuzukiCubic p)
     {t : ℝ} (ht : 0 < t) :
@@ -382,21 +382,19 @@ theorem norm_suzuki4_order5_via_bch_axiom (A B : 𝔸)
 /-!
 ## Level 2: Explicit BCH-derived 4-fold commutator bound
 
-Childs et al. (2021) Proposition pf4_bound_2term states:
+Childs et al. (2021), arXiv Proposition J.1, states:
 ```
   ‖S₄(t) - exp(tH)‖ ≤ t⁵ · Σ αᵢ · ‖Cᵢ‖   (8 four-fold commutators)
 ```
 with specific coefficients `α₁...α₈ ∈ [0.0046, 0.0284]`.
 
-Childs's paper itself notes these coefficients come from a *heuristic*
-balanced factoring of the 12-factor Duhamel and "we do not have a
-rigorous proof of the tightness of these bounds." A rigorous derivation
-from BCH gives a weaker (but fully rigorous) bound of the form
+The proposition is rigorous; the paper notes that the tightness of its
+coefficients is not proved. A separate BCH derivation gives the
+unit-coefficient bound
 ```
   ‖S₄(t) - exp(tH)‖ ≤ M_bch · t⁵ · Σᵢ ‖Cᵢ‖
 ```
-where `M_bch` is an **explicit BCH-derived constant** (no heuristic
-factoring required).
+where `M_bch` is a BCH-derived constant.
 
 ### The BCH-derived constant
 
@@ -421,7 +419,7 @@ require extra algebraic simplification beyond raw BCH.
 
 /-- Sum of the 8 Childs 4-fold commutator norms with **unit coefficients**
   (Level 2 BCH bound). Compare to `childsBoundSum` which uses Childs's
-  heuristic 4-decimal coefficients. -/
+  published 4-decimal coefficients. -/
 def bchFourFoldSum (A B : 𝔸) : ℝ :=
   ‖childsComm₁ A B‖ + ‖childsComm₂ A B‖ + ‖childsComm₃ A B‖ + ‖childsComm₄ A B‖ +
   ‖childsComm₅ A B‖ + ‖childsComm₆ A B‖ + ‖childsComm₇ A B‖ + ‖childsComm₈ A B‖
@@ -461,9 +459,9 @@ omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [S
 
   **Now a theorem (was an axiom).** Derived directly from Lean-BCH's
   bridge corollary `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic`.
-  As of Lean-BCH pin `d455ff0` (2026-05-19), the upstream B1.c quintic
-  axiom (`BCH.symmetric_bch_quintic_sub_poly_axiom`) that underwrote the
-  bridge has been discharged, so `#print axioms bch_w4Deriv_quintic_level2`
+  At the current Lean-BCH pin `05e8c52`, the upstream B1.c quintic
+  assumption (`BCH.symmetric_bch_quintic_sub_poly_axiom`) that underwrote the
+  bridge has a proved replacement, so `#print axioms bch_w4Deriv_quintic_level2`
   reports only the standard Lean foundational axioms
   `[propext, Classical.choice, Quot.sound]`. -/
 theorem bch_w4Deriv_quintic_level2
@@ -480,18 +478,18 @@ omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [S
 ```
   ‖S₄(t) - exp(t•(A+B))‖ ≤ C · t⁵        for t ∈ [0, δ)
 ```
-  with `C ≥ 0` explicit in terms of `bchFourFoldSum A B` (the sum of
-  norms of the 8 Childs 4-fold commutators with unit coefficients) and
-  the exp-Lipschitz constant near zero.
+  The theorem type records only `C·t⁵`; the proof constructs `C` from the
+  unit-coefficient `bchFourFoldSum A B` and an exp-Lipschitz factor. Use
+  `norm_suzuki4_level2_explicit` to retain the unit sum in the statement.
 
   Derivation: combine `bch_w4Deriv_quintic_level2`
   (τ⁵ identification of `log S₄(τ)`) with the M2b round-trip
   `BCH.exp_suzuki5_bch` (`S₄(τ) = exp(suzuki5_bch τ)` in the
   small-coefficient regime) and exp-Lipschitz `BCH.norm_exp_add_sub_exp_le`.
 
-  Tightening the leading coefficient from `bchFourFoldSum` to
-  Childs's 0.0046–0.0284 coefficients is Level 3
-  (`norm_suzuki4_level3_bch`, via `bch_w4Deriv_level3_tight`). -/
+  Replacing the unit sum by the certified γᵢ leading coefficients is
+  `norm_suzuki4_level3_explicit`, via
+  `bch_w4Deriv_level3_tight`. -/
 theorem norm_suzuki4_level2_bch (A B : 𝔸)
     (p : ℝ) (hcubic : IsSuzukiCubic p) :
     ∃ δ > 0, ∃ C ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
@@ -593,47 +591,40 @@ theorem norm_suzuki4_level2_bch (A B : 𝔸)
   exact h_final'
 
 /-!
-## Level 1 (Childs 2021 bound): derived from Level 3, no heuristic axiom
+## Level 1 (Childs 2021 coefficient form): derived from Level 3
 
-The theorem reproducing Childs's exact 4th-order bound with coefficients
+The theorem carrying Childs's coefficient vector
 `{0.0047, 0.0057, 0.0046, 0.0074, 0.0097, 0.0097, 0.0173, 0.0284}` is
-`norm_suzuki4_childs_form_via_level3`, defined below after the Level 3
-framework. It composes the CAS-certified Level 3 bound with the Lean-proved
-termwise inequality `γᵢ ≤ αᵢ` (`bchTightPrefactors_le_childs`).
+`norm_suzuki4_childs_explicit`, with the required `K'·τ⁶` remainder.
+`norm_suzuki4_le_childs_near_zero` removes the remainder under a strict
+leading-coefficient gap; `norm_suzuki4_childs_form_via_level3` is retained as
+an order-only alias. These results use the Lean-proved termwise inequality
+`γᵢ ≤ αᵢ` (`bchTightPrefactors_le_childs`).
 
 **Axiom-elimination note (2026-04-23):** an earlier version of this file
-carried a separate `bch_childs_pointwise_residual` axiom that directly
-axiomatized Childs's pointwise residual bound with his heuristic
-coefficients. That axiom was retired because Childs's paper itself
-labels those coefficients heuristic ("we do not have a rigorous proof of
-the tightness of these bounds"). The Level-3-derived reproduction gives
-the same numerical bound from a strictly stronger CAS-certified foundation.
+carried a separate `bch_childs_pointwise_residual` axiom. That axiom was
+retired: the coefficient statements now follow from the certified Level 3
+bound and the proved comparison, while Childs et al.'s published proposition
+remains a rigorous external reference whose coefficient optimality is open.
 -/
 
 /-!
-## Level 3: Explicit tighter prefactors via exact BCH expansion
+## Level 3: Certified smaller leading prefactors via exact BCH expansion
 
-Childs's coefficients `{0.0047, 0.0057, 0.0046, 0.0074, 0.0097, 0.0097,
-0.0173, 0.0284}` come from his balanced-factoring heuristic. The exact
-BCH quintic expansion gives prefactors that are:
+Childs's rigorous-bound coefficients are `{0.0047, 0.0057, 0.0046, 0.0074,
+0.0097, 0.0097, 0.0173, 0.0284}`; their tightness is not proved. Our exact
+BCH quintic expansion and chosen projection give certified ceilings that are:
 - Explicit rational functions of the Suzuki parameter `p`.
 - Specialized at `p = 1/(4-4^(1/3))` to specific rational numbers.
-- Strictly smaller than (or equal to) Childs's heuristic values
-  (since Childs's come from a non-tight balancing).
+- Strictly smaller than Childs's published values termwise.
 
 ### Framework
 
 We encode the 8 BCH prefactors as an explicit `BCHPrefactors` structure,
-axiomatize a "tight" instance (values `< Childs`), and derive the
-corresponding S₄ bound. The specific numerical values of
-`bchTightPrefactors` can later be computed via CAS-assisted BCH expansion
-and replaced by rational literals (or, once Lean-BCH's quintic expansion
-is formalized, derived as theorems).
-
-The values below are a **conservative placeholder** obtained by halving
-Childs's coefficients — a Level 3 bound that is demonstrably tighter by
-construction. The real BCH-derived values are expected to be similar
-magnitude (possibly tighter; Childs's aren't provably tight).
+define the certified rational ceilings, and derive the corresponding S₄
+bound. The values of `bchTightPrefactors` are transcribed from a CAS-assisted
+BCH expansion and verified through the inequalities used by the Lean proofs;
+Lean-BCH supplies the formal algebraic bridge to the quintic residual.
 -/
 
 /-- Structure holding the 8 BCH prefactors, one per Childs 4-fold commutator. -/
@@ -655,7 +646,8 @@ structure BCHPrefactors where
   nonneg₇ : 0 ≤ γ₇ := by norm_num
   nonneg₈ : 0 ≤ γ₈ := by norm_num
 
-/-- Childs's prefactors (2021) — his heuristic balanced-factoring values. -/
+/-- Coefficients in Childs et al. (2021)'s rigorous arXiv Proposition J.1
+bound; the paper does not prove these coefficients tight. -/
 def childsPrefactors : BCHPrefactors where
   γ₁ := 0.0047
   γ₂ := 0.0057
@@ -705,16 +697,16 @@ def childsPrefactors : BCHPrefactors where
   `‖suzuki5_R5‖ ≤ boundSum` (prior versions used truncations which
   failed the bound by ~10⁻⁷ for γ₂ and γ₆).
 
-  **Every ceiling value is strictly smaller than Childs's heuristic
-  coefficient** (~9× to ~64× tighter for non-zero values; two are
+  **Every ceiling value is strictly smaller than Childs's published
+  coefficient** (8.6× to ~64× for non-zero values; two are
   exactly 0).
 
   Caveat: the Childs 8-commutator basis is **over-complete** (2 free
   parameters in the projection because the weight-5 free Lie algebra is
   6-dimensional). We chose the projection setting both free parameters
   to zero (which gives `γ₃ = γ₇ = 0`). Other valid projections may
-  redistribute mass across the 8 coefficients but all satisfy
-  `Σγᵢ‖Cᵢ‖ ≤ Σ childs_αᵢ‖Cᵢ‖` for the R₅ term by design.
+  redistribute mass across the 8 coefficients. The stated domination is
+  proved for this stored projection; arbitrary valid projections need not satisfy it.
 
   Note on correctness: these γᵢ bound the **leading-order** BCH
   quintic residual `R₅`. The full w4Deriv pointwise bound on `[0, t]`
@@ -786,7 +778,7 @@ section AntiHermitianLevel3
 -- isometry), so each is introduced with an explicit `omit`.
 
 omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
-/-- **Level 3 BCH τ⁵ identification with tight prefactors**. At Suzuki
+/-- **Level 3 BCH τ⁵ identification with certified prefactors**. At Suzuki
   `p = 1/(4 − 4^(1/3))`, there exist `δ > 0` and `K ≥ 0` such that for
   all `τ ∈ [0, δ)`,
 ```
@@ -1002,7 +994,7 @@ omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [S
 /-- **Childs 2021 bound, sharp form.** The leading coefficient is Childs's own
   `Σᵢ αᵢ‖Cᵢ‖`, obtained from `norm_suzuki4_level3_explicit` by the termwise
   inequality `γᵢ ≤ αᵢ` (`bchTightPrefactors_le_childs`).  This is a genuine
-  reproduction of Childs et al. Prop. `pf4_bound_2term`: unlike
+  reproduction of Childs et al.'s arXiv Proposition J.1 coefficient form: unlike
   `norm_suzuki4_childs_form_via_level3`, the Childs sum occurs *in the
   statement*. -/
 theorem norm_suzuki4_childs_explicit (A B : 𝔸) :
@@ -1016,22 +1008,20 @@ theorem norm_suzuki4_childs_explicit (A B : 𝔸) :
   linarith
 
 omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
-/-- **Level 3 BCH-derived Trotter bound with explicit tighter prefactors**:
+/-- **Level 3 BCH-derived order bound** (backward-compatible form):
   at Suzuki `p = 1/(4 − 4^(1/3))`, there exist `δ > 0` and `C ≥ 0` such
   that for all `τ ∈ [0, δ)`,
 ```
   ‖S₄(τ) - exp(τ•H)‖ ≤ C · τ⁵
 ```
-  with `C ≥ 0` explicit in terms of `bchTightPrefactors.boundSum A B`
-  and the exp-Lipschitz constant near zero.
-
-  The prefactors `bchTightPrefactors.γᵢ` are explicit rational numbers,
-  each strictly smaller than the corresponding Childs coefficient. This
-  gives a bound at least as tight as Childs's via
-  `bchTightPrefactors_le_childs`.
+  The theorem type records only the order `C·τ⁵`; use
+  `norm_suzuki4_level3_explicit` for the certified γᵢ leading coefficient
+  and the honest `K'·τ⁶` remainder. The γᵢ are strictly smaller termwise than
+  the published Childs coefficients, but are not claimed globally optimal in
+  the over-complete basis.
 
   Derivation: combine `bch_w4Deriv_level3_tight` (τ⁵ identification of
-  `log S₄(τ)` with tight γᵢ) with the M2b round-trip
+  `log S₄(τ)` with certified γᵢ) with the M2b round-trip
   `BCH.exp_suzuki5_bch` (`S₄(τ) = exp(suzuki5_bch τ)` in the
   small-coefficient regime) and exp-Lipschitz
   `BCH.norm_exp_add_sub_exp_le`. -/
@@ -1071,22 +1061,17 @@ theorem norm_suzuki4_level3_le_childs_pointwise (A B : 𝔸)
   positivity
 
 omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
-/-- **Childs 2021 bound, derived from Level 3**:
+/-- **Childs-labelled order bound, derived from Level 3**:
   at Suzuki `p = 1/(4 − 4^(1/3))`, there exist `δ > 0` and `C ≥ 0` such
   that for all `τ ∈ [0, δ)`,
 ```
   ‖S₄(τ) - exp(τ•H)‖ ≤ C · τ⁵
 ```
-  with `C` dominated by `childsBoundSum A B` times an exp-Lipschitz factor.
-
-  **Derivation:** the Level 3 existential bound `norm_suzuki4_level3_bch`
-  gives `C · τ⁵` with `C` expressed via `bchTightPrefactors.boundSum`;
-  this is pointwise ≤ `childsBoundSum` times the same exp factor.
-
-  Existential-δ form now — matches Level 2. The earlier finite-t
-  statement (`t⁵ · childsBoundSum` directly) required a derivative-form
-  axiom 2; now that axiom 2 is a theorem with log-form (existential-δ)
-  signature, the Childs bound inherits the same shape. -/
+  This backward-compatible theorem is definitionally the Level 3 order
+  statement, so the Childs coefficients do not occur in its type. Use
+  `norm_suzuki4_childs_explicit` for the published αᵢ coefficient plus the
+  `K'·τ⁶` remainder, or `norm_suzuki4_le_childs_near_zero` for the no-remainder
+  bound under a strict leading-coefficient gap. -/
 theorem norm_suzuki4_childs_form_via_level3 (A B : 𝔸) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
     ∃ δ > 0, ∃ C ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
@@ -1096,7 +1081,7 @@ theorem norm_suzuki4_childs_form_via_level3 (A B : 𝔸) :
   norm_suzuki4_level3_bch A B
 
 /-!
-## Level 4: uniform bound (R₅ + R₇ CAS data)
+## Level 4: local uniform bound (R₅ + R₇ CAS data)
 
 The Level 3 bound `t⁵ · bchTightPrefactors.boundSum` has one remaining
 caveat: it bounds the leading-order coefficient, not the uniform quantity
@@ -1143,12 +1128,12 @@ def bchR7Bound (A B : 𝔸) : ℝ :=
 These lemmas verify *within Lean* (without the CAS) that the numerical
 values hard-coded in `bchTightPrefactors` and `bchR7UniformConstant` match
 the reported CAS output with an explicit safety margin. They don't reach
-the BCH expansion itself (still axiomatized), but they close the manual
+  the BCH expansion theorem imported from Lean-BCH, but they close the manual
 transcription gap "Python float → Lean literal".
 -/
 
 /-- `bchR7UniformConstant = 0.01951`: literal value, matches the CAS output
-  `K ≈ 0.019509...` with an explicit round-up margin of ≈0.5%. -/
+  `K ≈ 0.019509...` with an explicit round-up margin of ≈0.005%. -/
 lemma bchR7UniformConstant_eq : bchR7UniformConstant = 0.01951 := rfl
 
 /-- The chosen `bchR7UniformConstant = 0.01951` exceeds the exact CAS value
@@ -1385,7 +1370,7 @@ omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [S
 
   Whenever the two leading coefficients differ strictly — i.e. some commutator
   with a strictly-smaller BCH prefactor is nonzero — the BCH-derived bound beats
-  Childs's *on an explicit neighbourhood of `0`*, with Childs's own coefficient
+  Childs's *on an existential neighbourhood of `0`*, with Childs's own coefficient
   and **no** remainder term:
 ```
   ‖S₄(τ) − e^{τH}‖ ≤ τ⁵ · Σᵢ αᵢ‖Cᵢ‖        (0 ≤ τ < δ)

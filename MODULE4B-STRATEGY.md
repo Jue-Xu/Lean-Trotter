@@ -1,5 +1,10 @@
 # Module 4b Attack Strategy: S₄ O(t⁵) Residual Bound
 
+> **Historical snapshot.** This strategy predates closure of the two sorries
+> and is retained only as a record of the proof-development path. The current
+> release has zero sorries and zero project-specific axioms; see `README.md`,
+> `AGENTS.md`, and `TODO.md`.
+
 ## Goal
 
 Discharge the **two remaining sorries** in the Lean-Trotter project:

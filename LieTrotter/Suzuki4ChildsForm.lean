@@ -4,10 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 # S₄ Error Bound in Childs's Explicit-Prefactor Form
 
-This module re-states Childs et al. (2021) Proposition pf4_bound_2term in
+This module re-states Childs et al. (2021), arXiv Proposition J.1, in
 Lean and provides a CONDITIONAL reduction to it via Module 3.
 
-## Childs Proposition pf4_bound_2term
+## Childs arXiv Proposition J.1
 
 For a Hamiltonian H = A + B and the fourth-order Suzuki formula `S₄`:
 
@@ -25,9 +25,9 @@ For a Hamiltonian H = A + B and the fourth-order Suzuki formula `S₄`:
 The 8 4-fold nested commutators enumerate the choices `[X₁,[X₂,[X₃,[B,A]]]]`
 with `X_i ∈ {A, B}` (innermost forced to `[B,A]` since `[A,A] = 0`).
 
-Childs et al. note that "we do not have a rigorous proof of the tightness
-of these bounds" — the coefficients come from a heuristic balanced
-factoring in the 12-factor Duhamel.
+Childs et al. prove this bound but note that its tightness is not proved.
+Their balanced-factoring strategy selects the coefficients within the
+12-factor Duhamel argument.
 
 ## What this module provides
 
@@ -37,19 +37,19 @@ factoring in the 12-factor Duhamel.
 - `norm_suzuki4_childs_via_residual` (PROVED): the CONDITIONAL theorem
   showing that a Childs-style residual hypothesis on `w4Deriv` gives the
   Childs-form integrated bound
-- `norm_suzuki4_childs_form`: the headline Proposition pf4_bound_2term
+- `norm_suzuki4_childs_form`: the headline arXiv Proposition J.1 form
   from Childs et al., closed with an explicit residual-bound hypothesis
   `hResidual : ∀ τ ∈ [0,t], ‖w4Deriv τ‖ ≤ 5·childsBoundSum·τ⁴` (discharged
-  via `norm_suzuki4_childs_via_residual`). The remaining research content
-  is proving this pointwise bound from the Suzuki order conditions; see
-  `Suzuki4Phase5.lean` for the architectural reduction.
+  via `norm_suzuki4_childs_via_residual`). Project-level unconditional
+  coefficient bounds are proved downstream in `Suzuki4ViaBCH.lean`; this
+  module retains the reusable direct residual reduction.
 
 ## Caveats
 
-1. **Numerical coefficients.** Childs's 0.0047 etc. are 4-decimal
-   approximations of rational expressions in the Suzuki parameter
-   `p = 1/(4-r)` where `r³ = 4`. The Lean theorem uses these decimal
-   values literally; deriving exact algebraic forms is part of Module 4b.
+1. **Numerical coefficients.** Childs's 0.0047 etc. are published
+   4-decimal values, and the Lean theorem uses them literally. Separate
+   certified BCH ceilings are defined in `Suzuki4ViaBCH.lean`; neither
+   coefficient vector is claimed globally optimal.
 2. **Sign conventions.** Childs writes `e^{-itH}`; we use `e^{tH}` (with
    `tH` for anti-Hermitian H). The two conventions agree when the algebra
    embeds Pauli matrices with `H = iH'` for Hermitian `H'`.
@@ -102,8 +102,8 @@ def childsComm₈ (A B : 𝔸) : 𝔸 := commBr B (commBr B (commBr B (commBr B 
 /-!
 ## Childs's bound RHS as a sum
 
-The 8 commutator-norm terms with their Childs coefficients (4-decimal
-approximations from the heuristic balanced factoring).
+The 8 commutator-norm terms with the published 4-decimal Childs
+coefficients from the balanced-factor construction.
 -/
 
 /-- The Childs RHS sum: `Σⱼ αⱼ · ‖Cⱼ‖` for the 8 commutators. -/
@@ -137,7 +137,7 @@ variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸
 
   If the Duhamel residual is bounded by `5 · childsBoundSum · τ⁴`
   on `[0, t]`, then the integrated S₄ error matches Childs et al.
-  Proposition pf4_bound_2term exactly:
+  the arXiv Proposition J.1 form exactly:
 
     ‖S₄(t) - exp(tH)‖ ≤ t⁵ · childsBoundSum
 
@@ -160,17 +160,17 @@ theorem norm_suzuki4_childs_via_residual (A B : 𝔸)
       ≤ (5 * childsBoundSum A B) / 5 * t ^ 5 := h
     _ = t ^ 5 * childsBoundSum A B := by ring
 
-/-- **Childs Proposition pf4_bound_2term** (with explicit residual hypothesis).
+/-- **Childs arXiv Proposition J.1 form** (with explicit residual hypothesis).
 
   The unconditional Childs bound, closed by taking the Module 4b residual
   bound as an explicit hypothesis `hResidual`. The conditional reduction
   `norm_suzuki4_childs_via_residual` (above) handles the integration step.
 
-  The hypothesis is exactly the remaining Module 4b research target:
-  `‖w4Deriv τ‖ ≤ 5 · childsBoundSum · τ⁴` for the Suzuki parameter
-  `p = 1/(4 - 4^{1/3})`. Providing it closes the theorem. See
-  `Suzuki4Phase5.lean` for the architectural reduction of this hypothesis
-  to three concrete `iteratedDeriv` identities on `s4Func` at τ=0. -/
+  The hypothesis isolates the Module 4b pointwise residual target:
+  `‖w4Deriv τ‖ ≤ 5 · childsBoundSum · τ⁴` for the Suzuki parameter.
+  Project-level coefficient bounds are discharged independently in
+  `Suzuki4ViaBCH.lean`; this theorem preserves the direct Duhamel reduction
+  described by the Taylor architecture in `Suzuki4Phase5.lean`. -/
 theorem norm_suzuki4_childs_form (A B : 𝔸)
     (hA : star A = -A) (hB : star B = -B) {t : ℝ} (ht : 0 ≤ t) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
@@ -205,12 +205,12 @@ Module 1 ✅ → Module 2 ✅ → Module 3 ✅ + Module 4a ✅
               norm_suzuki4_childs_form ✅ (takes residual bound as hypothesis)
 ```
 
-This module makes Childs Proposition pf4_bound_2term explicit in the
+This module makes Childs arXiv Proposition J.1 explicit in the
 project, providing concrete commutator definitions and showing the
 clean reduction path via Module 3. The theorem statement requires the
-pointwise residual bound as an input; proving this bound from the Suzuki
-order conditions is the remaining Module 4b research (see Suzuki4Phase5.lean
-for the architectural reduction to three concrete iteratedDeriv identities).
+pointwise residual bound as an input; the completed release bounds discharge
+the order conditions through `Suzuki4ViaBCH.lean`, while this module preserves
+the direct reduction described in `Suzuki4Phase5.lean`.
 -/
 
 end

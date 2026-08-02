@@ -8,8 +8,8 @@ This module supplies one of the two ingredients required by Module 3's
 FTC-2 reduction (`norm_w4_sub_one_le_t5_via_residual`): namely, the
 **continuity** of the extracted derivative `w4Deriv A B p`.
 
-The other ingredient — the pointwise τ⁴ residual bound from Suzuki order
-conditions — remains as the genuine algebraic core (Module 4b, future).
+The other ingredient — the pointwise τ⁴ residual control from Suzuki order
+conditions — is supplied downstream by the completed BCH/Taylor route.
 
 ## Strategy
 
@@ -151,11 +151,11 @@ reduction. The remaining hypothesis is the pointwise τ⁴ residual bound:
 
   ∀ τ ∈ [0, t], ‖w4Deriv A B p τ‖ ≤ C · τ⁴
 
-This requires the genuine algebraic core: explicit derivative computation
-+ Suzuki order-condition cancellation at 4 levels. That work remains
-deferred (Module 4b, future).
+In the completed project this algebraic core is discharged through explicit
+derivative and BCH/Taylor modules; this file intentionally isolates continuity.
+See `Suzuki4DerivExplicit.lean` and `Suzuki4ViaBCH.lean` for the closed route.
 
-**Order-0 cancellation `w4Deriv A B p 0 = 0`** (deferred):
+**Historical order-0 subproblem `w4Deriv A B p 0 = 0`:**
 
 A natural first sub-result toward the τ⁴ bound. Direct attempt via
 chained `HasDerivAt.mul` runs into Pi-multiplication form issues — the

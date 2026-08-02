@@ -12,8 +12,8 @@ Duhamel residual `w₄'(τ) = w4Deriv A B p τ`. The reduction uses:
 3. **Integral comparison**: `‖∫ f‖ ≤ ∫ ‖f‖ ≤ ∫ C·τ⁴ = C·t⁵/5`
 
 The result is a CONDITIONAL theorem: given continuity of `w4Deriv` and a
-pointwise τ⁴ bound, the O(t⁵) S₄ bound follows. The remaining work
-(Module 4) is to PRODUCE the pointwise residual bound from the Suzuki
+pointwise τ⁴ bound, the O(t⁵) S₄ bound follows. The project-level discharge
+is proved downstream; this file retains the reusable reduction from the Suzuki
 order conditions (palindromic symmetry + 4p³+q³=0).
 
 ## Why this is the right reduction
@@ -160,8 +160,8 @@ Modules 1-3 are now sorry-free. The architecture is clean:
        ↓
   norm_suzuki4_order5_via_module3 (conditional on residual bound)
 
-The remaining work is **Module 4**: produce the pointwise residual bound
-`‖w4Deriv A B p τ‖ ≤ C·τ⁴` from the Suzuki order conditions. This requires:
+The downstream **Module 4/BCH route** produces the pointwise residual control
+from the Suzuki order conditions. Its four ingredients are:
 
 1. **Explicit form for `w4Deriv`** (replacing the `Classical.choose` from Module 2):
    compute the 12-term product-rule expansion and simplify to

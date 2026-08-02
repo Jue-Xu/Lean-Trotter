@@ -1,5 +1,10 @@
 # Module 4b Phase 5 Handoff
 
+> **Historical snapshot (2026-04-22).** This handoff is retained for project
+> history and is not the current release status. The h4/BCH gaps described
+> below are closed; see `README.md`, `AGENTS.md`, and `TODO.md` for the
+> 2026-08-02 axiom-free status.
+
 ## Status (current, 2026-04-22)
 
 **Sorry count: 0** (outer theorems closed with explicit residual-bound hypothesis; h2 and h3 PROVED; h4 axiomatized via BCH).
@@ -206,7 +211,7 @@ fact. Currently blocked by `module` tactic timeout on the quartic expansion
 (16 monomials × 11 cons steps × many cons-combining steps, even at 8M heartbeats).
 
 **Path B (via Lean-BCH):** Import Lean-BCH's quintic BCH theorems (in
-progress; see `/Users/jue/Documents/Claude/Projects/Lean-BCH/`). Via Path B,
+progress; see the [Lean-BCH repository](https://github.com/Jue-Xu/Lean-BCH)). Via Path B,
 h4 follows directly from the BCH expansion structure. The 7 axioms in
 `Suzuki4ViaBCH.lean` are ready to be replaced by Lean-BCH imports once its
 `quintic_pure_identity` nsmul gap closes.

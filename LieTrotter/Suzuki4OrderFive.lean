@@ -383,11 +383,11 @@ The bound is:
 
 where C_quartic depends on T, ‖D‖, and polynomial functions of p.
 
-Sorry: the 12-factor Duhamel derivative computation and the verification
-of the 4 order conditions (that the residual vanishes to order 3) are
-deferred. The structural framework (FTC-2 + anti-Hermitian isometry +
-integration of the τ⁴ bound) would give the result once the pointwise
-bound ‖𝒯₄(τ)‖ ≤ C₅·τ⁴ is established. -/
+The theorem below is deliberately conditional: it retains the pointwise
+τ⁴ residual bound as an explicit hypothesis. The unconditional project-level
+τ⁵ bounds are supplied later by the BCH/Taylor route in
+`Suzuki4ViaBCH.lean`; the structural FTC-2 and anti-Hermitian argument here
+integrates any such residual bound. -/
 theorem norm_suzuki4_fifth_order
     (A B : 𝔸) {t : ℝ} (ht : 0 ≤ t)
     (hA : star A = -A) (hB : star B = -B)
@@ -406,10 +406,10 @@ theorem norm_suzuki4_fifth_order
     let C₅ := T * (4 * p ^ 4 + |q| ^ 4) / 4 +
               ‖D‖ * (4 * p ^ 3 + |q| ^ 3) / 6
     -- Explicit residual-bound hypothesis: the pointwise τ⁴ bound on the
-    -- Duhamel residual `w4Deriv`. This is exactly the remaining Module 4b
-    -- research content (orders 0-3 cancellation of the 12-factor Duhamel
-    -- derivative; see `Suzuki4Phase5.lean` for the architectural reduction
-    -- to three concrete `iteratedDeriv` identities on `s4Func`). Given this
+    -- Duhamel residual `w4Deriv`. This is the isolated Module 4b hypothesis;
+    -- the project-level unconditional route discharges the corresponding
+    -- order conditions in `Suzuki4ViaBCH.lean` through the BCH/Taylor bridge.
+    -- Retaining the hypothesis here keeps the direct Duhamel reduction reusable. Given this
     -- bound, the S₄ O(t⁵) conclusion follows directly from Module 3's FTC-2
     -- reduction (`norm_suzuki4_order5_via_module3`).
     (∀ τ ∈ Set.Icc (0 : ℝ) t, ‖w4Deriv A B p τ‖ ≤ 5 * C₅ * τ ^ 4) →

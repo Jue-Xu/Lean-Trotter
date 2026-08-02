@@ -8,10 +8,10 @@ This module provides a general framework for computing iterated derivatives
 of products of exp factors at τ=0 via iterated Leibniz rule. It defines
 `prodExpList` (product of `exp((cᵢ·τ)•Xᵢ)` factors) and associated sums.
 
-The full multinomial-formula development (h2, h3, h4 iteratedDeriv identities
-for s4Func) is incremental research work. This file provides the foundational
-definitions and base cases; the full identities require additional combinatorial
-reasoning deferred to future sessions.
+The multinomial formulas through order four are proved here, together with
+the h2 identity and the h3 identity under `IsSuzukiCubic p`. The h4
+infrastructure is connected to the completed BCH/Taylor discharge in
+`Suzuki4ViaBCH.lean`.
 
 ## What's here
 
@@ -20,16 +20,16 @@ reasoning deferred to future sessions.
 - `sumCommList` definition (sum of commutators Σᵢ<ⱼ[dᵢ,dⱼ])
 - `s4DList` / `s4Func_eq_prodExpList`: connect to s4Func
 - `sumDList_s4DList = A + B` (via `suzuki4_free_term`)
-- `contDiffAt_prodExpList` / `prodExpList_at_zero`: basic smoothness + boundary
+- order-0 through order-4 multinomial formulas and the h2/h3 consequences
 
-## Remaining work
+## Completion status
 
-The multinomial formulas for `iteratedDeriv k (prodExpList L) 0` at k=1, 2, 3, 4
-and the instantiation for s4Func. Each requires careful handling of
-`iteratedDeriv_mul` / `iteratedDeriv_fun_mul` + Pi.mul vs fun form + ℕ-smul
-vs ring multiplication. See the CAPSTONE theorem in `Suzuki4Phase5.lean` for
-the architectural reduction of the outer sorries to these three identities
-(h2, h3, h4).
+All formulas listed above are theorems in this file. Their proofs handle
+`iteratedDeriv_mul` / `iteratedDeriv_fun_mul`, Pi multiplication versus
+function form, and ℕ-smul versus ring multiplication. The CAPSTONE in
+`Suzuki4Phase5.lean` packages the resulting identities, and
+`Suzuki4ViaBCH.lean` proves the remaining h4 bridge without project-specific
+axioms.
 -/
 
 import LieTrotter.Suzuki4Phase5
@@ -595,7 +595,7 @@ theorem iteratedDeriv_s4Func_order3_iff_w4Func_zero (A B : 𝔸) (p : ℝ) :
   exact (iteratedDeriv_w4Func_order3_zero_iff_of_order2 A B p h2).symm
 
 /-!
-## Operator-level order-3 identity: `sumTripleCorr_s4DList = 0` UNCONDITIONALLY
+## Operator-level order-3 identity under the Suzuki cubic condition
 
 Closed via a factored-form lemma: the full cons-expansion of sumTripleCorr
 over the 11-element s4DList equals `(4p³+(1-4p)³) • <fixed operator combo>`.
@@ -643,7 +643,7 @@ lemma sumTripleCorr_s4DList_eq_factored (A B : 𝔸) (p : ℝ) :
   simp only [smul_mul_smul_mul_smul]
   module
 
-/-- **sumTripleCorr_s4DList = 0 (UNCONDITIONAL on `IsSuzukiCubic p`)**:
+/-- **sumTripleCorr_s4DList = 0 under `IsSuzukiCubic p`**:
   closes h3 via the bridge `iteratedDeriv_s4Func_order3_eq_cb_of_bridge`. -/
 lemma sumTripleCorr_s4DList_eq_zero (A B : 𝔸) (p : ℝ) (h : IsSuzukiCubic p) :
     sumTripleCorr (s4DList A B p) = 0 := by
@@ -651,13 +651,13 @@ lemma sumTripleCorr_s4DList_eq_zero (A B : 𝔸) (p : ℝ) (h : IsSuzukiCubic p)
   unfold IsSuzukiCubic at h
   rw [h, zero_smul]
 
-/-- **h3 UNCONDITIONAL (given `IsSuzukiCubic p`)**:
+/-- **h3 under `IsSuzukiCubic p`**:
   `iteratedDeriv 3 (s4Func A B p) 0 = (A + B)^3`. -/
 theorem iteratedDeriv_s4Func_order3_eq_cb (A B : 𝔸) (p : ℝ) (h : IsSuzukiCubic p) :
     iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3 :=
   iteratedDeriv_s4Func_order3_eq_cb_of_bridge A B p (sumTripleCorr_s4DList_eq_zero A B p h)
 
-/-- **Order-3 vanishing of w4Func UNCONDITIONALLY** via proved h3. -/
+/-- **Order-3 vanishing of w4Func under `IsSuzukiCubic p`** via proved h3. -/
 theorem iteratedDeriv_w4Func_order3_eq_zero (A B : 𝔸) (p : ℝ) (h : IsSuzukiCubic p) :
     iteratedDeriv 3 (w4Func A B p) 0 = 0 :=
   (iteratedDeriv_s4Func_order3_iff_w4Func_zero A B p).mp

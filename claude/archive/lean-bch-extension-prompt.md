@@ -38,10 +38,10 @@ lake exe cache get
 lake build
 ```
 
-The reference Lean-Trotter repo is at
-`/Users/jue/Documents/Claude/Projects/Lean-Trotter`. Inspect
-`LieTrotter/Suzuki4ViaBCH.lean` to see the exact axiom statements you must
-match.
+The reference project is the
+[Lean-Trotter repository](https://github.com/Jue-Xu/Lean-Trotter). Inspect
+`LieTrotter/Suzuki4ViaBCH.lean` to see the historical axiom statements this
+archived prompt was written to match.
 
 ## The 3 axioms and what they need
 

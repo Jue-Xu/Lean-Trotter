@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 # Fourth-Order Suzuki Commutator-Scaling
 
-Two commutator-scaling bounds for the Suzuki S₄ integrator,
-improving on Childs et al. (2021) Proposition 7.
+Definitions and historical design notes for commutator-scaled bounds on
+the Suzuki S₄ integrator; final theorems live in downstream modules.
 
 ## Phase 1: Exact coefficients (rigorous Childs' framework)
 
@@ -13,8 +13,8 @@ The S₄ Duhamel residual has 10 interface terms, each involving conjugation
 expansions. After canceling orders 0–3 (Suzuki order conditions), the
 order-4 remainder gives an O(t⁵) bound with 8 commutator terms.
 
-Childs et al. compute numerical coefficients (4 decimal places) using a
-"heuristic" balanced factoring. Our approach:
+Childs et al. prove numerical coefficients using balanced factoring, while
+not claiming their tightness. The completed project:
 - Computes EXACT algebraic coefficients (polynomials in p = 1/(4-4^{1/3}))
 - Uses the palindromic symmetry to pair interface terms
 - Gives a machine-checked (non-heuristic) bound
@@ -85,6 +85,6 @@ a CLEAN reduction to a pointwise residual bound on `w4Deriv A B p τ`.
 The full form with explicit residual-bound hypothesis is
 `LieTrotter.Suzuki4OrderFive.norm_suzuki4_fifth_order` — closed using
 `norm_suzuki4_order5_via_module3` after providing the pointwise bound
-on `w4Deriv`. The remaining research content is proving this bound from
-the Suzuki order conditions (see `Suzuki4Phase5.lean`).
+on `w4Deriv`. The unconditional discharge and explicit coefficient bounds
+are proved in `Suzuki4ViaBCH.lean` and compounded downstream.
 -/

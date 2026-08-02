@@ -917,7 +917,7 @@ now all proven:
 - Order-2: automatic (no separate identity, palindromic structure)
 - Order-3: `suzuki4_phase3_{aba,a2b,bab}` (all ∝ Suzuki cubic)
 
-Only the operator-level integration + triangle inequality remain.
+The operator-level discharge is supplied downstream by the BCH/Taylor route.
 -/
 
 /-!
@@ -927,7 +927,7 @@ For applying Module 3's conditional bound, we need
 `‖w4Deriv τ‖ ≤ C · τ⁴`. Combining our results:
 - `w4Deriv = w4DerivExplicit` (4b-A2)
 - `‖w4DerivExplicit τ‖ = ‖w4Residual τ‖` (4b-A3, anti-Hermitian)
-- For palindromic Suzuki: `‖w4Residual τ‖ = O(τ⁴)` (the remaining work)
+- For palindromic Suzuki: `‖w4Residual τ‖ = O(τ⁴)` (proved downstream)
 
 The following lemma packages the first two equalities for convenient
 application.

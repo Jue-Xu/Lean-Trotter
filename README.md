@@ -2,7 +2,10 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-lightblue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-A Lean 4 formalization of the **Lie-Trotter product formula** and **Strang splitting** for complete normed algebras, including multi-operator generalizations.
+A Lean 4 formalization of the **Lie-Trotter product formula**, **Strang
+splitting**, and the fourth-order **Suzuki formula** for complete normed
+algebras, including multi-operator generalizations and commutator-scaled error
+bounds.
 
 **First-order (Lie-Trotter):** step error $O(1/n^2)$, total error $O(1/n)$
 
@@ -16,19 +19,18 @@ Both formulas are also proved for **any finite number of operators** $A_1, \ldot
 
 ## Status
 
-**Complete.** All theorems proved, 0 `sorry`s, full build passes.
+**Complete.** The project has 0 `sorry`s and 0 project or transitive
+non-foundational axioms. `#print axioms` on the Lie-Trotter, Strang, Suzuki τ⁵,
+quartic-convergence, and L4 uniform-refinement headlines reports only Lean's
+foundational axioms `[propext, Classical.choice, Quot.sound]`. The Lean-BCH
+dependency is pinned at `05e8c52`, where the former septic bridge assumptions
+used by L4 are theorems.
 
-**Tight 4th-order Trotter (Childs (2021) form) is fully proved at the project
-level as of 2026-05-19.** `#print axioms` on every τ⁵ headline
-(`norm_suzuki4_childs_form_via_level3`, `norm_suzuki4_level3_bch`,
-`norm_suzuki4_level2_bch`, `bch_iteratedDeriv_s4Func_order4`,
-`exists_norm_s4Func_sub_exp_le_t5`, `lie_trotter`, `symmetric_lie_trotter`)
-reports only Lean's three foundational axioms
-`[propext, Classical.choice, Quot.sound]`. The Lean-BCH dependency (pin
-`d455ff0`) is the source of truth for the BCH-side bridge corollaries that
-underwrite these headlines. The optional L4 uniform refinement
-(`norm_suzuki4_level4_uniform`) still transitively depends on two surviving
-Lean-BCH septic axioms — see `CLAUDE.md` for details.
+The full convergence hierarchy is proved:
+
+$$\text{Lie--Trotter }O(1/n)\quad\longrightarrow\quad
+  \text{Strang }O(1/n^2)\quad\longrightarrow\quad
+  \text{Suzuki }S_4\ O(1/n^4).$$
 
 ### Main results
 
@@ -40,14 +42,14 @@ Lean-BCH septic axioms — see `CLAUDE.md` for details.
 | `symmetric_lie_trotter` | $(e^{A/2n} e^{B/n} e^{A/2n})^n \to e^{A+B}$ | $O(1/n^2)$ | 2 |
 | `lie_trotter_list` | $(\prod_i e^{A_i/n})^n \to e^{\sum_i A_i}$ | $O(1/n)$ | $m$ |
 | `symmetric_lie_trotter_list` | palindromic product $\to e^{\sum_i A_i}$ | $O(1/n^2)$ | $m$ |
-| `suzuki4_convergence` | $S_4(1/n)^n \to e^{A+B}$ where $S_4 = S_2^2 \cdot S_2 \cdot S_2^2$ | $O(1/n^2)$* | 2 |
+| `suzuki4_convergence_quartic` | $S_4(t/n)^n \to e^{t(A+B)}$ | $O(1/n^4)$ | 2 |
 
 #### Step error bounds (single-step approximation)
 
 | Theorem | Bound | Order |
 |---------|-------|-------|
 | `norm_exp_mul_exp_sub_exp_add'` | $\lVert e^a e^b - e^{a+b}\rVert \le 2\lVert a\rVert\lVert b\rVert\, e^{\lVert a\rVert+\lVert b\rVert}$ | $O(\lVert a\rVert\lVert b\rVert)$ |
-| `norm_exp_mul_exp_mul_exp_sub_exp_add_cubic` | $\lVert e^a e^b e^a - e^{2a+b}\rVert \le C\, e^{2\lVert a\rVert+\lVert b\rVert}$ | $O(\lVert a\rVert^2\lVert b\rVert)$ |
+| `norm_exp_mul_exp_mul_exp_sub_exp_add_cubic` | $\lVert e^a e^b e^a-e^{a+b+a}\rVert \le (7\lVert a\rVert^2\lVert b\rVert+3\lVert a\rVert\lVert b\rVert^2+3\lVert a\rVert^3)e^{2\lVert a\rVert+\lVert b\rVert}$ | cubic |
 
 > **Note on "order":** A $k$-th order method has step error $O(1/n^{k+1})$ and total error $O(1/n^k)$ after $n$ steps, because the telescoping assembly multiplies by $n$.
 
@@ -64,53 +66,80 @@ LieTrotter/
 ├── MultiOperator.lean     — multi-operator first-order (A₁+⋯+Aₘ)
 ├── MultiStrang.lean       — multi-operator symmetric Strang with O(1/n²)
 ├── Suzuki4.lean           — fourth-order Suzuki integrator (S₄ from five S₂)
+├── Suzuki4Convergence.lean — axiom-free O(1/n⁴) total error and convergence
 ├── CommutatorScaling.lean — first-order commutator-scaling error (Duhamel/FTC-2)
 ├── MultiCommutatorScaling.lean    — multi-operator variant
 ├── StrangCommutatorScaling.lean   — second-order (Strang) commutator-scaling
+├── StrangTotalErrorCommScaling.lean — commutator-scaled Strang total error
 ├── HigherCommutator.lean  — triple FTC for [B,[B,[B,A]]]
 ├── StrangCommutatorScalingTight.lean — tighter norm-of-difference Strang bound
 ├── Suzuki4HasDerivAt.lean, Suzuki4Module{2,3,4}.lean, Suzuki4DerivExplicit.lean
 │                          — HasDerivAt / FTC-2 scaffolding for S₄
-├── Suzuki4ChildsForm.lean — Childs 2021 Prop pf4_bound_2term (conditional on residual)
+├── Suzuki4ChildsForm.lean — Childs arXiv Proposition J.1 framework (conditional on residual)
 ├── Suzuki4OrderFive.lean  — S₄ O(t⁵) abstract-form target (conditional on residual)
-├── Suzuki4MultinomialExpand.lean — prodExpList + h2, h3 UNCONDITIONAL + h4 infra
+├── Suzuki4MultinomialExpand.lean — prodExpList + h2; h3 under Suzuki cubic; h4 infra
 ├── Suzuki4Phase5.lean     — Taylor-reduction + Leibniz bridges + CAPSTONE
 ├── Suzuki4StrangBlocks.lean — S₄ = 5 Strang blocks; Suzuki cubic sum lemmas
-└── Suzuki4ViaBCH.lean     — BCH-interface axioms + Level 1 (Childs) + Level 2 bounds
+├── Suzuki4ViaBCH.lean     — proved BCH bridges and Level 1–4 bounds
+├── Suzuki4TightConvergence.lean — commutator-scaled O(1/n⁴) total error
+├── Suzuki4UnitaryTotalError.lean — skew-adjoint/unitary total-error bounds
+├── Suzuki4Commute.lean    — exactness when A and B commute
+├── Suzuki4GapClosers.lean — general-parameter quartic corollaries
+├── PrefactorStrict.lean   — formal strict prefactor comparisons
+├── TrotterStepCount.lean  — accuracy-to-step counts (explicit Lie/Strang; existential S₄ constants)
+└── MatrixCorollaries.lean — finite complex-matrix specializations
 ```
 
-### S₄ fourth-order bound (axiom-free for τ⁵; L4 still gated)
+### S₄ fourth-order bounds and convergence
 
-`Suzuki4ViaBCH.lean` provides three forms of Childs's 4th-order Trotter
-error bound `‖S₄(t) - exp(tH)‖ ≤ t⁵ · (4-fold commutator sum)`, all
-**now fully proved** (`#print axioms` reports only Lean's standard 3) by
-composing Lean-BCH bridge corollaries with exp-Lipschitz / triangle-
-inequality lifts on the Lean-Trotter side:
+`Suzuki4ViaBCH.lean` provides three backward-compatible order statements
+(`∃ δ > 0, ∃ C ≥ 0, error ≤ C·t⁵`) and sharper theorems whose types retain
+the leading commutator coefficients. All are fully proved (`#print axioms`
+reports only Lean's standard three):
 
-- **Level 1** (`norm_suzuki4_childs_form_via_level3`): reproduces Childs et al.
-  (2021) Prop pf4_bound_2term with his exact coefficients 0.0047–0.0284,
-  derived from the CAS-certified Level 3 bound plus the Lean-proved
-  termwise inequality γᵢ ≤ αᵢ (no heuristic axiomatization).
-- **Level 2** (`norm_suzuki4_level2_bch`): rigorous BCH-derived bound with
-  explicit unit coefficients on the 8 Childs 4-fold commutators.
-- **Level 3** (`norm_suzuki4_level3_bch`): tight γᵢ prefactors at Suzuki `p`.
+- **Level 1 / Childs form:** `norm_suzuki4_childs_form_via_level3` records only
+  the order. `norm_suzuki4_childs_explicit` carries the published Childs
+  coefficients (0.0046–0.0284) plus an honest `K′t⁶` remainder, while
+  `norm_suzuki4_le_childs_near_zero` removes that remainder on a neighbourhood
+  of zero under a strict leading-coefficient gap. Childs et al.'s arXiv
+  Proposition J.1 is rigorous; its coefficients are not proved tight.
+- **Level 2 / unit form:** `norm_suzuki4_level2_bch` records only the order;
+  `norm_suzuki4_level2_explicit` carries unit coefficients on the eight
+  four-fold commutators plus a `K′t⁶` remainder.
+- **Level 3 / BCH form:** `norm_suzuki4_level3_bch` records only the order;
+  `norm_suzuki4_level3_explicit` carries the certified γᵢ leading
+  coefficients plus a `K′t⁶` remainder.
 
 The companion [Lean-BCH](https://github.com/Jue-Xu/Lean-BCH) project (pin
-`d455ff0`, 2026-05-19) provides the underlying 5-factor palindromic BCH
-machinery. The optional **L4 uniform refinement**
-(`norm_suzuki4_level4_uniform`, with an extra `t⁷ · bchR7Bound` correction)
-still transitively depends on two surviving Lean-BCH septic axioms; the
-core L1–L3 τ⁵ bounds do not.
+`05e8c52`) provides the underlying palindromic BCH machinery. **Level 4**
+(`norm_suzuki4_level4_uniform`) adds the `t⁷ · bchR7Bound` correction on an
+existential small-`t` interval `[0, δ)`; it too is free of transitive
+non-foundational axioms at this pin.
+
+`Suzuki4Convergence.lean` compounds the $O(|t|^5)$ single-step estimate into
+`suzuki4_total_error_quartic` and `suzuki4_convergence_quartic`, proving
+$O(1/n^4)$ total error in any complete normed algebra with `NormOneClass`.
+`Suzuki4TightConvergence.lean` makes the leading nested-commutator coefficient
+explicit, and `Suzuki4UnitaryTotalError.lean` sharpens the growth factor for
+skew-adjoint inputs.
 
 ## Building
 
 Requires [Lean 4](https://leanprover.github.io/) (v4.29.0-rc8) and [Mathlib](https://github.com/leanprover-community/mathlib4).
 
 ```bash
-lake update
+lake update lean-bch # fetch the pinned Lean-BCH revision
 lake exe cache get    # download Mathlib oleans (~3 GB)
 lake build
 ```
+
+The first clean build also compiles Lean-BCH and can take substantially
+longer than an incremental rebuild.
+
+The symbolic derivations and numerical experiments used by the manuscript are
+documented in [`scripts/README.md`](scripts/README.md). Install
+`scripts/requirements-numerical.txt` and run the listed scripts to regenerate
+the archived CSV results under `claude/`.
 
 ## Proof outline
 
@@ -138,11 +167,15 @@ lake build
 
 9. **Second-order** ($m$ operators): Recursive palindromic product $S_n(A_1, \ldots, A_m) = e^{A_1/2n} \cdot S_n(A_2, \ldots, A_m) \cdot e^{A_1/2n}$. Induction reduces each step to the 2-operator cubic Strang bound.
 
-### Suzuki S₄ integrator (O(1/n²), with O(1/n⁴) pathway)
+### Suzuki S₄ integrator (fourth-order, O(1/n⁴) total error)
 
-10. **Composition:** $S_4(t) = S_2(pt)^2 \cdot S_2((1-4p)t) \cdot S_2(pt)^2$ for $0 < p < 1/4$. Five S₂ steps with time fractions summing to 1. The exact exponential targets commute (all scalar multiples of $A+B$), so the 5-step telescope gives $O(1/n^3)$ step error → $O(1/n^2)$ total.
+10. **Composition:** $S_4(t) = S_2(pt)^2 \cdot S_2((1-4p)t) \cdot S_2(pt)^2$ for $p \in [0,1/2]$. Five S₂ steps have time fractions summing to 1; the middle fraction may be negative.
 
-> \*The specific choice $p = 1/(4-4^{1/3})$ satisfies $4p^3 + (1-4p)^3 = 0$, which cancels the third-order error and upgrades to $O(1/n^5)$ step error → $O(1/n^4)$ total. This cancellation requires a parity argument (error is odd in $t$) that is noted as future work.
+11. **Fourth-order cancellation and assembly:** If
+$4p^3+(1-4p)^3=0$—in particular for
+$p=1/(4-4^{1/3})$—the formalized BCH/Taylor argument gives an $O(|t|^5)$
+single-step error. Telescoping then proves $O(1/n^4)$ total error and
+convergence to $e^{t(A+B)}$.
 
 ## References
 

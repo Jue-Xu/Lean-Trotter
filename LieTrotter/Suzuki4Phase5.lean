@@ -395,14 +395,14 @@ lemma contDiffAt_exp_smul_mul (X : 𝔸) (c : ℝ) (τ : ℝ) {n : WithTop ℕ�
 The 2-factor iteratedDeriv at 0 has the form
   `iteratedDeriv 2 (fun τ => exp(c₁τ•X₁) * exp(c₂τ•X₂)) 0 = (c₂•X₂)² + 2·(c₁•X₁)·(c₂•X₂) + (c₁•X₁)²`
 
-via Mathlib's `iteratedDeriv_mul` + the base case above. A full Lean proof
-requires careful handling of Nat-cast coercions in the binomial coefficients
-and ℕ-smul vs ℝ-smul distinctions. Deferred to subsequent session when we
-need the multi-factor generalization.
+via Mathlib's `iteratedDeriv_mul` + the base case above. The completed proof
+handles Nat-cast coercions in the binomial coefficients and ℕ-smul versus
+ℝ-smul distinctions in `Suzuki4MultinomialExpand.lean`, which supplies the
+multi-factor generalization.
 -/
 
 /-!
-## Future work: Leibniz-rule path for order-n vanishings
+## Implemented path: Leibniz rule for order-n vanishings
 
 **KEY INSIGHT**: Mathlib provides `iteratedDeriv_mul` (a Leibniz-rule
 formula for iterated derivatives of products):
@@ -410,8 +410,8 @@ formula for iterated derivatives of products):
   iteratedDeriv n (f * g) x = Σ_{i=0..n} C(n,i) · iteratedDeriv i f x · iteratedDeriv (n-i) g x
 
 Using this iteratively on the 11-factor product s4Func, and the fact
-that `iteratedDeriv k (fun τ => exp((c·τ)•X)) 0 = (c•X)^k` (a baby
-lemma needed), we can compute:
+that `iteratedDeriv k (fun τ => exp((c·τ)•X)) 0 = (c•X)^k` (proved
+below), the downstream multinomial module computes:
 
   iteratedDeriv n (s4Func A B p) 0 = multinomial sum of ordered products
     of `k` copies of `dⱼ`'s (with multinomial coefficients)
@@ -443,10 +443,10 @@ If s4(0) = 1, s4'(0) = H, s4''(0) = H² (from order-2), then:
 Vanishes iff s4'''(0) = H³, i.e., the Phase 3 polynomial identities
 (`suzuki4_phase3_{aba,a2b,bab}` multiplied by suzuki4_cubic_cancel).
 
-**Remaining concrete work** (for a future session):
-1. Prove `iteratedDeriv_exp_smul_mul` (base case): for `fun τ => exp((c·τ)•X)`,
+**Downstream implementation** (completed in `Suzuki4MultinomialExpand.lean`):
+1. Prove the exponential base case: for `fun τ => exp((c·τ)•X)`,
    `iteratedDeriv k · 0 = (c•X)^k`. ~30 lines.
-2. Apply Leibniz rule iteratively on s4Func to get explicit expansion of
+2. Apply the Leibniz rule iteratively on s4Func to get the expansion of
    iteratedDeriv n s4Func 0. Complexity grows combinatorially.
 3. Match against multinomial expansion of H^n and use
    s4_pairwise_commutator_sum_zero / suzuki4_phase3 to cancel.

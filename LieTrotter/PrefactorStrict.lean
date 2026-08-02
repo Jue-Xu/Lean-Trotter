@@ -5,13 +5,13 @@ Released under Apache 2.0 license as described in the file LICENSE.
 # Strict Prefactor Comparison: γᵢ < αᵢ, Termwise and With an 8× Gap
 
 The existing comparison between this project's CAS-certified S₄ prefactors
-`bchTightPrefactors` (the γᵢ) and Childs et al. (2021)'s heuristic
-coefficients `childsPrefactors` (the αᵢ) is the *non-strict* summed
+`bchTightPrefactors` (the γᵢ) and the coefficients in Childs et al. (2021)'s
+rigorous arXiv Proposition J.1 bound, `childsPrefactors` (the αᵢ), is the
+*non-strict* summed
 inequality `bchTightPrefactors_le_childs : Σγᵢ‖Cᵢ‖ ≤ Σαᵢ‖Cᵢ‖`
-(`Suzuki4ViaBCH.lean`).  A literature check (2026-07-17) found **no published
-analytic tightening of Childs's Proposition-7 S₄ prefactors**, so the γᵢ are,
-to our knowledge, the tightest analytic values on record — this file gives
-that claim its strongest formal form:
+(`Suzuki4ViaBCH.lean`). This file formalizes a strict termwise improvement of
+that published coefficient vector; it does not claim that either vector is
+globally optimal in the over-complete commutator basis:
 
 * `bchTightPrefactors_lt_childs_termwise` — **strict** inequality `γᵢ < αᵢ`
   at every index `i = 1, …, 8` (including `γ₃ = 0 < 0.0046 = α₃` and

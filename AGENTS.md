@@ -63,41 +63,16 @@ refinement—depend only on Lean's standard foundational axioms.
      **`‖S₄(t/n)ⁿ − exp(t(A+B))‖ ≤ e^{tK}·(Σγᵢ‖Cᵢ‖)·t⁵/n⁴ + K'/n⁵`** — the
      Childs-shape total error: the `1/n⁴` coefficient is a nested-commutator sum,
      so it collapses as `[A,B] → 0`. Also `..._childs_scaling` with the αᵢ.
-4d. **Quick-wins batch (2026-07-17)** — 7 new modules, all axiom-free
-   (`#print axioms` = 3 standard on all 23 new headline theorems):
-   - `Suzuki4UnitaryTotalError.lean`: anti-Hermitian (unitary) S₄ total error
-     with **no `e^{tK}` growth factor** — `‖S₄(t/n)ⁿ − exp(t(A+B))‖ ≤
-     (Σγᵢ‖Cᵢ‖)·t⁵/n⁴ + K′/n⁵`
-     for `t ≥ 0` and sufficiently large `n`
-     (`suzuki4_total_error_commutator_scaling_of_skewAdjoint`, Childs-α and
-     plain-quartic variants). The statement quantum simulation quotes.
-   - `StrangTotalErrorCommScaling.lean`: commutator-scaled Strang **total**
-     error for `t ≥ 0` (`strang_total_error_comm_scaling`:
-     `(‖[B,[B,A]]‖/12+‖[A,[A,B]]‖/24)·t³/n²`; `..._tight`:
-     `‖D‖/6·t³/n² + T/4·t⁴/n³`) — fills the step-vs-total asymmetry with S₄.
-   - `Suzuki4Commute.lean`: commuting degeneration —
-     `suzuki4Exp_eq_exp_of_commute` (S₄ exact for EVERY p, no IsSuzukiCubic),
-     `boundSum = 0`, total error ≡ 0. Closes the docstring-vs-statement drift
-     at `suzuki4_total_error_commutator_scaling`.
-   - `TrotterStepCount.lean`: ε-form step counts; also
-     `lie_trotter_error_explicit` / `strang_error_explicit` (per-n bounds with
-     the constants IN the statement); the S₄ step count binds C, N before ε
-     (Lesson 16).
-   - `MatrixCorollaries.lean`: `Matrix (Fin d) (Fin d) ℂ` specializations under
-     the spectral norm (`Matrix.Norms.L2Operator`), incl.
-     `matrix_suzuki4_state_error` (`‖S₄ⁿψ − e^{tH}ψ‖ ≤ C/n⁴·‖ψ‖`). Task F1 closed.
-   - `Suzuki4GapClosers.lean`: general-t `suzuki4Step` total error (the paper's
-     "rescale A→tA" remark is now a theorem) + named imaginary-time/Gibbs
-     corollaries.
-   - `PrefactorStrict.lean`: strict `γᵢ < αᵢ` termwise, quantified gap
-     `γᵢ ≤ αᵢ/8` (binding ratio α₂/γ₂ ≈ 8.60), `boundSum ≤ childsBoundSum/8`.
-   **Numerical companions:** the committed, reproducible artifacts are
-   `scripts/sweep_strang_alignment.py`,
-   `scripts/verify_strang_alignment_independent.py`,
-   `claude/strang_alignment_sweep.csv`, `scripts/test_r5_gain.py`, and
-   `claude/s4_r5_gain.csv`. They provide numerical evidence for concrete
-   finite-chain examples; they are not Lean theorems or universal lattice
-   claims.
+4d. **Release corollaries (2026-07-17)** — axiom-free modules for unitary S₄
+   total error, commutator-scaled Strang total error, exactness under
+   commutation, accuracy-to-step counts, matrix specializations, general-time
+   and Gibbs corollaries, and strict comparison of the stored prefactors:
+   `Suzuki4UnitaryTotalError.lean`, `StrangTotalErrorCommScaling.lean`,
+   `Suzuki4Commute.lean`, `TrotterStepCount.lean`, `MatrixCorollaries.lean`,
+   `Suzuki4GapClosers.lean`, and `PrefactorStrict.lean`. The numerical
+   companions are documented in `scripts/README.md` and archived as CSVs under
+   `claude/`; they are evidence for sampled finite chains, not universal Lean
+   theorems.
 
 5. **S₄ BCH-derived bounds** — L1–L4 are axiom-free. NOTE: L1 = L2 = L3
    *as propositions* (all are `∃C, err ≤ C·τ⁵`);
@@ -279,7 +254,7 @@ Release corollaries and specializations:
   corollaries and formal coefficient-vector comparisons.
 
 Top-level: `LieTrotter.lean` (root import), `lakefile.lean`, `lean-toolchain`,
-`CLAUDE.md` (this file), `CHANGELOG.md` (lab notes), `TODO.md` (remaining work).
+`AGENTS.md` (this file), `CHANGELOG.md` (lab notes), `TODO.md` (remaining work).
 
 ---
 
@@ -850,17 +825,17 @@ L4/τ⁷ chain at Lean-BCH pin `05e8c52`.
     (worst 123pt); `\setlength{\emergencystretch}{3em}` cut that to 6 (worst
     14pt). And when a build dies with a cascading `Missing }` at `\end{document}`,
     look for an unclosed `\caption{` — brace-counting the caption region finds it
-    in seconds. (This bit twice: `tab:levels`'s caption had a `\claude{…}` note as
+    in seconds. (This bit twice: `tab:levels`'s caption had a `\Codex{…}` note as
     its last content, sharing the caption's closing `}` on one line; commenting the
     note with `%` ate that brace. Notes that trail structural braces need the
     brace re-added on its own line.)
 
 20. **Resolved caveats get hidden; open ones get a *visible* flag — and if a
     caveat is closable in ~5 lines of Lean, close it instead of hedging.** After
-    the manuscript audit, the `\claude{…}` notes split into (a) changelog for a
-    fix already in the prose — comment those out (`%\claude`), preserving the trail
+    the manuscript audit, the `\Codex{…}` notes split into (a) changelog for a
+    fix already in the prose — comment those out (`%\Codex`), preserving the trail
     without rendering; and (b) genuinely open issues — those stay visible as
-    `\claude{OPEN ISSUE …}` so a referee/collaborator sees them. Hiding (b) as if
+    `\Codex{OPEN ISSUE …}` so a referee/collaborator sees them. Hiding (b) as if
     it were (a) silently re-introduces the overclaim the note was guarding against;
     one such note even said "see the caveat below" where the caveat *was* the note,
     so hiding it dangled the reference. For the Strang norm-of-difference bound, the
@@ -926,3 +901,5 @@ Patterns and anti-patterns from this formalization, useful for future Lean proje
 2. A. Childs et al., "Theory of Trotter Error with Commutator Scaling," *Phys. Rev. X* 11, 011020, 2021.
 3. Mathlib: `Mathlib.Analysis.Normed.Algebra.Exponential`
 4. Mathlib: `Mathlib.Analysis.Normed.Algebra.MatrixExponential`
+
+## Imported Claude Cowork project instructions

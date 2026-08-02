@@ -4,9 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 # Fourth-Order Suzuki Formula
 
-The fourth-order Suzuki formula S₄ composes five symmetric Strang steps
-and converges at O(1/n²). The optimal parameter choice yields O(1/n⁴)
-via Suzuki's parity cancellation, deferred to future work.
+The fourth-order Suzuki formula S₄ composes five symmetric Strang steps,
+and this file proves O(1/n²) for its admissible parameter range. At the
+Suzuki parameter, `Suzuki4Convergence.lean` upgrades the rate to O(1/n⁴).
 -/
 
 import LieTrotter.StrangSplitting
@@ -434,8 +434,8 @@ include 𝕂 in
     For any `A, B` in a complete normed algebra and `0 ≤ p ≤ 1/2`,
     `(S₄(1/n))^n → exp(A+B)` as `n → ∞` at rate O(1/n²).
 
-    The choice `p = 1/(4 - 4^{1/3})` yields O(1/n⁴) via Suzuki's
-    parity cancellation (deferred). -/
+    At `p = 1/(4 - 4^{1/3})`, `Suzuki4Convergence.lean` supplies the
+    proved O(1/n⁴) upgrade via the single-step O(t⁵) bound. -/
 theorem suzuki4_convergence (A B : 𝔸) (p : ℝ) (hp : 0 ≤ p) (hp2 : p ≤ 1 / 2) :
     Filter.Tendsto
       (fun n : ℕ => (suzuki4Step 𝕂 A B (↑p) n) ^ n)
