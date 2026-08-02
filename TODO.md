@@ -211,14 +211,17 @@ open issue positively (Strang tight-bound gain 9–50% on the sampled spin
 chains) and pass the S₄ ‖R₅‖ numerical gate (gain 8–86%). A polished
 bound-versus-true-error benchmark remains optional work below.
 
-### Novelty context (literature check, 2026-07-17)
+### Novelty context (literature check, updated 2026-08-02)
 
-- The only prior mechanized Trotter bound found anywhere is a *first-order*
-  commutator lemma inside QBlue, a Rocq-verified compiler for second-quantized
-  Hamiltonian simulation (arXiv:2509.18583). No proof assistant has a
-  higher-order product-formula bound, so the Strang O(1/n²) and S₄ O(1/n⁴)
-  results appear to be the **first machine-checked higher-order Trotter
-  bounds**. The manuscript should cite QBlue and make exactly that claim.
+- QBlue's public Rocq artifact (Zenodo DOI 10.5281/zenodo.15852130) contains
+  theorem declarations named `lie_trotter_error_bound` and
+  `suzuki_second_order_error_bound`. Accordingly, do **not** claim the first
+  machine-checked higher-order Trotter bound without qualification. The
+  manuscript now scopes novelty to the first kernel-checked norm-convergence
+  proof found, with no project-specific axioms, for the Lie–Trotter sequence
+  on arbitrary elements of a complete normed algebra, while separately
+  presenting the explicitly audited higher-order and commutator-scaled
+  hierarchy.
 - No published work analytically tightens the rigorous, but not proven tight,
   S₄ prefactors in Childs et al. (2021), arXiv Proposition J.1
   (coefficient range 0.0046–0.0284)

@@ -1,11 +1,11 @@
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-We have presented, to our knowledge, the first machine-checked convergence
-proof of the Lie--Trotter
-product formula, together with the first formalized higher-order extensions
-and
-commutator-scaling error bounds, in Lean~4 with the \Mathlib library.
+We have presented, to our knowledge, the first kernel-checked proof, with no
+project-specific axioms, of norm convergence of the Lie--Trotter sequence for
+arbitrary elements of a complete normed algebra, together with higher-order
+extensions and commutator-scaling error bounds, in Lean~4 with the \Mathlib
+library.
 The development comprises over 14\,000 lines with zero \texttt{sorry} axioms
 and zero own theorem-level BCH-interface axioms. Levels~1--4 are fully
 proved at the project level: at Lean-BCH revision \texttt{05e8c52},
@@ -16,7 +16,7 @@ Level~4 local small-$\tau$ ($\tau^7$) refinement. The development covers:
   \item First-order Lie--Trotter convergence at rate $O(1/n)$;
   \item Symmetric Strang splitting at rate $O(1/n^2)$;
   \item Multi-operator generalizations of both formulas;
-  \item First- and second-order commutator-scaling bounds via a novel
+  \item First- and second-order commutator-scaling bounds via a
     Duhamel/FTC technique;
   \item A second-order Strang bound via norm-of-difference that captures
     signed cancellations invisible to the sum-of-norms form, and whose

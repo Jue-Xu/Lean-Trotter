@@ -121,8 +121,11 @@ These projects share the pattern of using formal verification not merely to
 certify known results but to expose subtle gaps in published proofs.
 Closest to our topic, the QBlue verified compiler for Hamiltonian
 simulation~\cite{liVerifiedCompilerQuantum2025} mechanizes, in Rocq, a
-standard first-order Trotterization error lemma as part of its correctness
-proof. Our work extends this program to the product formulas themselves: to
-our knowledge it provides the first machine-checked \emph{convergence} proof
-of a product formula, and the first machine-checked higher-order and
-commutator-scaling Trotter bounds.
+first-order Trotter error bound; its
+\href{https://doi.org/10.5281/zenodo.15852130}{public artifact} also contains
+a declared second-order Suzuki error bound. Our work extends this program to
+abstract norm convergence in complete normed algebras: to our knowledge it
+provides the first kernel-checked proof, with no project-specific axioms, of
+\emph{norm convergence} of the Lie--Trotter sequence for arbitrary elements
+of a complete normed algebra, together with commutator-scaled and
+axiom-audited higher-order bounds.

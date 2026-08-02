@@ -137,11 +137,12 @@ Tightening Commutator-Scaling Error Bounds in Lean~4}
 
 \begin{abstract}
 We present a machine-checked proof of the Lie--Trotter product
-formula in \Lean with \Mathlib---to our knowledge the first formalized
-convergence proof of a product formula in any proof
-assistant---together with higher-order extensions
+formula in \Lean with \Mathlib---to our knowledge the first
+kernel-checked formal proof, with no project-specific axioms, of norm
+convergence of the Lie--Trotter sequence for arbitrary elements of a
+complete normed algebra---together with higher-order extensions
 (symmetric Strang, multi-operator, fourth-order Suzuki $S_4$) and
-commutator-scaling error bounds obtained via a new Duhamel/FTC
+commutator-scaling error bounds obtained via a Duhamel/FTC
 technique that sidesteps ODE uniqueness theory. For the $S_4$
 integrator, CAS-assisted Baker--Campbell--Hausdorff expansion yields
 four order-$t^5$ bounds, including a replacement of the prefactors of

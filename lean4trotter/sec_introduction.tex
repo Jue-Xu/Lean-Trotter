@@ -140,13 +140,14 @@ Our \Lean formalization is available at
 \href{https://github.com/Jue-Xu/Lean-Trotter}{\texttt{github.com/Jue-Xu/Lean-Trotter}}.
 Our main contributions are:
 \begin{itemize}
-  \item To our knowledge, the \emph{first machine-checked convergence proof}
-    of the Lie--Trotter product formula---the $n \to \infty$ limit
-    statement---and the first machine-checked \emph{higher-order}
+  \item To our knowledge, the \emph{first kernel-checked proof, with no
+    project-specific axioms, of norm convergence} of the Lie--Trotter sequence
+    for arbitrary elements of a complete normed algebra---the $n \to \infty$
+    limit statement---together with an axiom-audited hierarchy of higher-order
     product-formula bounds (Strang, Suzuki $S_4$) and multi-operator
-    extensions in any proof assistant. A first-order Trotterization
-    step-error lemma was previously mechanized in Rocq inside the QBlue
-    verified compiler~\cite{liVerifiedCompilerQuantum2025}.
+    extensions. The \href{https://doi.org/10.5281/zenodo.15852130}{public QBlue
+    Rocq artifact} contains first-order Lie--Trotter and second-order Suzuki
+    error-bound declarations in its verified-compiler development~\cite{liVerifiedCompilerQuantum2025}.
 
   \item A \emph{Duhamel/FTC-based proof technique} for commutator-scaling bounds
     that avoids ODE uniqueness theory (Gronwall's inequality, Picard iteration),
@@ -154,7 +155,7 @@ Our main contributions are:
 
   \item Machine-checked \emph{commutator-scaling error bounds} at first and
     second order, with double-commutator coefficients matching the
-    theoretical literature---and a new tighter-Strang refinement
+    theoretical literature---and a tighter-Strang refinement
     via norm-of-difference (\cref{apd:tighter}).
 
   \item \emph{CAS-assisted BCH bounds for Suzuki $S_4$}: four machine-checked
@@ -168,14 +169,18 @@ Our main contributions are:
     the inequality $\norm{e^a} \le e^{\norm{a}}$ for general Banach algebras.
 \end{itemize}
 
-To our knowledge, no prior proof-assistant development contains the
-Lie--Trotter \emph{convergence} statement, a higher-order product-formula
-bound, or commutator-scaling Trotter bounds; the closest prior mechanization
-is QBlue's first-order step-error lemma in
-Rocq~\cite{liVerifiedCompilerQuantum2025} (\cref{sec:bg-lean}).
+To our knowledge, no prior proof-assistant development contains this
+Lie--Trotter norm-convergence theorem for arbitrary elements of a complete
+normed algebra. QBlue's public Rocq artifact does contain first-order
+Lie--Trotter and second-order Suzuki error-bound declarations in a
+verified-compiler setting~\cite{liVerifiedCompilerQuantum2025}
+(\cref{sec:bg-lean}); our novelty claim is therefore narrowly about this
+norm-convergence theorem, its generality, and the explicitly audited trust
+base, not the mere presence of a higher-order theorem statement.
 \Mathlib contains the identity $e^{a+b} = e^a\,e^b$ for commuting elements
 (\texttt{exp\_add\_of\_commute}), but the non-commuting convergence
-theorem---which is a limit statement, not an algebraic identity---is new.
+theorem---which is a limit statement, not an algebraic identity---is the
+theorem established here.
 
 The remainder of this paper is organized as follows.
 \Cref{sec:background} reviews the mathematical background on product formulas
