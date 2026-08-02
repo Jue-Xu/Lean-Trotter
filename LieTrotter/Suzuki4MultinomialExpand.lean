@@ -737,7 +737,8 @@ theorem norm_suzuki4_order5_with_h2_and_w4Func_vanishings (A B : 𝔸)
     (hA : star A = -A) (hB : star B = -B) (p : ℝ) {t : ℝ} (ht : 0 < t)
     (hW3 : iteratedDeriv 3 (w4Func A B p) 0 = 0)
     (hW4 : iteratedDeriv 4 (w4Func A B p) 0 = 0) :
-    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 := by
+    ∃ C ≥ 0, ∀ τ ∈ Set.Icc (0 : ℝ) t,
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 := by
   have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
   have h3 := iteratedDeriv_s4Func_order3_eq_cb_via_w4Func A B p hW3
   have h4 := iteratedDeriv_s4Func_order4_eq_q_via_w4Func A B p h3 hW4
@@ -752,7 +753,8 @@ theorem norm_suzuki4_order5_with_h2_and_w4Func_vanishings (A B : 𝔸)
 theorem norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing (A B : 𝔸)
     (hA : star A = -A) (hB : star B = -B) (p : ℝ) (hcubic : IsSuzukiCubic p)
     {t : ℝ} (ht : 0 < t) (hW4 : iteratedDeriv 4 (w4Func A B p) 0 = 0) :
-    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 := by
+    ∃ C ≥ 0, ∀ τ ∈ Set.Icc (0 : ℝ) t,
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 := by
   have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
   have h3 := iteratedDeriv_s4Func_order3_eq_cb A B p hcubic
   have h4 := iteratedDeriv_s4Func_order4_eq_q_via_w4Func A B p h3 hW4
@@ -773,7 +775,8 @@ theorem norm_suzuki4_order5_via_bch (A B : 𝔸)
       (2 : ℝ) • ((A + B) * sumTripleCorr (s4DList A B p)
                  + sumTripleCorr (s4DList A B p) * (A + B)))
     {t : ℝ} (ht : 0 < t) :
-    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 := by
+    ∃ C ≥ 0, ∀ τ ∈ Set.Icc (0 : ℝ) t,
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 := by
   have h2 := iteratedDeriv_s4Func_order2_eq_sq A B p
   have h3 := iteratedDeriv_s4Func_order3_eq_cb A B p hcubic
   have h4 := iteratedDeriv_s4Func_order4_eq_q_of_bch A B p hcubic hBCH

@@ -165,15 +165,23 @@ section AntiHermitian
 variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸]
 
 /-- **Phase 5 packaged**: from the four order-vanishing hypotheses, conclude
-  the O(t⁵) S₄ bound (`norm_suzuki4_fifth_order` target). -/
+  the O(τ⁵) S₄ bound, *uniformly* on `[0, t]`.
+
+  The constant `C` is bound **before** `τ`.  That order matters: with `τ` bound
+  first the statement would be a tautology (take `C := ‖error(τ)‖/τ⁵`), carrying
+  no order-τ⁵ information at all.  The uniformity is genuinely available —
+  `exists_norm_w4Residual_t4_bound_of_zero_taylor` produces a single `C` valid
+  on all of `[0, t]` — so there is no reason to throw it away. -/
 theorem norm_suzuki4_order5_of_vanishings (A B : 𝔸)
     (hA : star A = -A) (hB : star B = -B) (p : ℝ)
     {t : ℝ} (ht : 0 ≤ t)
     (hZero : ∀ k, k ≤ 3 → iteratedDerivWithin k (w4Residual A B p) (Icc 0 t) 0 = 0) :
-    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C / 5 * t ^ 5 := by
+    ∃ C ≥ 0, ∀ τ ∈ Icc (0 : ℝ) t,
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ C / 5 * τ ^ 5 := by
   obtain ⟨C, hC_nn, hBound⟩ := exists_norm_w4Residual_t4_bound_of_zero_taylor A B p ht hZero
-  refine ⟨C, hC_nn, ?_⟩
-  exact norm_suzuki4_order5_from_residual_bound A B hA hB p ht hC_nn hBound
+  refine ⟨C, hC_nn, fun τ hτ => ?_⟩
+  refine norm_suzuki4_order5_from_residual_bound A B hA hB p hτ.1 hC_nn ?_
+  exact fun s hs => hBound s ⟨hs.1, le_trans hs.2 hτ.2⟩
 
 end AntiHermitian
 
@@ -251,12 +259,13 @@ theorem norm_suzuki4_order5_of_w4Func_vanishings (A B : 𝔸)
     (hA : star A = -A) (hB : star B = -B) (p : ℝ)
     {t : ℝ} (ht : 0 ≤ t)
     (hZero : ∀ k, 1 ≤ k → k ≤ 4 → iteratedDerivWithin k (w4Func A B p) (Icc 0 t) 0 = 0) :
-    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 := by
+    ∃ C ≥ 0, ∀ τ ∈ Icc (0 : ℝ) t,
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 := by
   obtain ⟨C, hC_nn, hBound⟩ := exists_norm_w4Func_sub_one_t5_bound_of_zero_taylor A B p ht hZero
-  refine ⟨C, hC_nn, ?_⟩
-  -- Module 2: ‖S₄ - exp(tH)‖ = ‖w4Func(t) - 1‖
-  rw [norm_suzuki4_diff_eq_norm_relative A B hA hB p t]
-  exact hBound t (right_mem_Icc.mpr ht)
+  refine ⟨C, hC_nn, fun τ hτ => ?_⟩
+  -- Module 2: ‖S₄(τ) - exp(τH)‖ = ‖w4Func(τ) - 1‖
+  rw [norm_suzuki4_diff_eq_norm_relative A B hA hB p τ]
+  exact hBound τ hτ
 
 end AntiHermitian2
 
@@ -748,7 +757,8 @@ theorem norm_suzuki4_order5_of_s4Func_iteratedDerivs
     (h2 : iteratedDeriv 2 (s4Func A B p) 0 = (A + B) ^ 2)
     (h3 : iteratedDeriv 3 (s4Func A B p) 0 = (A + B) ^ 3)
     (h4 : iteratedDeriv 4 (s4Func A B p) 0 = (A + B) ^ 4) :
-    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 := by
+    ∃ C ≥ 0, ∀ τ ∈ Icc (0 : ℝ) t,
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 := by
   -- Convert iteratedDeriv vanishings to iteratedDerivWithin vanishings
   -- via the ContDiff bridge `iteratedDerivWithin_eq_iteratedDeriv`.
   apply norm_suzuki4_order5_of_w4Func_vanishings A B hA hB p ht.le

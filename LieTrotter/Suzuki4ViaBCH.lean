@@ -374,7 +374,8 @@ variable [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸
 theorem norm_suzuki4_order5_via_bch_axiom (A B : 𝔸)
     (hA : star A = -A) (hB : star B = -B) (p : ℝ) (hcubic : IsSuzukiCubic p)
     {t : ℝ} (ht : 0 < t) :
-    ∃ C ≥ 0, ‖suzuki4Exp A B p t - exp (t • (A + B))‖ ≤ C * t ^ 5 :=
+    ∃ C ≥ 0, ∀ τ ∈ Set.Icc (0 : ℝ) t,
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 :=
   norm_suzuki4_order5_with_h2_h3_and_w4Func_order4_vanishing
     A B hA hB p hcubic ht (bch_iteratedDeriv_w4Func_order4_eq_zero A B p hcubic)
 
