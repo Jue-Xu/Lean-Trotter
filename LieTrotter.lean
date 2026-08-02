@@ -20,6 +20,13 @@ We prove the Lie–Trotter product formula for elements in a complete normed alg
 - `LieTrotter.MultiStrang` — multi-operator symmetric Strang with O(1/n²)
 - `LieTrotter.Suzuki4` — fourth-order Suzuki integrator (five S₂ steps)
 - `LieTrotter.CommutatorScaling` — commutator-scaling error via Duhamel formula
+- `LieTrotter.Suzuki4UnitaryTotalError` — S₄ total error, anti-Hermitian (no growth factor)
+- `LieTrotter.StrangTotalErrorCommScaling` — commutator-scaled Strang total error
+- `LieTrotter.Suzuki4Commute` — commuting degeneration: S₄ exact, coefficient zero
+- `LieTrotter.TrotterStepCount` — ε-form step counts (n = O((C/ε)^{1/k}))
+- `LieTrotter.MatrixCorollaries` — Matrix (Fin d) (Fin d) ℂ specializations, state error
+- `LieTrotter.Suzuki4GapClosers` — general-t suzuki4Step + imaginary-time corollaries
+- `LieTrotter.PrefactorStrict` — strict γᵢ < αᵢ with 8× termwise gap
 
 ## References
 
@@ -56,3 +63,11 @@ import LieTrotter.TaylorMatch
 import LieTrotter.Suzuki4BchBound
 import LieTrotter.Suzuki4ViaBCH
 import LieTrotter.Suzuki4Convergence
+import LieTrotter.Suzuki4TightConvergence
+import LieTrotter.Suzuki4UnitaryTotalError
+import LieTrotter.StrangTotalErrorCommScaling
+import LieTrotter.Suzuki4Commute
+import LieTrotter.TrotterStepCount
+import LieTrotter.MatrixCorollaries
+import LieTrotter.Suzuki4GapClosers
+import LieTrotter.PrefactorStrict
