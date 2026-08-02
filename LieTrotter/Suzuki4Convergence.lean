@@ -302,6 +302,21 @@ above apply unconditionally to the standard S₄ integrator.
 lemma isSuzukiCubic_suzukiP : IsSuzukiCubic (1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))) :=
   BCH.IsSuzukiCubic_suzukiP
 
+/-- The standard Suzuki parameter lies in `[0, 1/2]`, the range in which the
+generic (O(1/n²)) S₄ results of `Suzuki4.lean` are stated.
+
+`p ≈ 0.41449`.  Note this is **greater** than `1/4`: the earlier hypothesis
+`p < 1/4` on `suzuki4_step_error` / `suzuki4_error_rate_sq` /
+`suzuki4_convergence` excluded the very parameter those theorems advertise.
+The proofs only ever needed `‖p‖ ≤ 1` and `‖1 − 4p‖ ≤ 1`, both of which hold
+throughout `[0, 1/2]`. -/
+lemma suzukiP_mem_unit_range :
+    (0 : ℝ) ≤ 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3)) ∧
+      1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3)) ≤ 1 / 2 := by
+  obtain ⟨hlo, hhi⟩ := BCH.suzukiP_mem_rational_interval
+  rw [show BCH.suzukiP = 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3)) from rfl] at hlo hhi
+  constructor <;> linarith
+
 /-- **Fourth-order convergence of the standard Suzuki S₄ integrator.**
 No hypotheses beyond the ambient algebra: the cubic condition is discharged by
 `BCH.IsSuzukiCubic_suzukiP`. -/

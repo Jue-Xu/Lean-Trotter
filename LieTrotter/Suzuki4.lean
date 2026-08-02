@@ -195,7 +195,7 @@ commute (all scalar multiples of `A + B`), so their product = `exp((A+B)/n)`.
 
 set_option maxHeartbeats 250000 in
 include 𝕂 in
-theorem suzuki4_step_error (A B : 𝔸) (p : ℝ) (hp : 0 < p) (hp4 : p < 1 / 4)
+theorem suzuki4_step_error (A B : 𝔸) (p : ℝ) (hp : 0 ≤ p) (hp2 : p ≤ 1 / 2)
     (n : ℕ) (hn : 0 < n) :
     ‖suzuki4Step 𝕂 A B (↑p) n - exp ((n : 𝕂)⁻¹ • (A + B))‖ ≤
       19 * (‖A‖ + ‖B‖) ^ 3 /
@@ -206,15 +206,15 @@ theorem suzuki4_step_error (A B : 𝔸) (p : ℝ) (hp : 0 < p) (hp4 : p < 1 / 4)
   set ε₀ := K₀ / (n : ℝ) ^ 3 * Real.exp (s / n)
   set M := Real.exp (s / n)
   have hn_pos : (0 : ℝ) < (n : ℝ) := Nat.cast_pos.mpr hn
-  have hp14 : 0 < 1 - 4 * p := by linarith
   -- Norm of coefficients
   have norm_p : ‖(↑p : 𝕂)‖ ≤ 1 := by
     rw [show (↑p : 𝕂) = RCLike.ofReal p from rfl, RCLike.norm_ofReal,
-      abs_of_nonneg hp.le]; linarith
+      abs_of_nonneg hp]; linarith
   have norm_q : ‖(1 : 𝕂) - 4 * (↑p : 𝕂)‖ ≤ 1 := by
     rw [show (1 : 𝕂) - 4 * (↑p : 𝕂) = (↑(1 - 4 * p) : 𝕂) from by push_cast; ring,
       show (↑(1 - 4 * p) : 𝕂) = RCLike.ofReal (1 - 4 * p) from rfl,
-      RCLike.norm_ofReal, abs_of_nonneg hp14.le]; linarith
+      RCLike.norm_ofReal, abs_le]
+    constructor <;> linarith
   set cp : 𝕂 := ↑p
   set cq : 𝕂 := 1 - 4 * cp
   -- The five steps and their targets
@@ -337,17 +337,17 @@ theorem suzuki4_step_error (A B : 𝔸) (p : ℝ) (hp : 0 < p) (hp4 : p < 1 / 4)
 -/
 
 include 𝕂 in
-private lemma norm_suzuki4Step_le (A B : 𝔸) (p : ℝ) (hp : 0 < p) (hp4 : p < 1 / 4)
+private lemma norm_suzuki4Step_le (A B : 𝔸) (p : ℝ) (hp : 0 ≤ p) (hp2 : p ≤ 1 / 2)
     (n : ℕ) (hn : 0 < n) :
     ‖suzuki4Step 𝕂 A B (↑p) n‖ ≤ Real.exp (5 * (‖A‖ + ‖B‖) / n) := by
-  have hp14 : 0 < 1 - 4 * p := by linarith
   have norm_p : ‖(↑p : 𝕂)‖ ≤ 1 := by
     rw [show (↑p : 𝕂) = RCLike.ofReal p from rfl, RCLike.norm_ofReal,
-      abs_of_nonneg hp.le]; linarith
+      abs_of_nonneg hp]; linarith
   have norm_q : ‖(1 : 𝕂) - 4 * (↑p : 𝕂)‖ ≤ 1 := by
     rw [show (1 : 𝕂) - 4 * (↑p : 𝕂) = (↑(1 - 4 * p) : 𝕂) from by push_cast; ring,
       show (↑(1 - 4 * p) : 𝕂) = RCLike.ofReal (1 - 4 * p) from rfl,
-      RCLike.norm_ofReal, abs_of_nonneg hp14.le]; linarith
+      RCLike.norm_ofReal, abs_le]
+    constructor <;> linarith
   set cp : 𝕂 := ↑p; set cq : 𝕂 := 1 - 4 * cp
   set M := Real.exp ((‖A‖ + ‖B‖) / n)
   set S₁ := strangStep 𝕂 A B cp n; set S₃ := strangStep 𝕂 A B cq n
@@ -373,7 +373,7 @@ private lemma norm_suzuki4Step_le (A B : 𝔸) (p : ℝ) (hp : 0 < p) (hp4 : p <
 -/
 
 include 𝕂 in
-theorem suzuki4_error_rate_sq (A B : 𝔸) (p : ℝ) (hp : 0 < p) (hp4 : p < 1 / 4) :
+theorem suzuki4_error_rate_sq (A B : 𝔸) (p : ℝ) (hp : 0 ≤ p) (hp2 : p ≤ 1 / 2) :
     ∃ C > 0, ∀ n : ℕ, 0 < n →
       ‖(suzuki4Step 𝕂 A B (↑p) n) ^ n - exp (A + B)‖ ≤ C / n ^ 2 := by
   set s := ‖A‖ + ‖B‖
@@ -390,10 +390,10 @@ theorem suzuki4_error_rate_sq (A B : 𝔸) (p : ℝ) (hp : 0 < p) (hp4 : p < 1 /
   have hs_nonneg : 0 ≤ s := by positivity
   -- Step error
   have h_step : ‖S - Q‖ ≤ K / (n : ℝ) ^ 3 * Real.exp (5 * s / n) :=
-    suzuki4_step_error (𝕂 := 𝕂) A B p hp hp4 n hn
+    suzuki4_step_error (𝕂 := 𝕂) A B p hp hp2 n hn
   -- Max norm bound
   have h_S_norm : ‖S‖ ≤ Real.exp (5 * s / n) :=
-    norm_suzuki4Step_le (𝕂 := 𝕂) A B p hp hp4 n hn
+    norm_suzuki4Step_le (𝕂 := 𝕂) A B p hp hp2 n hn
   have h_Q_norm : ‖Q‖ ≤ Real.exp (s / n) := by
     calc ‖Q‖ ≤ Real.exp ‖(n : 𝕂)⁻¹ • (A + B)‖ := norm_exp_le (𝕂 := 𝕂) _
       _ ≤ Real.exp (s / n) := by
@@ -436,13 +436,13 @@ include 𝕂 in
 
     The choice `p = 1/(4 - 4^{1/3})` yields O(1/n⁴) via Suzuki's
     parity cancellation (deferred). -/
-theorem suzuki4_convergence (A B : 𝔸) (p : ℝ) (hp : 0 < p) (hp4 : p < 1 / 4) :
+theorem suzuki4_convergence (A B : 𝔸) (p : ℝ) (hp : 0 ≤ p) (hp2 : p ≤ 1 / 2) :
     Filter.Tendsto
       (fun n : ℕ => (suzuki4Step 𝕂 A B (↑p) n) ^ n)
       atTop (nhds (exp (A + B))) := by
   rw [Metric.tendsto_atTop]
   intro ε hε
-  obtain ⟨C, hC_pos, hC_bound⟩ := suzuki4_error_rate_sq (𝕂 := 𝕂) A B p hp hp4
+  obtain ⟨C, hC_pos, hC_bound⟩ := suzuki4_error_rate_sq (𝕂 := 𝕂) A B p hp hp2
   obtain ⟨N, hN⟩ := exists_nat_gt (C / ε)
   refine ⟨N + 1, fun n hn => ?_⟩
   rw [dist_eq_norm]
