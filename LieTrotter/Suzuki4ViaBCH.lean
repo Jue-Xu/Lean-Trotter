@@ -386,7 +386,7 @@ Childs et al. (2021) Proposition pf4_bound_2term states:
 ```
   ‖S₄(t) - exp(tH)‖ ≤ t⁵ · Σ αᵢ · ‖Cᵢ‖   (8 four-fold commutators)
 ```
-with specific coefficients `α₁...α₈ ∈ [0.0047, 0.0284]`.
+with specific coefficients `α₁...α₈ ∈ [0.0046, 0.0284]`.
 
 Childs's paper itself notes these coefficients come from a *heuristic*
 balanced factoring of the 12-factor Duhamel and "we do not have a
@@ -415,7 +415,7 @@ with `βᵢ` rational functions of `p`. For Suzuki `p = 1/(4-4^(1/3))`, each
 
 The value `M_bch = 1` (our choice below) is a crude but explicit bound:
 each `βᵢ(p)` for Suzuki `p` satisfies `|βᵢ| ≤ 1` by direct evaluation of
-the rational expressions. Tighter constants (e.g., Childs's 0.0047-0.0284)
+the rational expressions. Tighter constants (e.g., Childs's 0.0046–0.0284)
 require extra algebraic simplification beyond raw BCH.
 -/
 
@@ -426,6 +426,7 @@ def bchFourFoldSum (A B : 𝔸) : ℝ :=
   ‖childsComm₁ A B‖ + ‖childsComm₂ A B‖ + ‖childsComm₃ A B‖ + ‖childsComm₄ A B‖ +
   ‖childsComm₅ A B‖ + ‖childsComm₆ A B‖ + ‖childsComm₇ A B‖ + ‖childsComm₈ A B‖
 
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 lemma bchFourFoldSum_nonneg (A B : 𝔸) : 0 ≤ bchFourFoldSum A B := by
   unfold bchFourFoldSum; positivity
 
@@ -489,7 +490,7 @@ omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [S
   small-coefficient regime) and exp-Lipschitz `BCH.norm_exp_add_sub_exp_le`.
 
   Tightening the leading coefficient from `bchFourFoldSum` to
-  Childs's 0.0047–0.0284 coefficients is Level 3
+  Childs's 0.0046–0.0284 coefficients is Level 3
   (`norm_suzuki4_level3_bch`, via `bch_w4Deriv_level3_tight`). -/
 theorem norm_suzuki4_level2_bch (A B : 𝔸)
     (p : ℝ) (hcubic : IsSuzukiCubic p) :
@@ -830,6 +831,192 @@ theorem bch_w4Deriv_level3_tight (A B : 𝔸) :
   exact this
 
 omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
+set_option maxHeartbeats 1000000 in
+/-- **Exp-Lipschitz lift that preserves the leading coefficient.**
+
+Every BCH bridge gives a τ⁵-identification of `log S₄(τ)` with an *explicit*
+leading coefficient `S`:
+```
+  ‖suzuki5_bch τ − τ•(A+B)‖ ≤ τ⁵·S + K·τ⁶ .
+```
+Lifting this through `exp` is where the older `norm_suzuki4_level{2,3}_bch`
+proofs threw the prefactor away, by (i) merging `τ⁵·S + K·τ⁶` into `(S+K)·τ⁵`
+and (ii) multiplying through by `exp(‖A+B‖ + S + K)`.  Neither is necessary:
+`exp u ≤ 1 + u·exp u` (from `1 − u ≤ exp(−u)`) makes the Lipschitz factor
+`1 + O(τ)`, so its excess is absorbed into the τ⁶ remainder and `S` survives
+*verbatim* as the leading coefficient.
+
+This single lemma therefore upgrades every level of the hierarchy at once. -/
+private lemma norm_suzuki4_sub_exp_le_of_log_bound
+    (A B : 𝔸) (p : ℝ) {S K δ_log : ℝ} (hS : 0 ≤ S) (hK : 0 ≤ K) (hδ_log : 0 < δ_log)
+    (hlog : ∀ τ : ℝ, 0 ≤ τ → τ < δ_log →
+      ‖BCH.suzuki5_bch ℝ A B p τ - τ • (A + B)‖ ≤ τ ^ 5 * S + K * τ ^ 6) :
+    ∃ δ > 0, ∃ K' ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ τ ^ 5 * S + K' * τ ^ 6 := by
+  have h_regime := exists_regime_nhds A B p
+  rw [Metric.eventually_nhds_iff] at h_regime
+  obtain ⟨δ_reg, hδ_reg_pos, h_regime⟩ := h_regime
+  set δ := min δ_log (min δ_reg 1) with hδ_def
+  have hδ_pos : 0 < δ := lt_min hδ_log (lt_min hδ_reg_pos one_pos)
+  have hδ_le_log : δ ≤ δ_log := min_le_left _ _
+  have hδ_le_reg : δ ≤ δ_reg := le_trans (min_le_right _ _) (min_le_left _ _)
+  have hδ_le_one : δ ≤ 1 := le_trans (min_le_right _ _) (min_le_right _ _)
+  have hAB_nn : (0:ℝ) ≤ ‖A + B‖ := norm_nonneg _
+  set M : ℝ := ‖A + B‖ + S + K with hM_def
+  have hM_nn : 0 ≤ M := by rw [hM_def]; linarith
+  have hE_pos : (0:ℝ) < Real.exp M := Real.exp_pos _
+  have hSK_nn : (0:ℝ) ≤ S + K := by linarith
+  have hKME_nn : (0:ℝ) ≤ K * M * Real.exp M :=
+    mul_nonneg (mul_nonneg hK hM_nn) hE_pos.le
+  refine ⟨δ, hδ_pos, K + (S + K) * M * Real.exp M, by
+    have : (0:ℝ) ≤ (S + K) * M * Real.exp M :=
+      mul_nonneg (mul_nonneg hSK_nn hM_nn) hE_pos.le
+    linarith, ?_⟩
+  intro τ hτ_nn hτ_lt
+  have hτ_le_one : τ ≤ 1 := le_trans hτ_lt.le hδ_le_one
+  have hτ_lt_log : τ < δ_log := lt_of_lt_of_le hτ_lt hδ_le_log
+  have hτ_lt_reg : τ < δ_reg := lt_of_lt_of_le hτ_lt hδ_le_reg
+  have hτ5_nn : (0:ℝ) ≤ τ ^ 5 := by positivity
+  have hτ6_nn : (0:ℝ) ≤ τ ^ 6 := by positivity
+  have hτ6_le_τ5 : τ ^ 6 ≤ τ ^ 5 := by
+    have h6 : τ ^ 6 = τ * τ ^ 5 := by ring
+    rw [h6]
+    calc τ * τ ^ 5 ≤ 1 * τ ^ 5 := mul_le_mul_of_nonneg_right hτ_le_one hτ5_nn
+      _ = τ ^ 5 := by ring
+  have hτ7_le_τ6 : τ ^ 7 ≤ τ ^ 6 := by
+    have h7 : τ ^ 7 = τ * τ ^ 6 := by ring
+    rw [h7]
+    calc τ * τ ^ 6 ≤ 1 * τ ^ 6 := mul_le_mul_of_nonneg_right hτ_le_one hτ6_nn
+      _ = τ ^ 6 := by ring
+  have hτ5_le_τ : τ ^ 5 ≤ τ := by
+    have h5 : τ ^ 5 = τ * τ ^ 4 := by ring
+    have h4 : τ ^ 4 ≤ 1 := pow_le_one₀ hτ_nn hτ_le_one
+    rw [h5]
+    calc τ * τ ^ 4 ≤ τ * 1 := mul_le_mul_of_nonneg_left h4 hτ_nn
+      _ = τ := by ring
+  have hτ_dist : dist τ 0 < δ_reg := by
+    rw [Real.dist_eq]; simpa [abs_of_nonneg hτ_nn] using hτ_lt_reg
+  obtain ⟨h_R, _, _, _, _, _⟩ := h_regime hτ_dist
+  have h_log := hlog τ hτ_nn hτ_lt_log
+  have h_exp_bch : exp (BCH.suzuki5_bch ℝ A B p τ) = BCH.suzuki5Product (𝕂 := ℝ) A B p τ :=
+    BCH.exp_suzuki5_bch (𝕂 := ℝ) A B p τ h_R
+  set d : 𝔸 := BCH.suzuki5_bch ℝ A B p τ - τ • (A + B) with hd_def
+  have h_add : τ • (A + B) + d = BCH.suzuki5_bch ℝ A B p τ := by rw [hd_def]; abel
+  have h_lip := BCH.norm_exp_add_sub_exp_le (𝕂 := ℝ) (τ • (A + B)) d
+  rw [h_add] at h_lip
+  have hd_norm : ‖d‖ ≤ τ ^ 5 * S + K * τ ^ 6 := h_log
+  have hKτ6 : K * τ ^ 6 ≤ K * τ ^ 5 := mul_le_mul_of_nonneg_left hτ6_le_τ5 hK
+  have hd_le_lin : ‖d‖ ≤ (S + K) * τ ^ 5 := by linarith [hd_norm, hKτ6]
+  have hτV : ‖τ • (A + B)‖ ≤ τ * ‖A + B‖ := by
+    have h1 : ‖τ • (A + B)‖ ≤ ‖(τ : ℝ)‖ * ‖A + B‖ := norm_smul_le _ _
+    rwa [Real.norm_eq_abs, abs_of_nonneg hτ_nn] at h1
+  have hu_le : ‖τ • (A + B)‖ + ‖d‖ ≤ τ * M := by
+    have h5 : (S + K) * τ ^ 5 ≤ (S + K) * τ :=
+      mul_le_mul_of_nonneg_left hτ5_le_τ hSK_nn
+    have hexp : τ * M = τ * ‖A + B‖ + (S + K) * τ := by rw [hM_def]; ring
+    rw [hexp]; linarith [hτV, hd_le_lin, h5]
+  -- exp u ≤ 1 + u·exp u, hence the Lipschitz factor is 1 + O(τ).
+  have h_exp_key : Real.exp (‖τ • (A + B)‖ + ‖d‖) ≤
+      1 + (‖τ • (A + B)‖ + ‖d‖) * Real.exp (‖τ • (A + B)‖ + ‖d‖) := by
+    have h := Real.add_one_le_exp (-(‖τ • (A + B)‖ + ‖d‖))
+    rw [Real.exp_neg] at h
+    have hpos : (0:ℝ) < Real.exp (‖τ • (A + B)‖ + ‖d‖) := Real.exp_pos _
+    have h2 := mul_le_mul_of_nonneg_right h hpos.le
+    rw [inv_mul_cancel₀ hpos.ne'] at h2
+    nlinarith [h2]
+  have hu_le_M : ‖τ • (A + B)‖ + ‖d‖ ≤ M := by
+    refine le_trans hu_le ?_
+    calc τ * M ≤ 1 * M := mul_le_mul_of_nonneg_right hτ_le_one hM_nn
+      _ = M := by ring
+  have h_exp_le : Real.exp (‖τ • (A + B)‖ + ‖d‖) ≤ 1 + τ * M * Real.exp M := by
+    have hmul : (‖τ • (A + B)‖ + ‖d‖) * Real.exp (‖τ • (A + B)‖ + ‖d‖) ≤ (τ * M) * Real.exp M :=
+      mul_le_mul hu_le (Real.exp_le_exp.mpr hu_le_M) (Real.exp_pos _).le
+        (mul_nonneg hτ_nn hM_nn)
+    nlinarith [h_exp_key, hmul]
+  have h_lip' : ‖BCH.suzuki5Product (𝕂 := ℝ) A B p τ - exp (τ • (A + B))‖ ≤
+      ‖d‖ * Real.exp (‖τ • (A + B)‖ + ‖d‖) := by
+    rw [← h_exp_bch]; exact h_lip
+  have hR_nn : (0:ℝ) ≤ τ ^ 5 * S + K * τ ^ 6 := by
+    have h1 : (0:ℝ) ≤ τ ^ 5 * S := mul_nonneg hτ5_nn hS
+    have h2 : (0:ℝ) ≤ K * τ ^ 6 := mul_nonneg hK hτ6_nn
+    linarith
+  have hmul : ‖d‖ * Real.exp (‖τ • (A + B)‖ + ‖d‖) ≤
+      (τ ^ 5 * S + K * τ ^ 6) * (1 + τ * M * Real.exp M) :=
+    mul_le_mul hd_norm h_exp_le (Real.exp_pos _).le hR_nn
+  have hstep : (K * M * Real.exp M) * τ ^ 7 ≤ (K * M * Real.exp M) * τ ^ 6 :=
+    mul_le_mul_of_nonneg_left hτ7_le_τ6 hKME_nn
+  have hexpand : (τ ^ 5 * S + K * τ ^ 6) * (1 + τ * M * Real.exp M)
+      = τ ^ 5 * S + K * τ ^ 6 + (S * M * Real.exp M) * τ ^ 6
+        + (K * M * Real.exp M) * τ ^ 7 := by ring
+  have hrhs : τ ^ 5 * S + (K + (S + K) * M * Real.exp M) * τ ^ 6
+      = τ ^ 5 * S + K * τ ^ 6 + (S * M * Real.exp M) * τ ^ 6
+        + (K * M * Real.exp M) * τ ^ 6 := by ring
+  have h_final : ‖BCH.suzuki5Product (𝕂 := ℝ) A B p τ - exp (τ • (A + B))‖ ≤
+      τ ^ 5 * S + (K + (S + K) * M * Real.exp M) * τ ^ 6 := by
+    refine le_trans h_lip' (le_trans hmul ?_)
+    rw [hexpand, hrhs]
+    linarith [hstep]
+  have h_s4_eq : BCH.suzuki5Product (𝕂 := ℝ) A B p τ = suzuki4Exp A B p τ := by rfl
+  rw [h_s4_eq] at h_final
+  exact h_final
+
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
+/-- **Level 2, sharp form**: the unit-coefficient four-fold commutator sum
+  `Σᵢ ‖Cᵢ‖` is the leading coefficient *of the statement*.  Holds for every `p`
+  satisfying the Suzuki cubic condition. -/
+theorem norm_suzuki4_level2_explicit (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
+    ∃ δ > 0, ∃ K' ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤
+        τ ^ 5 * bchFourFoldSum A B + K' * τ ^ 6 := by
+  obtain ⟨δ_log, hδ_log_pos, K, hK_nn, hlog⟩ := bch_w4Deriv_quintic_level2 A B p hcubic
+  have hFS : BCH.bchFourFoldSum A B = bchFourFoldSum A B := by
+    unfold BCH.bchFourFoldSum bchFourFoldSum
+    unfold childsComm₁ childsComm₂ childsComm₃ childsComm₄
+      childsComm₅ childsComm₆ childsComm₇ childsComm₈ commBr
+    rfl
+  rw [hFS] at hlog
+  exact norm_suzuki4_sub_exp_le_of_log_bound A B p (bchFourFoldSum_nonneg A B) hK_nn
+    hδ_log_pos hlog
+
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
+/-- **Level 3, sharp form**: the certified γ-prefactor sum is the *leading
+  coefficient of the statement*, not merely a witness chosen inside the proof.
+  At Suzuki `p = 1/(4 − 4^(1/3))` there are `δ > 0` and `K' ≥ 0` with
+```
+  ‖S₄(τ) - exp(τ•H)‖ ≤ τ⁵ · Σᵢ γᵢ‖Cᵢ‖  +  K' · τ⁶       (0 ≤ τ < δ)
+```
+  This is the statement the manuscript advertises.  Contrast
+  `norm_suzuki4_level3_bch` below, whose `∃ C, · ≤ C·τ⁵` shape records only the
+  *order* τ⁵ and forgets every prefactor — it is implied by this one (and, at
+  the level of propositions, also by `norm_suzuki4_level2_bch`). -/
+theorem norm_suzuki4_level3_explicit (A B : 𝔸) :
+    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
+    ∃ δ > 0, ∃ K' ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤
+        τ ^ 5 * bchTightPrefactors.boundSum A B + K' * τ ^ 6 := by
+  obtain ⟨δ_log, hδ_log_pos, K, hK_nn, hlog⟩ := bch_w4Deriv_level3_tight A B
+  exact norm_suzuki4_sub_exp_le_of_log_bound A B _
+    (bchTightPrefactors.boundSum_nonneg A B) hK_nn hδ_log_pos hlog
+
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
+/-- **Childs 2021 bound, sharp form.** The leading coefficient is Childs's own
+  `Σᵢ αᵢ‖Cᵢ‖`, obtained from `norm_suzuki4_level3_explicit` by the termwise
+  inequality `γᵢ ≤ αᵢ` (`bchTightPrefactors_le_childs`).  This is a genuine
+  reproduction of Childs et al. Prop. `pf4_bound_2term`: unlike
+  `norm_suzuki4_childs_form_via_level3`, the Childs sum occurs *in the
+  statement*. -/
+theorem norm_suzuki4_childs_explicit (A B : 𝔸) :
+    let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
+    ∃ δ > 0, ∃ K' ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤
+        τ ^ 5 * childsBoundSum A B + K' * τ ^ 6 := by
+  obtain ⟨δ, hδ, K', hK', h⟩ := norm_suzuki4_level3_explicit A B
+  refine ⟨δ, hδ, K', hK', fun τ hτ0 hτδ => le_trans (h τ hτ0 hτδ) ?_⟩
+  have := mul_le_mul_of_nonneg_left (bchTightPrefactors_le_childs A B) (pow_nonneg hτ0 5)
+  linarith
+
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 /-- **Level 3 BCH-derived Trotter bound with explicit tighter prefactors**:
   at Suzuki `p = 1/(4 − 4^(1/3))`, there exist `δ > 0` and `C ≥ 0` such
   that for all `τ ∈ [0, δ)`,
@@ -853,102 +1040,27 @@ theorem norm_suzuki4_level3_bch (A B : 𝔸) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
     ∃ δ > 0, ∃ C ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
       ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 := by
-  set p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3)) with hp_def
-  -- Cubic hypothesis is trivially satisfied: already encoded in p's definition.
-  have hcubic : BCH.IsSuzukiCubic p := by
-    rw [hp_def]; exact BCH.IsSuzukiCubic_suzukiP
-  -- Extract (δ_log, K) from the Lean-BCH τ⁵ identification.
-  obtain ⟨δ_log, hδ_log_pos, K, hK_nn, h_log_bound⟩ :=
-    bch_w4Deriv_level3_tight A B
-  -- We also need the small-coefficient regime for M2b round-trip.
-  have h_regime := exists_regime_nhds A B p
-  rw [Metric.eventually_nhds_iff] at h_regime
-  obtain ⟨δ_reg, hδ_reg_pos, h_regime⟩ := h_regime
-  -- Shrink δ to ensure τ ≤ 1 so the exp factor is bounded uniformly.
-  set δ := min δ_log (min δ_reg 1) with hδ_def
-  have hδ_pos : 0 < δ := lt_min hδ_log_pos (lt_min hδ_reg_pos (by norm_num : (0:ℝ) < 1))
-  have hδ_le_log : δ ≤ δ_log := min_le_left _ _
-  have hδ_le_reg : δ ≤ δ_reg := le_trans (min_le_right _ _) (min_le_left _ _)
-  have hδ_le_one : δ ≤ 1 := le_trans (min_le_right _ _) (min_le_right _ _)
-  -- Define explicit C via bchTightPrefactors.boundSum.
-  set Sbs := bchTightPrefactors.boundSum A B with hSbs_def
-  have hSbs_nn : 0 ≤ Sbs := bchTightPrefactors.boundSum_nonneg A B
-  set C := (Sbs + K) * Real.exp (‖A + B‖ + Sbs + K) with hC_def
-  have hC_nn : 0 ≤ C := by
-    refine mul_nonneg (add_nonneg hSbs_nn hK_nn) (Real.exp_pos _).le
-  refine ⟨δ, hδ_pos, C, hC_nn, ?_⟩
+  -- Immediate from the sharp form: on `τ ≤ 1` the τ⁶ remainder is absorbed into
+  -- the τ⁵ term.  (Retained for backward compatibility; the sharp form is the
+  -- one that carries the mathematical content.)
+  obtain ⟨δ, hδ_pos, K', hK'_nn, h⟩ := norm_suzuki4_level3_explicit A B
+  have hSbs_nn : (0:ℝ) ≤ bchTightPrefactors.boundSum A B :=
+    bchTightPrefactors.boundSum_nonneg A B
+  refine ⟨min δ 1, lt_min hδ_pos one_pos,
+    bchTightPrefactors.boundSum A B + K', by linarith, ?_⟩
   intro τ hτ_nn hτ_lt
-  -- Pointwise regime + log bound at this τ.
-  have hτ_lt_log : τ < δ_log := lt_of_lt_of_le hτ_lt hδ_le_log
-  have hτ_lt_reg : τ < δ_reg := lt_of_lt_of_le hτ_lt hδ_le_reg
-  have hτ_le_one : τ ≤ 1 := le_trans hτ_lt.le hδ_le_one
-  have hτ_dist : dist τ 0 < δ_reg := by
-    rw [Real.dist_eq]; simpa [abs_of_nonneg hτ_nn] using hτ_lt_reg
-  obtain ⟨h_R, _h_pτ, _h_1m4pτ, _h_regsb, _h_Zbch, _h_nested⟩ := h_regime hτ_dist
-  have h_log := h_log_bound τ hτ_nn hτ_lt_log
-  -- M2b round-trip: S₄(τ) = exp(suzuki5_bch τ).
-  have h_exp_bch : exp (BCH.suzuki5_bch ℝ A B p τ) = BCH.suzuki5Product (𝕂 := ℝ) A B p τ :=
-    BCH.exp_suzuki5_bch (𝕂 := ℝ) A B p τ h_R
-  set δ_bch := BCH.suzuki5_bch ℝ A B p τ - τ • (A + B) with hδ_bch_def
-  have h_add : τ • (A + B) + δ_bch = BCH.suzuki5_bch ℝ A B p τ := by
-    rw [hδ_bch_def]; abel
-  -- Apply exp-Lipschitz.
-  have h_lip := BCH.norm_exp_add_sub_exp_le (𝕂 := ℝ) (τ • (A + B)) δ_bch
-  rw [h_add] at h_lip
-  -- Bound ‖δ_bch‖ ≤ τ⁵·Sbs + K·τ⁶.
-  have hδ_bch_norm : ‖δ_bch‖ ≤ τ ^ 5 * Sbs + K * τ ^ 6 := h_log
-  -- For τ ∈ [0, 1]: τ⁵·Sbs + K·τ⁶ ≤ (Sbs + K)·τ⁵ since τ⁶ ≤ τ⁵.
-  have hτ5_nn : 0 ≤ τ ^ 5 := pow_nonneg hτ_nn 5
+  have hτ_lt_δ : τ < δ := lt_of_lt_of_le hτ_lt (min_le_left _ _)
+  have hτ_le_one : τ ≤ 1 := le_of_lt (lt_of_lt_of_le hτ_lt (min_le_right _ _))
+  have hτ5_nn : (0:ℝ) ≤ τ ^ 5 := by positivity
   have hτ6_le_τ5 : τ ^ 6 ≤ τ ^ 5 := by
-    have : τ ^ 6 = τ * τ ^ 5 := by ring
-    rw [this]
-    calc τ * τ ^ 5 ≤ 1 * τ ^ 5 :=
-          mul_le_mul_of_nonneg_right hτ_le_one hτ5_nn
+    have h6 : τ ^ 6 = τ * τ ^ 5 := by ring
+    rw [h6]
+    calc τ * τ ^ 5 ≤ 1 * τ ^ 5 := mul_le_mul_of_nonneg_right hτ_le_one hτ5_nn
       _ = τ ^ 5 := by ring
-  have hδ_bch_poly : τ ^ 5 * Sbs + K * τ ^ 6 ≤ (Sbs + K) * τ ^ 5 := by
-    have h1 : K * τ ^ 6 ≤ K * τ ^ 5 := mul_le_mul_of_nonneg_left hτ6_le_τ5 hK_nn
-    nlinarith [hSbs_nn, hK_nn, hτ5_nn]
-  have hδ_bch_le : ‖δ_bch‖ ≤ (Sbs + K) * τ ^ 5 := le_trans hδ_bch_norm hδ_bch_poly
-  -- Bound ‖τ•(A+B)‖ ≤ ‖A+B‖ (since τ ≤ 1).
-  have hτV_norm : ‖τ • (A + B)‖ ≤ ‖A + B‖ := by
-    have h1 : ‖τ • (A + B)‖ ≤ ‖(τ : ℝ)‖ * ‖A + B‖ := norm_smul_le _ _
-    have h2 : ‖(τ : ℝ)‖ = τ := by rw [Real.norm_eq_abs, abs_of_nonneg hτ_nn]
-    rw [h2] at h1
-    calc ‖τ • (A + B)‖ ≤ τ * ‖A + B‖ := h1
-      _ ≤ 1 * ‖A + B‖ := mul_le_mul_of_nonneg_right hτ_le_one (norm_nonneg _)
-      _ = ‖A + B‖ := by ring
-  -- Bound the exp-Lipschitz factor.
-  have h_exp_le :
-      Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) ≤ Real.exp (‖A + B‖ + Sbs + K) := by
-    apply Real.exp_le_exp.mpr
-    have hδ_bch_le_SbsK : ‖δ_bch‖ ≤ Sbs + K := by
-      calc ‖δ_bch‖ ≤ (Sbs + K) * τ ^ 5 := hδ_bch_le
-        _ ≤ (Sbs + K) * 1 := by
-            apply mul_le_mul_of_nonneg_left
-            · calc τ ^ 5 ≤ 1 ^ 5 := pow_le_pow_left₀ hτ_nn hτ_le_one 5
-                _ = 1 := one_pow 5
-            · exact add_nonneg hSbs_nn hK_nn
-        _ = Sbs + K := by ring
-    linarith
-  -- Chain.
-  have h_s4_eq : BCH.suzuki5Product (𝕂 := ℝ) A B p τ = suzuki4Exp A B p τ := by rfl
-  have h_lip' :
-      ‖BCH.suzuki5Product (𝕂 := ℝ) A B p τ - exp (τ • (A + B))‖ ≤
-        ‖δ_bch‖ * Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) := by
-    rw [← h_exp_bch]; exact h_lip
-  have h_final' :
-      ‖BCH.suzuki5Product (𝕂 := ℝ) A B p τ - exp (τ • (A + B))‖ ≤ C * τ ^ 5 := by
-    have hExp_factor_nn : 0 ≤ Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) := (Real.exp_pos _).le
-    have hExp_target_nn : 0 ≤ Real.exp (‖A + B‖ + Sbs + K) := (Real.exp_pos _).le
-    have hδ_bch_nn : 0 ≤ ‖δ_bch‖ := norm_nonneg _
-    calc ‖BCH.suzuki5Product (𝕂 := ℝ) A B p τ - exp (τ • (A + B))‖
-        ≤ ‖δ_bch‖ * Real.exp (‖τ • (A + B)‖ + ‖δ_bch‖) := h_lip'
-      _ ≤ ((Sbs + K) * τ ^ 5) * Real.exp (‖A + B‖ + Sbs + K) := by
-          apply mul_le_mul hδ_bch_le h_exp_le hExp_factor_nn
-          exact mul_nonneg (add_nonneg hSbs_nn hK_nn) hτ5_nn
-      _ = C * τ ^ 5 := by rw [hC_def]; ring
-  rw [h_s4_eq] at h_final'
-  exact h_final'
+  have hK'τ : K' * τ ^ 6 ≤ K' * τ ^ 5 := mul_le_mul_of_nonneg_left hτ6_le_τ5 hK'_nn
+  calc ‖suzuki4Exp A B (1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))) τ - exp (τ • (A + B))‖
+      ≤ τ ^ 5 * bchTightPrefactors.boundSum A B + K' * τ ^ 6 := h τ hτ_nn hτ_lt_δ
+    _ ≤ (bchTightPrefactors.boundSum A B + K') * τ ^ 5 := by linarith
 
 omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 /-- **Level 3 dominates Level 1 (Childs)** (pointwise): for any `τ ≥ 0`,
@@ -1269,35 +1381,52 @@ theorem norm_suzuki4_level4_uniform (A B : 𝔸)
              τ ^ 8) :=
   bch_uniform_integrated A B hA hB
 
-/-- **Level 4 dominates Childs for small `τ`**: when `C·(boundSum + τ²·R7Bound + τ³)`
-  is `≤ childsBoundSum`, the Level 4 bound is strictly tighter than Childs's.
+omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
+/-- **The BCH bound dominates Childs's near zero.**
 
-  Existential-δ form: there exist `δ > 0` and `C ≥ 0` such that for all
-  `τ ∈ [0, δ)` satisfying `C · (boundSum + τ²·R7Bound + τ³) ≤ childsBoundSum`,
-  we have `‖S₄(τ) − e^{τH}‖ ≤ τ⁵ · childsBoundSum`.
+  Whenever the two leading coefficients differ strictly — i.e. some commutator
+  with a strictly-smaller BCH prefactor is nonzero — the BCH-derived bound beats
+  Childs's *on an explicit neighbourhood of `0`*, with Childs's own coefficient
+  and **no** remainder term:
+```
+  ‖S₄(τ) − e^{τH}‖ ≤ τ⁵ · Σᵢ αᵢ‖Cᵢ‖        (0 ≤ τ < δ)
+```
+  Derived from the sharp `norm_suzuki4_level3_explicit`: the τ⁶ remainder `K'·τ⁶`
+  is `τ⁵·(K'τ)`, and `K'τ` is below the gap `Σ(αᵢ−γᵢ)‖Cᵢ‖` once `τ < gap/(K'+1)`.
 
-  Practical use: at runtime, take `τ` small enough that the side condition
-  holds, e.g. `τ² · R7Bound ≤ (childsBoundSum/C − boundSum) − τ³`. -/
-theorem norm_suzuki4_level4_le_childs_when_small (A B : 𝔸)
-    (hA : star A = -A) (hB : star B = -B) :
+  **This replaces `norm_suzuki4_level4_le_childs_when_small`**, which was vacuous:
+  its side condition constrained an *existentially bound* `C`, so a prover could
+  return a `C` large enough to falsify the hypothesis and discharge the
+  implication empty.  (That theorem was provable with no BCH content at all.)
+  The present statement has no such escape hatch — and, routing through Level 3
+  rather than Level 4, it needs neither anti-Hermiticity nor a C*-algebra. -/
+theorem norm_suzuki4_le_childs_near_zero (A B : 𝔸)
+    (hgap : bchTightPrefactors.boundSum A B < childsBoundSum A B) :
     let p : ℝ := 1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))
-    ∃ δ > 0, ∃ C ≥ 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
-      C * (bchTightPrefactors.boundSum A B + τ ^ 2 * bchR7Bound A B + τ ^ 3) ≤
-        childsBoundSum A B →
+    ∃ δ > 0, ∀ τ : ℝ, 0 ≤ τ → τ < δ →
       ‖suzuki4Exp A B p τ - exp (τ • (A + B))‖ ≤ τ ^ 5 * childsBoundSum A B := by
-  obtain ⟨δ, hδ_pos, C, hC_nn, h_uniform⟩ := bch_uniform_integrated A B hA hB
-  refine ⟨δ, hδ_pos, C, hC_nn, ?_⟩
-  intro τ hτ_nn hτ_lt h_small
-  have h_bound := h_uniform τ hτ_nn hτ_lt
-  have hpow : 0 ≤ τ ^ 5 := pow_nonneg hτ_nn 5
-  calc ‖suzuki4Exp A B _ τ - exp (τ • (A + B))‖
-      ≤ C * (τ ^ 5 * bchTightPrefactors.boundSum A B +
-             τ ^ 7 * bchR7Bound A B +
-             τ ^ 8) := h_bound
-    _ = τ ^ 5 *
-        (C * (bchTightPrefactors.boundSum A B + τ ^ 2 * bchR7Bound A B + τ ^ 3)) := by
-        ring
-    _ ≤ τ ^ 5 * childsBoundSum A B := mul_le_mul_of_nonneg_left h_small hpow
+  obtain ⟨δ₀, hδ₀_pos, K', hK'_nn, hstep⟩ := norm_suzuki4_level3_explicit A B
+  set Sbs := bchTightPrefactors.boundSum A B with hSbs_def
+  set cbs := childsBoundSum A B with hcbs_def
+  set gap : ℝ := cbs - Sbs with hgap_def
+  have hgap_pos : 0 < gap := by rw [hgap_def]; linarith
+  have hK1_pos : (0 : ℝ) < K' + 1 := by linarith
+  refine ⟨min δ₀ (gap / (K' + 1)), lt_min hδ₀_pos (by positivity), ?_⟩
+  intro τ hτ_nn hτ_lt
+  have hτ_lt_δ₀ : τ < δ₀ := lt_of_lt_of_le hτ_lt (min_le_left _ _)
+  have hτ_lt_gap : τ < gap / (K' + 1) := lt_of_lt_of_le hτ_lt (min_le_right _ _)
+  have hτ5_nn : (0 : ℝ) ≤ τ ^ 5 := by positivity
+  -- The τ⁶ remainder stays below the α−γ gap.
+  have hK'τ : K' * τ ≤ gap := by
+    have h1 : τ * (K' + 1) < gap := by
+      rw [lt_div_iff₀ hK1_pos] at hτ_lt_gap; linarith
+    nlinarith [hτ_nn, hK'_nn]
+  calc ‖suzuki4Exp A B (1 / (4 - (4 : ℝ) ^ ((1 : ℝ) / 3))) τ - exp (τ • (A + B))‖
+      ≤ τ ^ 5 * Sbs + K' * τ ^ 6 := hstep τ hτ_nn hτ_lt_δ₀
+    _ = τ ^ 5 * (Sbs + K' * τ) := by ring
+    _ ≤ τ ^ 5 * (Sbs + gap) := by
+        exact mul_le_mul_of_nonneg_left (by linarith) hτ5_nn
+    _ = τ ^ 5 * cbs := by rw [hgap_def]; ring
 
 end AntiHermitianLevel3
 
