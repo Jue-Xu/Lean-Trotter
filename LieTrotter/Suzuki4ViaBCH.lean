@@ -831,7 +831,6 @@ theorem bch_w4Deriv_level3_tight (A B : 𝔸) :
   exact this
 
 omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
-omit [StarRing 𝔸] [ContinuousStar 𝔸] [CStarRing 𝔸] [Nontrivial 𝔸] [StarModule ℝ 𝔸] in
 set_option maxHeartbeats 1000000 in
 /-- **Exp-Lipschitz lift that preserves the leading coefficient.**
 

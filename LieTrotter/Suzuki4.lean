@@ -431,7 +431,7 @@ theorem suzuki4_error_rate_sq (A B : 𝔸) (p : ℝ) (hp : 0 ≤ p) (hp2 : p ≤
 
 include 𝕂 in
 /-- **The Fourth-Order Suzuki Product Formula (Phase 1).**
-    For any `A, B` in a complete normed algebra and `0 < p < 1/4`,
+    For any `A, B` in a complete normed algebra and `0 ≤ p ≤ 1/2`,
     `(S₄(1/n))^n → exp(A+B)` as `n → ∞` at rate O(1/n²).
 
     The choice `p = 1/(4 - 4^{1/3})` yields O(1/n⁴) via Suzuki's
