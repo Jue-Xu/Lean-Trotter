@@ -54,11 +54,11 @@ Projection onto Childs 8-commutator basis
   C8:  γ = p²/18000 + 13p/9000 − 1/6000          (≈ 0.000442)
 
 ======================================================================
-Comparison with Childs (2021) heuristic coefficients
+Comparison with Childs (2021) published coefficients (rigorous, not proven tight)
 ======================================================================
   C1: ours ≈ 0.000260, childs = 0.00470  [tighter ✓]  (18× tighter)
   C2: ours ≈ 0.000662, childs = 0.00570  [tighter ✓]  ( 9× tighter)
-  ... (all 8 coefficients strictly tighter than Childs's heuristics)
+  ... (all 8 coefficients strictly smaller than Childs's published values)
 ```
 
 **Caveats:**
@@ -100,3 +100,31 @@ specialization to Suzuki p) is documented in the Lean docstring.
   result, carry `p` symbolically throughout without applying the Suzuki
   cubic reduction until the very end. Currently the script applies
   reduction eagerly for simpler display.
+
+## Numerical experiments cited by the manuscript
+
+Install the pinned numerical dependencies from the repository root:
+
+```bash
+python3 -m pip install -r scripts/requirements-numerical.txt
+```
+
+Regenerate the two CSV data sets cited in
+`lean4trotter/apd_tighter_strang.tex`:
+
+```bash
+python3 scripts/sweep_strang_alignment.py
+python3 scripts/verify_strang_alignment_independent.py
+python3 scripts/test_r5_gain.py
+```
+
+The first and third commands overwrite the corresponding CSV files under
+`claude/` and also generate PDF plots there.  The PDFs are build artifacts and
+are intentionally ignored; regenerate them on demand.  The independent
+verifier reimplements four representative Strang cases and checks the archived
+CSV values to relative tolerance `1e-9`.
+
+`test_r5_gain.py` checks the stored Lean coefficient ceilings with exact
+`fractions.Fraction` interval arithmetic using the rational enclosure of the
+Suzuki parameter proved upstream.  Dense matrix norms remain ordinary NumPy
+float64 computations, as stated in the manuscript.
