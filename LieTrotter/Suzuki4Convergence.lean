@@ -129,7 +129,10 @@ lives in the step bound.  This is the `t/n` analogue of `exp_div_pow`.
 -/
 
 omit [NormOneClass 𝔸] in
-private lemma exp_smul_div_pow (V : 𝔸) (t : ℝ) (n : ℕ) (hn : 0 < n) :
+/-- The target exponential composes exactly: `exp((t/n)•V)^n = exp(t•V)`.  All of
+the S₄ error lives in the step bound.  (Public: also used by the tight,
+commutator-scaled total-error bound in `Suzuki4TightConvergence.lean`.) -/
+lemma exp_smul_div_pow (V : 𝔸) (t : ℝ) (n : ℕ) (hn : 0 < n) :
     (exp ((t / (n : ℝ)) • V)) ^ n = exp (t • V) := by
   letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
   have hn_ne : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr hn.ne'
