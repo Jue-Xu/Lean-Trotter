@@ -4,13 +4,14 @@
 \subsection{Project structure and statistics}
 \label{sec:project-structure}
 
-The formalization is organized into 31~Lean source files, grouped by track
+The formalization is organized into 41~Lean source files, grouped by track
 in \cref{tab:files}. Each file is self-contained with explicit imports,
 enabling parallel development and independent verification.
 
 \begin{table}[ht]
 \centering
-\small
+\footnotesize
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}lrl@{}}
 \toprule
 \textbf{File} & \textbf{Lines} & \textbf{Content} \\
@@ -31,7 +32,8 @@ enabling parallel development and independent verification.
 \leansrc{StrangCommutatorScaling.lean}      & 733  & Strang double-commutator scaling \\
 \leansrc{MultiStrangCommutatorScaling.lean} & 174  & Multi-op.\ Strang comm.\ scaling \\
 \leansrc{HigherCommutator.lean}            & 243  & Triple-FTC: extracts $[B,[B,[B,A]]]$ \\
-\leansrc{StrangCommutatorScalingTight.lean} & 559 & Tighter Strang via norm-of-difference $D$ \\
+\leansrc{StrangCommutatorScalingTight.lean} & 603 & Tighter Strang via norm-of-difference $D$; $\norm{D}$ domination \\
+\leansrc{StrangTotalErrorCommScaling.lean}  & 184 & Commutator-scaled Strang \emph{total} error \\
 \midrule
 \multicolumn{3}{@{}l}{\textit{Suzuki $S_4$ track (\cref{sec:suzuki4})}} \\
 \leansrc{Suzuki4.lean}                    & 466  & $S_4$ definition; generic $O(1/n^2)$ rate \\
@@ -42,26 +44,38 @@ enabling parallel development and independent verification.
 \leansrc{Suzuki4Module2.lean}             & 167  & Module~2: FTC-2 bridge \\
 \leansrc{Suzuki4Module3.lean}             & 184  & Module~3: FTC-2 reduction \\
 \leansrc{Suzuki4Module4.lean}             & 175  & Module~4a: continuity of $w_4'$ \\
-\leansrc{Suzuki4DerivExplicit.lean}       & 979  & Module~4b: explicit derivative + Phase 1--3 identities \\
+\leansrc{Suzuki4DerivExplicit.lean}       & 979  & Module~4b: explicit derivative; Phase 1--3 \\
 \leansrc{Suzuki4StrangBlocks.lean}        & 120  & $S_4$ = 5 Strang blocks + cubic cancellation \\
-\leansrc{Suzuki4MultinomialExpand.lean}   & 784  & Multinomial formulas; h2, h3 unconditional \\
-\leansrc{Suzuki4Phase5.lean}              & 772  & Taylor reduction + Leibniz bridges + CAPSTONE \\
+\leansrc{Suzuki4MultinomialExpand.lean}   & 787  & Multinomial formulas; h2 unconditional, h3 under Suzuki cubic \\
+\leansrc{Suzuki4Phase5.lean}              & 782  & Taylor reduction + Leibniz bridges + CAPSTONE \\
 \leansrc{Suzuki4OrderFive.lean}           & 440  & $O(t^5)$ abstract-form target \\
 \leansrc{Suzuki4ChildsForm.lean}          & 216  & Childs Prop pf4\_bound\_2term framework \\
-\leansrc{Suzuki4BchBound.lean}            & 495  & SLICE~1: single-step $O(\abs{\tau}^5)$ via Lean-BCH M6 \\
+\leansrc{Suzuki4BchBound.lean}            & 495  & SLICE~1: single-step $O(\abs{\tau}^5)$ bound \\
 \leansrc{TaylorMatch.lean}                & 331  & SLICE~2: generic Taylor-match-from-norm \\
-\leansrc{Suzuki4ViaBCH.lean}              & 1\,294 & SLICE~3 wiring + L1/L2/L3/L4 BCH-derived bounds \\
-\leansrc{Suzuki4Convergence.lean}         & 380  & Total error $O(1/n^4)$ + convergence (\cref{sec:s4-convergence}) \\
+\leansrc{Suzuki4ViaBCH.lean}              & 1\,436 & SLICE~3 wiring + L1/L2/L3/L4 BCH-derived bounds \\
+\leansrc{Suzuki4Convergence.lean}         & 398  & Total error $O(1/n^4)$ + convergence \\
+\leansrc{Suzuki4TightConvergence.lean}    & 169  & Commutator-scaled $O(1/n^4)$ \\
+\leansrc{Suzuki4UnitaryTotalError.lean}   & 274  & Skew-adjoint total error, no growth factor \\
+\leansrc{Suzuki4Commute.lean}             & 228  & Commuting case: $S_4$ exact, error $\equiv 0$ \\
+\leansrc{Suzuki4GapClosers.lean}          & 205  & General-$t$ step; imaginary-time corollaries \\
+\leansrc{TrotterStepCount.lean}           & 392  & $\varepsilon$-form step counts; explicit per-$n$ bounds \\
+\leansrc{MatrixCorollaries.lean}          & 157  & Matrix specializations (spectral norm) \\
+\leansrc{PrefactorStrict.lean}            & 111  & Strict $\gamma_i < \alpha_i$; gap $\gamma_i \le \alpha_i/8$ \\
 \midrule
-\textbf{Total} & \textbf{12\,186} & \textbf{0 \texttt{sorry} axioms,
+\multicolumn{3}{@{}l}{\textit{Root}} \\
+\href{\repourl/LieTrotter.lean}{\texttt{LieTrotter.lean}} & 73 & Import aggregator \\
+\midrule
+\textbf{Total} & \textbf{14\,196} & \textbf{0 \texttt{sorry} axioms,
 0 own theorem-level BCH-interface axioms} \\
 \bottomrule
 \end{tabular}
 \caption{Source files in the formalization, grouped by track.
 \texttt{Suzuki4.lean} carries the generic $O(1/n^2)$ rate, which holds for
-all $n$ with an explicit constant and no cubic condition;
+every $n \ge 1$ and needs no cubic condition;
 \texttt{Suzuki4Convergence.lean} upgrades the \emph{same} object to $O(1/n^4)$
-under the Suzuki cubic condition (\cref{sec:s4-convergence}).}
+under the Suzuki cubic condition (\cref{sec:s4-convergence}), and
+\texttt{Suzuki4TightConvergence.lean} does so with a commutator-scaled leading
+coefficient.}
 \label{tab:files}
 \end{table}
 
@@ -76,7 +90,7 @@ which closed the previous B1.c (\texttt{symmetric\_bch\_quintic\_sub\_poly\_axio
 dependency; its single-step $O(\abs{\tau}^5)$ payoff lemma anchors
 our SLICE-1 bound in \leansrc{Suzuki4BchBound.lean}. Two private
 septic axioms remain in Lean-BCH and gate only the optional Level~4
-finite-$t$ uniform refinement (see \cref{sec:caveats}).
+local small-$\tau$ ($\tau^7$) refinement (see \cref{sec:caveats}).
 Build time for the full project is under 2~minutes on a standard
 laptop after \Mathlib oleans are cached (\texttt{lake exe cache get}).
 
@@ -87,9 +101,9 @@ Our theorems are stated for a general complete normed algebra $\A$ over a
 field $\mathbb{K} \in \{\mathbb{R}, \mathbb{C}\}$:
 
 \begin{leancode}
-variable {K : Type*} [RCLike K]
-variable {A : Type*} [NormedRing A] [NormedAlgebra K A]
-  [NormOneClass A] [CompleteSpace A]
+variable {𝕂 : Type*} [RCLike 𝕂]
+variable {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+  [NormOneClass 𝔸] [CompleteSpace 𝔸]
 \end{leancode}
 
 The typeclass \texttt{NormOneClass} requires $\norm{1} = 1$, which is needed
@@ -97,25 +111,31 @@ for \texttt{norm\_pow\_le} in current \Mathlib. The main theorem is
 (\leanref{Assembly.lean}{121}{lie\_trotter}):
 
 \begin{leancode}
-theorem lie_trotter (A B : A) :
+theorem lie_trotter (A B : 𝔸) :
     Filter.Tendsto
-      (fun n : N => (exp ((n : K)^{-1} * A) *
-                     exp ((n : K)^{-1} * B)) ^ n)
+      (fun n : ℕ => (exp ((n : 𝕂)⁻¹ • A) *
+                      exp ((n : 𝕂)⁻¹ • B)) ^ n)
       atTop (nhds (exp (A + B)))
 \end{leancode}
+
+Note the scalar action $\bullet$: the step is $n^{-1}$ \emph{acting on} $A$
+in the $\mathbb{K}$-module $\A$, not a ring product with a coerced $n^{-1} \in
+\A$. The two coincide in a unital algebra but are distinct terms in Lean, and
+the derivative and integral lemmas we rely on are all stated for $\bullet$.
 
 \paragraph{The \texttt{include} pattern.}
 Since \texttt{NormedSpace.exp} no longer takes a field parameter in recent
 \Mathlib, the variable $\mathbb{K}$ does not appear in the type of theorems
-involving \texttt{exp}. Lean~4 drops unused type-level variables, so we must
-write \texttt{include K in} before each lemma whose proof (but not statement)
-requires $\mathbb{K}$
-(e.g., \leanref{ExpBounds.lean}{34}{exp\_tsum\_form}):
+involving \texttt{exp}---in \texttt{norm\_exp\_le} below, both sides mention
+only $\A$ and $\mathbb{R}$. Lean~4 drops unused type-level variables, so we
+must write \texttt{include $\mathbb{K}$ in} before each lemma whose proof (but
+not statement) requires $\mathbb{K}$
+(e.g., \leanref{ExpBounds.lean}{72}{norm\_exp\_le}, whose proof rewrites with
+\texttt{exp\_tsum\_form ($\mathbb{K}$ := $\mathbb{K}$)}):
 
 \begin{leancode}
-include K in
-lemma exp_tsum_form (a : A) :
-    exp a = \sum' n, (((Nat.factorial n : K)^{-1}) * a ^ n : A) := by ...
+include 𝕂 in
+lemma norm_exp_le (a : 𝔸) : ‖exp a‖ ≤ Real.exp ‖a‖ := by ...
 \end{leancode}
 
 \subsection{Telescoping in Lean}
@@ -126,8 +146,8 @@ using \texttt{Finset.sum\_range\_succ} to peel off the last term
 (\leanref{Telescoping.lean}{32}{telescoping\_direct}):
 
 \begin{leancode}
-theorem telescoping_direct (X Y : R) (n : N) :
-    (sum k in Finset.range n,
+theorem telescoping_direct (X Y : R) (n : ℕ) :
+    (∑ k ∈ Finset.range n,
       X ^ k * (X - Y) * Y ^ (n - 1 - k)) =
       X ^ n - Y ^ n := by
   induction n with
@@ -139,6 +159,9 @@ theorem telescoping_direct (X Y : R) (n : N) :
     ...
     noncomm_ring [pow_succ]
 \end{leancode}
+
+Here \texttt{R} is any \texttt{Ring}: the telescoping identity is purely
+algebraic, so this file assumes no norm and no completeness.
 
 The final step uses \texttt{noncomm\_ring}, which handles polynomial identities
 in non-commutative rings. The standard \texttt{ring} tactic silently fails on
@@ -153,13 +176,13 @@ general Banach algebras. Our proof works from the tsum representation
 (\leanref{ExpBounds.lean}{72}{norm\_exp\_le}):
 
 \begin{leancode}
-theorem norm_exp_le (a : A) :
-    ||exp a|| <= Real.exp ||a|| := by
-  rw [exp_tsum_form (K := K) a]
-  calc ||sum' n, ...||
-      <= sum' n, ||...||     -- norm_tsum_le_tsum_norm
-    _ <= sum' n, ||a||^n / n! -- norm_exp_term_le
-    _ = Real.exp ||a||        -- Real.hasSum_exp
+include 𝕂 in
+lemma norm_exp_le (a : 𝔸) : ‖exp a‖ ≤ Real.exp ‖a‖ := by
+  rw [exp_tsum_form (𝕂 := 𝕂), real_exp_eq_tsum]
+  calc ‖∑' n, (((Nat.factorial n : 𝕂)⁻¹) • a ^ n : 𝔸)‖
+      ≤ ∑' n, ‖...‖         -- norm_tsum_le_tsum_norm
+    _ ≤ ∑' n, ‖a‖ ^ n / n ! -- norm_exp_term_le
+    _ = Real.exp ‖a‖        -- Real.hasSum_exp
 \end{leancode}
 
 The proof chains three standard ingredients: pulling the norm inside the tsum,
@@ -175,10 +198,10 @@ non-commutative recurrence
 (\leanref{StepError.lean}{43}{norm\_pow\_add\_sub\_pow\_sub\_pow}):
 
 \begin{leancode}
-theorem norm_pow_add_sub_pow_sub_pow (a b : A) :
-    forall m : N, 1 <= m ->
-    ||(a + b) ^ m - a ^ m - b ^ m|| <=
-      (||a|| + ||b||) ^ m - ||a|| ^ m - ||b|| ^ m := by
+private lemma norm_pow_add_sub_pow_sub_pow (a b : 𝔸) :
+    ∀ m : ℕ, 1 ≤ m →
+      ‖(a + b) ^ m - a ^ m - b ^ m‖ ≤
+        (‖a‖ + ‖b‖) ^ m - ‖a‖ ^ m - ‖b‖ ^ m := by
   intro m hm
   induction m with
   | zero => omega
@@ -208,12 +231,12 @@ applying derivative lemmas
 (\leanref{CommutatorScaling.lean}{75}{hasDerivAt\_exp\_conj}):
 
 \begin{leancode}
-lemma hasDerivAt_exp_conj (A B : A) (s : R) :
+lemma hasDerivAt_exp_conj (A B : 𝔸) (s : ℝ) :
     HasDerivAt
-      (fun u => exp (u * B) * A * exp ((-u) * B))
-      (exp (s * B) * (B * A - A * B) *
-       exp ((-s) * B)) s := by
-  simp_rw [show forall u : R, (-u) * B = u * (-B)
+      (fun u => exp (u • B) * A * exp ((-u) • B))
+      (exp (s • B) * (B * A - A * B) *
+       exp ((-s) • B)) s := by
+  simp_rw [show ∀ u : ℝ, (-u) • B = u • (-B)
     from fun u => by rw [neg_smul, smul_neg]]
   ...
 \end{leancode}
@@ -225,16 +248,16 @@ representation~\eqref{eq:integral-error} are proved by
 (\leanref{CommutatorScaling.lean}{157}{exp\_conj\_sub\_eq\_integral}):
 
 \begin{leancode}
-theorem exp_conj_sub_eq_integral (A B : A) (t : R) :
-    exp (t * B) * A * exp ((-t) * B) - A =
-      integral s in (0 : R)..t,
-        exp (s * B) * (B * A - A * B) *
-        exp ((-s) * B) := by
-  have hderiv : forall u in Set.uIcc 0 t,
+theorem exp_conj_sub_eq_integral (A B : 𝔸) (τ : ℝ) :
+    exp (τ • B) * A * exp ((-τ) • B) - A =
+      ∫ s in (0 : ℝ)..τ,
+        exp (s • B) * (B * A - A * B) *
+        exp ((-s) • B) := by
+  have hderiv : ∀ u ∈ Set.uIcc 0 τ,
       HasDerivAt ... := fun u _ =>
     hasDerivAt_exp_conj A B u
   have hint : IntervalIntegrable ... :=
-    (continuous_exp_conj_deriv A B).intervalIntegrable 0 t
+    (continuous_exp_conj_deriv A B).intervalIntegrable 0 τ
   exact (integral_eq_sub_of_hasDerivAt hderiv hint).symm
 \end{leancode}
 
@@ -263,16 +286,18 @@ The palindromic product is defined recursively
 (\leanref{MultiStrangCommutatorScaling.lean}{42}{palindromicProd}):
 
 \begin{leancode}
-def palindromicProd (ops : List A) (t : R) : A :=
-  match ops with
+def palindromicProd : List 𝔸 → 𝔸
   | [] => 1
-  | [a] => exp (t * a)
+  | [a] => exp a
   | a :: rest =>
-    exp ((t / 2) * a) *
-    palindromicProd rest t *
-    exp ((t / 2) * a)
+    exp ((1/2 : ℝ) • a) *
+    palindromicProd rest *
+    exp ((1/2 : ℝ) • a)
 \end{leancode}
 
-The inductive step peels off the outermost $e^{tA_1/2}$ factors and applies the
-two-operator Strang bound to the pair $(A_1, A_2 + \cdots + A_m)$, then
-recurses on the inner product.
+The step size is not a parameter: it is folded into the operators by the
+caller, which passes the list $[t \bullet A_1, \ldots, t \bullet A_m]$. This
+keeps the recursion on a single argument, so the induction is on the list
+alone. The inductive step peels off the outermost $e^{A_1/2}$ factors and
+applies the two-operator Strang bound to the pair
+$(A_1, A_2 + \cdots + A_m)$, then recurses on the inner product.

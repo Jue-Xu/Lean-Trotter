@@ -65,13 +65,14 @@ typical for spatially local Hamiltonians---the error is much smaller.
 
 Childs et al.~\cite{childsTheoryTrotterError2021} showed that the leading error term is
 controlled by the commutator $\comm{B}{A} = BA - AB$ rather than the product
-$\norm{A}\norm{B}$. At first order,
+$\norm{A}\norm{B}$. At first order, for $t \ge 0$,
 \begin{equation}\label{eq:comm-scaling-bg}
   \norm{e^{tB}\,e^{tA} - e^{t(A+B)}}
     \le \frac{\norm{\comm{B}{A}}}{2}\,t^2\,e^{t(\norm{A}+3\norm{B})}.
 \end{equation}
 For the Strang splitting, the leading commutator $\comm{B}{A}$ cancels by
-symmetry, and the error is controlled by double commutators:
+symmetry, and---in the unitary setting (skew-adjoint $A, B$), again for
+$t \ge 0$---the error is controlled by double commutators:
 \begin{equation}\label{eq:strang-comm-bg}
   \norm{S_2(t) - e^{tH}}
     \le \Bigl(\frac{\norm{\comm{B}{\comm{B}{A}}}}{12}
@@ -118,5 +119,10 @@ Tooby-Smith~\cite{toobysmith2026higgs} formalized the stability of the
 two-Higgs-doublet potential, also identifying a literature error.
 These projects share the pattern of using formal verification not merely to
 certify known results but to expose subtle gaps in published proofs.
-Our work extends this program to quantum simulation, providing the first
-machine-checked proof of any product formula for operator exponentials.
+Closest to our topic, the QBlue verified compiler for Hamiltonian
+simulation~\cite{liVerifiedCompilerQuantum2025} mechanizes, in Rocq, a
+standard first-order Trotterization error lemma as part of its correctness
+proof. Our work extends this program to the product formulas themselves: to
+our knowledge it provides the first machine-checked \emph{convergence} proof
+of a product formula, and the first machine-checked higher-order and
+commutator-scaling Trotter bounds.

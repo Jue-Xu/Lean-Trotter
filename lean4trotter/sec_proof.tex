@@ -254,7 +254,8 @@ Right-multiplying by $e^{\tau B}$ yields
 $\norm{\comm{e^{\tau B}}{A}} \le \norm{\comm{B}{A}}\,\abs{\tau}\,e^{3\abs{\tau}\norm{B}}$.
 
 \paragraph{Final bound.}
-Substituting into \eqref{eq:integral-error} and bounding the integral:
+Substituting into \eqref{eq:integral-error} and bounding the integral (for
+$t \ge 0$):
 \[
   \norm{e^{tB}\,e^{tA} - e^{t(A+B)}}
     \le \int_0^t e^{(t-\tau)(\norm{A}+\norm{B})} \cdot
@@ -274,14 +275,24 @@ gives the claimed bound \eqref{eq:comm-first}.
 \subsection{Second-order Strang commutator scaling}
 \label{sec:strang}
 
-For the Strang splitting $S_2(t) = e^{tA/2}\,e^{tB}\,e^{tA/2}$, we prove
+For the Strang splitting $S_2(t) = e^{tA/2}\,e^{tB}\,e^{tA/2}$, we prove, for
+$t \ge 0$,
 \begin{equation}\label{eq:strang-bound}
   \norm{S_2(t) - e^{tH}}
     \le \frac{\norm{\comm{B}{\comm{B}{A}}}}{12}\,t^3
       + \frac{\norm{\comm{A}{\comm{A}{B}}}}{24}\,t^3,
 \end{equation}
-where $H = A + B$ and we additionally require that $A$ and $B$ are
-\emph{skew-adjoint} ($a^* = -a$), so that $\norm{e^{ta}} = 1$.
+where $H = A + B$. Unlike the first-order bound~\eqref{eq:comm-first}, this
+one is \emph{not} available in a bare normed algebra: it additionally requires
+that $\A$ be a C*-algebra (\texttt{StarRing}, \texttt{ContinuousStar},
+\texttt{CStarRing}, \texttt{Nontrivial}, \texttt{StarModule} $\mathbb{R}$ in
+Lean) and that $A$ and $B$ be \emph{skew-adjoint} ($a^* = -a$), which is what
+makes $\norm{e^{ta}} = 1$ and lets the FTC argument close without an
+exponential inflation factor. The sign condition $t \ge 0$ is likewise a
+hypothesis of the Lean theorem
+(\leanref{StrangCommutatorScaling.lean}{301}{norm\_strang\_comm\_scaling}),
+since the bound's right-hand side is odd in $t$.
+	%\claude{CORRECTNESS: \eqref{eq:strang-bound} was previously stated with skew-adjointness mentioned but with neither $0 \le t$ nor the C*-algebra typeclasses, both of which \texttt{norm\_strang\_comm\_scaling} carries. Contrast the $\tau^5$ Suzuki bounds of \cref{sec:suzuki4}, which need none of this.}
 
 The proof applies the same Duhamel strategy to
 $w(\tau) = e^{-\tau H}\,S_2(\tau)$, but now requires:
@@ -334,6 +345,14 @@ $\comm{A'}{\comm{A'}{B}} = \frac{1}{4}\comm{A}{\comm{A}{B}}$.
 The scalar factors are extracted through $\comm{cX}{Y} = c\,\comm{X}{Y}$
 (valid for central scalars) using \texttt{Algebra.smul\_mul\_assoc} and
 \texttt{Algebra.mul\_smul\_comm}, then \texttt{norm\_smul}.
-Combined with the integration constants ($1/6$ from the cubic integral
-and $1/2$ from the double FTC), this produces the final coefficients
-$1/12$ and $1/24$ in \eqref{eq:strang-bound}.
+
+The two integration constants compose into a single $1/6$: the double FTC
+bounds the residual pointwise by
+$\norm{\mathcal{T}_2(\tau)} \le \tfrac{1}{2}\bigl(\norm{\comm{A'}{\comm{A'}{B}}}
++ \norm{\comm{B}{\comm{B}{A'}}}\bigr)\tau^2$, and the outer FTC-2 integral
+contributes $\int_0^t \tau^2\,d\tau = t^3/3$. Applying the half-scalings to
+$\tfrac{1}{2}\cdot\tfrac{1}{3} = \tfrac{1}{6}$ gives
+$\tfrac16 \cdot \tfrac12 = \tfrac{1}{12}$ for $\norm{\comm{B}{\comm{B}{A}}}$
+and $\tfrac16 \cdot \tfrac14 = \tfrac{1}{24}$ for $\norm{\comm{A}{\comm{A}{B}}}$,
+the final coefficients in \eqref{eq:strang-bound}.
+	%\claude{CORRECTNESS: the previous sentence attributed the constants to ``$1/6$ from the cubic integral and $1/2$ from the double FTC''. Those multiply to $1/12$ \emph{before} the half-scalings, so the stated recipe yields $1/24$ and $1/48$, not $1/12$ and $1/24$. The outer integral of $\tau^2$ contributes $1/3$, not $1/6$; $1/6$ is the \emph{product} of the two integration constants. Cf.\ steps~5--6 of the \texttt{norm\_strang\_comm\_scaling} docstring.}

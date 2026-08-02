@@ -1,4 +1,11 @@
 \documentclass[11pt]{article}
+
+%% This document REQUIRES pdfLaTeX -- see the note above \usepackage{listings}.
+%% Compiling with XeLaTeX/LuaLaTeX silently drops Unicode from the Lean code
+%% blocks, so fail loudly instead.
+\usepackage{iftex}
+\RequirePDFTeX
+
 \usepackage{enumitem}
 \usepackage{amsthm}
 \usepackage{amssymb, amsmath, xcolor}
@@ -32,9 +39,20 @@
 
 \geometry{margin=1in}
 
+%% Lean identifiers such as \texttt{symmetric\_bch\_septic\_sub\_poly\_axiom} are
+%% long, unhyphenatable tokens; give TeX room to reflow around them rather than
+%% overflowing the margin.
+\setlength{\emergencystretch}{3em}
+
 %% --- Lean code blocks ---
-%% For local builds: xelatex -shell-escape main.tex
-%% For arXiv: switch to [frozencache] once the _minted cache is generated.
+%% COMPILE WITH pdfLaTeX.  (On Overleaf: Menu -> Compiler -> pdfLaTeX.)
+%% The Lean source uses Unicode (𝕂 𝔸 ℝ ‖ ≤ • ∑ ⁻¹ τ δ ...), which we render via
+%% the `literate` table below.  That mechanism is pdfTeX-only: under XeLaTeX or
+%% LuaLaTeX it does not fire, the characters fall through to the monospace font,
+%% and every glyph the font lacks is dropped *silently* -- no error, just Lean
+%% code blocks with characters missing from the PDF.  The \RequirePDFTeX guard
+%% above turns that silent corruption into a loud failure.
+%% No -shell-escape is needed (we use `listings`, not `minted`).
 \usepackage{listings}
 \lstdefinelanguage{Lean4}{
   morekeywords={theorem,lemma,def,noncomputable,section,variable,open,import,
@@ -68,6 +86,12 @@
     {∞}{{$\infty$}}1
     {‖}{{$\|$}}1
     {·}{{$\cdot$}}1
+    {α}{{$\alpha$}}1
+    {β}{{$\beta$}}1
+    {γ}{{$\gamma$}}1
+    {δ}{{$\delta$}}1
+    {ε}{{$\varepsilon$}}1
+    {τ}{{$\tau$}}1
 }
 \lstset{
   language=Lean4,
@@ -85,6 +109,16 @@
   showstringspaces=false
 }
 \lstnewenvironment{leancode}{\lstset{language=Lean4}}{}
+
+%% DO NOT add \DeclareUnicodeCharacter for the astral-plane chars (K/A double-
+%% struck, U+1D542 / U+1D538).  Registering them with the UTF-8 decoder collides
+%% with the byte-level `literate` machinery above: on the LaTeX 2025-06-01 kernel
+%% (which Overleaf runs) every 𝕂/𝔸 inside a listing then dies with
+%%   "Invalid UTF-8 byte sequence (\lst@FillFixed@\lst@EC...)".
+%% Older kernels (e.g. 2024-11-01) tolerate it, so this does NOT reproduce on a
+%% stale local TeX -- it only breaks on Overleaf.  `literate` already renders
+%% these characters inside listings, which is the only place they may appear:
+%% keep ALL prose ASCII and write $\mathbb{K}$ / $\mathfrak{A}$ there instead.
 
 \title{Formalizing the Lie--Trotter Product Formula and \\
 Tightening Commutator-Scaling Error Bounds in Lean~4}
@@ -105,20 +139,27 @@ Tightening Commutator-Scaling Error Bounds in Lean~4}
 \maketitle
 
 \begin{abstract}
-We present the first machine-checked proof of the Lie--Trotter product
-formula in \Lean with \Mathlib, together with higher-order extensions
+We present a machine-checked proof of the Lie--Trotter product
+formula in \Lean with \Mathlib---to our knowledge the first formalized
+convergence proof of a product formula in any proof
+assistant---together with higher-order extensions
 (symmetric Strang, multi-operator, fourth-order Suzuki $S_4$) and
 commutator-scaling error bounds obtained via a new Duhamel/FTC
 technique that sidesteps ODE uniqueness theory. For the $S_4$
 integrator, CAS-assisted Baker--Campbell--Hausdorff expansion yields
-four order-$t^5$ bounds, including a provably strictly tighter
-refinement of Childs et al.'s (2021) heuristic prefactors; compounding
-the single-step bound over $n$ steps yields a machine-checked
-$O(1/n^4)$ convergence theorem, completing a verified hierarchy
-$O(1/n) \to O(1/n^2) \to O(1/n^4)$.
-The formalization spans over 12\,100 lines with zero \texttt{sorry}
+four order-$t^5$ bounds, including a replacement of the prefactors of
+Childs et al.\ (2021)---rigorous upper bounds not proven tight---by
+CAS-certified coefficients that are smaller term by term by factors of
+$8.6\times$--$64\times$ (two of the eight vanish identically), the
+comparison machine-checked at the leading $t^5$ coefficient; compounding the
+single-step bound over $n$ steps yields a machine-checked $O(1/n^4)$
+convergence theorem with a commutator-scaled leading coefficient,
+completing a verified hierarchy $O(1/n) \to O(1/n^2) \to O(1/n^4)$.
+	%\claude{CORRECTNESS (2026-07-17): ``heuristic prefactors'' mischaracterized Childs et al. --- their Prop.~J.1 (arXiv numbering, verified against the compiled PDF) is a rigorous proposition; only tightness is unproven, in their own words ``we do not have a rigorous proof of the tightness of these bounds''. And ``machine-checked never to be weaker'' overstated: Lean compares the leading coefficients (\texttt{bchTightPrefactors\_le\_childs}), with full-bound domination near $0$ only under the strict-gap hypothesis of \texttt{norm\_suzuki4\_le\_childs\_near\_zero}, while the full L3 bound carries a $K'\tau^6$ remainder. Reworded to ``rigorous upper bounds not proven tight'' + ``machine-checked at the leading $t^5$ coefficient''.}
+	%\claude{CORRECTNESS: previously ``a provably strictly tighter refinement''. Lean proves only the non-strict \texttt{bchTightPrefactors.boundSum $\le$ childsBoundSum} --- and it must, since the two sides coincide (both $0$) when $A$ and $B$ commute. Strictness holds per-coefficient (a numeric fact about the stored rationals) and holds for the bound itself exactly when the relevant commutators do not all vanish; that is the hypothesis \texttt{hgap} of \texttt{norm\_suzuki4\_le\_childs\_near\_zero}. Also: the smallest tightening ratio is $0.0057/0.000663 = 8.6\times$, not $9\times$.}
+The formalization spans over 14\,000 lines with zero \texttt{sorry}
 axioms; the tight 4th-order Trotter bound is fully proved down to
-\Lean's standard foundational axioms, while a finite-$t$ uniform
+\Lean's standard foundational axioms, while a local small-$\tau$
 refinement at order $\tau^7$ still depends on two private axioms
 inside the companion
 \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project.

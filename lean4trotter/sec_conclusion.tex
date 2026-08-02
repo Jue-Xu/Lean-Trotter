@@ -1,30 +1,42 @@
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-We have presented the first machine-checked formalization of the Lie--Trotter
-product formula, together with its higher-order extensions and
+We have presented, to our knowledge, the first machine-checked convergence
+proof of the Lie--Trotter
+product formula, together with the first formalized higher-order extensions
+and
 commutator-scaling error bounds, in Lean~4 with the \Mathlib library.
-The development comprises over 12\,100 lines with zero \texttt{sorry} axioms
+The development comprises over 14\,000 lines with zero \texttt{sorry} axioms
 and zero own theorem-level BCH-interface axioms. The tight 4th-order
 Trotter bound (Levels~1--3) is fully proved at the project level
 (\texttt{\#print axioms} returns only \texttt{[propext, Classical.choice,
 Quot.sound]} on each $\tau^5$ headline); two transitive Lean-BCH
-septic axioms gate only the optional Level~4 finite-$t$ uniform
-refinement. The development covers:
+septic axioms gate only the optional Level~4 local small-$\tau$
+($\tau^7$) refinement. The development covers:
 \begin{itemize}
   \item First-order Lie--Trotter convergence at rate $O(1/n)$;
   \item Symmetric Strang splitting at rate $O(1/n^2)$;
   \item Multi-operator generalizations of both formulas;
   \item First- and second-order commutator-scaling bounds via a novel
     Duhamel/FTC technique;
-  \item A tighter second-order Strang bound via norm-of-difference that
-    captures signed cancellations invisible to the sum-of-norms form;
+  \item A second-order Strang bound via norm-of-difference that captures
+    signed cancellations invisible to the sum-of-norms form, and whose
+    leading coefficient is machine-checked never to exceed it---strictly
+    smaller whenever the two double commutators partially cancel, a gain
+    measured at $9$--$50\%$ across standard spin-chain benchmarks
+    (\cref{apd:tighter});
   \item A fourth-order Suzuki $S_4$ track with four CAS-assisted
-    BCH-based bounds, including a strictly tighter replacement
-    (9$\times$--64$\times$) of Childs's 2021 heuristic prefactors and an
-    existential-$\delta$ finite-$t$ bound via an explicit $\tau^7$ correction;
+    BCH-based bounds, including a replacement of the 2021 prefactors of
+    Childs et al.\ (rigorous, but not proven tight) by CAS-certified
+    coefficients smaller term by term by 8.6$\times$--64$\times$---the
+    comparison machine-checked at the leading coefficient, with full-bound
+    domination on a neighbourhood of zero under a strict-gap
+    hypothesis---and an existential-$\delta$ small-$\tau$ refinement via
+    an explicit $\tau^7$ correction;
   \item Fourth-order Suzuki convergence at rate $O(1/n^4)$, obtained by
-    compounding the single-step $O(t^5)$ bound over $n$ steps.
+    compounding the single-step $O(t^5)$ bound over $n$ steps --- and, from
+    the sharp step bound, with an explicit commutator-scaled leading
+    coefficient.
 \end{itemize}
 The first, second, and fourth-order convergence theorems together form a
 complete verified hierarchy $O(1/n) \to O(1/n^2) \to O(1/n^4)$: for each
@@ -54,7 +66,7 @@ Several extensions are natural:
     \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project,
     \texttt{symmetric\_bch\_septic\_sub\_poly\_axiom} and
     \texttt{norm\_septic\_match\_residual\_le\_axiom}; both gate
-    only the optional Level~4 finite-$t$ uniform bound with explicit
+    only the optional Level~4 local small-$\tau$ bound with explicit
     $\tau^7$ correction, not the tight 4th-order bound itself. Both
     have multi-session Lean-BCH discharge roadmaps. The order-4
     Taylor-coefficient identity \texttt{bch\_iteratedDeriv\_s4Func\_order4}

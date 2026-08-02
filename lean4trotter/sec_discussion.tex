@@ -97,8 +97,10 @@ exponentials opaque, rewrite commutativity as equalities, then apply
 Our results are stated for general complete normed algebras, which include
 the bounded operators $B(\mathcal{H})$ on a Hilbert space as a special case.
 Specialization to finite-dimensional matrix algebras
-$M_d(\mathbb{C})$ is straightforward via \Mathlib's
-\texttt{Matrix.instNormedRing}.
+$M_d(\mathbb{C})$ under the spectral norm is carried out in
+\leansrc{MatrixCorollaries.lean}, via \Mathlib's scoped
+\texttt{Matrix.Norms.L2Operator} instances
+(\texttt{Matrix.instL2OpNormedRing}).
 
 The commutator-scaling bounds are physically motivated by Hamiltonian
 simulation: for a lattice Hamiltonian $H = \sum_j h_j$ where each $h_j$ acts
@@ -117,7 +119,7 @@ commutator-scaling bounds, the abstract $S_4$ $O(t^5)$ identity
 (\texttt{bch\_iteratedDeriv\_s4Func\_order4}), and Levels~1--3 of the
 Suzuki $S_4$ track---returns only \Lean's standard foundational
 axioms \texttt{[propext, Classical.choice, Quot.sound]}. The Level 4
-finite-$t$ uniform refinement~\eqref{eq:level4} is the sole result
+local small-$\tau$ refinement~\eqref{eq:level4} is the sole result
 whose trust base extends beyond \Lean's foundations: it transitively
 depends on two private axioms inside the companion
 \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project,

@@ -67,32 +67,48 @@ Our formalization proves the following hierarchy of results:
         \label{eq:comm-strang}
     \end{align}
     matching the commutator-scaling program of Childs et al.~\cite{childsTheoryTrotterError2021}.
+    \eqref{eq:comm-first} holds for $t \ge 0$ in any complete normed algebra;
+    \eqref{eq:comm-strang} additionally assumes skew-adjoint
+    $A, B$ in a C*-algebra, so that $\norm{e^{tA}} = 1$.
 
-  \item \textbf{Tighter Strang bound via norm-of-difference}: a strictly
-    sharper second-order bound
+  \item \textbf{Tighter Strang bound via norm-of-difference}: a
+    second-order bound
     $\norm{S_2(t)-e^{tH}} \le \tfrac{\norm{D}}{6}t^3 + \tfrac{T}{4}t^4$
     where $D = \comm{B}{\comm{B}{A/2}} - \comm{A/2}{\comm{A/2}{B}}$ is an
     effective double commutator capturing signed cancellations that the
-    triangle-inequality form of \eqref{eq:comm-strang} cannot see.
+    triangle-inequality form of \eqref{eq:comm-strang} cannot see. Its
+    leading coefficient is machine-checked never to exceed that of
+    \eqref{eq:comm-strang} (\texttt{norm\_D\_le\_sum\_of\_norms}), and is
+    strictly smaller whenever the two double commutators partially cancel in
+    $D$; a numerical sweep over standard spin chains finds strictly positive
+    gains of $9$--$50\%$ in every tested configuration (\cref{apd:tighter}).
 
   \item \textbf{Fourth-order Suzuki $S_4$ with CAS-assisted BCH bounds}
     (\cref{sec:suzuki4}):
     four formalized order-$t^5$ bounds for
-    $\norm{S_4(t) - e^{t(A+B)}}$, culminating in a provably
-    strictly tighter (9$\times$--64$\times$ per coefficient)
-    replacement of Childs's~2021 heuristic prefactors, together with an
-    existential-$\delta$ finite-$t$ bound obtained by extending the CAS
+    $\norm{S_4(t) - e^{t(A+B)}}$, culminating in a replacement of the 2021
+    prefactors of Childs et al.---rigorous upper bounds not proven
+    tight---by CAS-certified coefficients smaller term by term by
+    8.6$\times$--64$\times$ (two of the eight vanish identically); the
+    comparison is machine-checked at the leading $t^5$ coefficient, and the
+    full bound provably beats Childs et al.'s on some neighbourhood of
+    zero whenever the compared commutators do not all vanish. An
+    existential-$\delta$ small-$\tau$ refinement extends the CAS
     computation to order~$\tau^7$.
+	%\claude{CORRECTNESS (2026-07-17): (i) ``strictly smaller exactly when positively aligned'' stated an iff that is false outside the proportional model --- strict triangle inequality does not require scalar alignment, and the sweep (claude/strang\_alignment\_sweep.md) finds gains even at zero/negative alignment proxy; reworded to ``partially cancel'' with the measured 9--50\% range. (ii) ``Childs's heuristic prefactors ... machine-checked never to be weaker'': their Prop.~J.1 is rigorous (only tightness unproven), and Lean's comparison is at the leading coefficient, with full-bound domination near zero under the strict-gap hypothesis of \texttt{norm\_suzuki4\_le\_childs\_near\_zero}.}
 
   \item \textbf{Fourth-order convergence of $S_4$} (\cref{sec:s4-convergence}):
     compounding the single-step $O(t^5)$ bound over $n$ steps gives
-    $\norm{(S_4(t/n))^n - e^{t(A+B)}} \le C/n^4$ for $n$ beyond an explicit
-    threshold, and hence $(S_4(t/n))^n \to e^{t(A+B)}$. Together with items~1
+    $\norm{(S_4(t/n))^n - e^{t(A+B)}} \le C/n^4$ for all $n$ beyond a threshold
+    $N$, and hence $(S_4(t/n))^n \to e^{t(A+B)}$. Compounding the \emph{sharp}
+    step bound instead gives the same rate with an explicit, commutator-scaled
+    leading coefficient. Together with items~1
     and~2 this completes a verified convergence hierarchy
     $O(1/n) \to O(1/n^2) \to O(1/n^4)$.
+	%\claude{CORRECTNESS: (i) ``provably strictly tighter'' --- Lean proves only $\le$ (see the abstract's note). (ii) ``for $n$ beyond an \emph{explicit} threshold'' --- in \texttt{suzuki4\_total\_error\_quartic} both $C$ and $N$ are existentially quantified; nothing explicit is recorded. (iii) ``finite-$t$'' for the $\tau^7$ bound --- \texttt{norm\_suzuki4\_level4\_uniform} is $\exists \delta > 0, \forall \tau < \delta$, so it says nothing at any \emph{given} $t$; ``existential-$\delta$ finite-$t$'' was self-contradictory.}
 \end{enumerate}
 
-The entire development comprises 32 Lean source files totaling over 12\,100 lines,
+The entire development comprises 41 Lean source files totaling over 14\,000 lines,
 with zero \texttt{sorry} axioms and zero own theorem-level BCH-interface
 axioms on the Lean-Trotter side. The three former BCH-interface axioms
 (\texttt{bch\_w4Deriv\_quintic\_level2},
@@ -105,10 +121,11 @@ all $\tau^5$ Suzuki~$S_4$ headlines---together with the standard
 Lie--Trotter, Strang, and commutator-scaling theorems---depend only
 on the standard foundational axioms \texttt{[propext, Classical.choice,
 Quot.sound]}. In particular, axiom inspection on
-\texttt{norm\_suzuki4\_childs\_form\_via\_level3} (Level~1 Childs
-reproduction), \texttt{norm\_suzuki4\_level3\_bch} (Level~3 tight
-$\gamma_i$ prefactors), \texttt{norm\_suzuki4\_level2\_bch} (Level~2
-unit-coefficient $\tau^5$ bound), the abstract $S_4$ $O(t^5)$ identity
+\texttt{norm\_suzuki4\_childs\_explicit} and
+\texttt{norm\_suzuki4\_le\_childs\_near\_zero} (the Level~1 Childs-form
+statements), \texttt{norm\_suzuki4\_level3\_explicit} (Level~3, with the
+certified $\gamma_i$ in the statement), \texttt{norm\_suzuki4\_level2\_explicit}
+(Level~2 unit coefficients), the abstract $S_4$ $O(t^5)$ identity
 (\texttt{bch\_iteratedDeriv\_s4Func\_order4}), and \texttt{lie\_trotter}
 returns the three foundational axioms only. Two transitive private
 axioms remain inside the companion
@@ -116,7 +133,7 @@ axioms remain inside the companion
 septic stepping stones
 (\texttt{symmetric\_bch\_septic\_sub\_poly\_axiom},
 \texttt{norm\_septic\_match\_residual\_le\_axiom}). They gate only
-the optional Level~4 finite-$t$ uniform refinement with an explicit
+the optional Level~4 local small-$\tau$ refinement with an explicit
 $\tau^7$ correction, not the core tight 4th-order bound. All other
 Lean-BCH content is fully sorry-free; the three-factor symmetric BCH
 cubic identities, the two-factor palindromic quintic remainder, and
@@ -126,8 +143,13 @@ Our \Lean formalization is available at
 \href{https://github.com/Jue-Xu/Lean-Trotter}{\texttt{github.com/Jue-Xu/Lean-Trotter}}.
 Our main contributions are:
 \begin{itemize}
-  \item The \emph{first formalization} of the Lie--Trotter product formula in any
-    proof assistant, including its higher-order and multi-operator extensions.
+  \item To our knowledge, the \emph{first machine-checked convergence proof}
+    of the Lie--Trotter product formula---the $n \to \infty$ limit
+    statement---and the first machine-checked \emph{higher-order}
+    product-formula bounds (Strang, Suzuki $S_4$) and multi-operator
+    extensions in any proof assistant. A first-order Trotterization
+    step-error lemma was previously mechanized in Rocq inside the QBlue
+    verified compiler~\cite{liVerifiedCompilerQuantum2025}.
 
   \item A \emph{Duhamel/FTC-based proof technique} for commutator-scaling bounds
     that avoids ODE uniqueness theory (Gronwall's inequality, Picard iteration),
@@ -139,17 +161,21 @@ Our main contributions are:
     via norm-of-difference (\cref{apd:tighter}).
 
   \item \emph{CAS-assisted BCH bounds for Suzuki $S_4$}: four machine-checked
-    bounds---including a rigorously tighter replacement for the
-    Childs (2021) prefactors and an existential-$\delta$ finite-$t$ bound
-    via an order-$\tau^7$ correction---with all CAS output verified by Lean
-    numerical sanity checks.
+    bounds---including a replacement for the Childs (2021) prefactors that
+    is tighter at leading order, and an existential-$\delta$ small-$\tau$
+    bound via an order-$\tau^7$ correction. The transcribed CAS constants
+    are validated in Lean by \texttt{nlinarith} inequalities; the CAS
+    computation itself is not machine-checked.
 
   \item Identification and filling of several \emph{gaps in \Mathlib}, notably
     the inequality $\norm{e^a} \le e^{\norm{a}}$ for general Banach algebras.
 \end{itemize}
 
-To our knowledge, no prior formalization of the Lie--Trotter product formula
-exists in any proof assistant.
+To our knowledge, no prior proof-assistant development contains the
+Lie--Trotter \emph{convergence} statement, a higher-order product-formula
+bound, or commutator-scaling Trotter bounds; the closest prior mechanization
+is QBlue's first-order step-error lemma in
+Rocq~\cite{liVerifiedCompilerQuantum2025} (\cref{sec:bg-lean}).
 \Mathlib contains the identity $e^{a+b} = e^a\,e^b$ for commuting elements
 (\texttt{exp\_add\_of\_commute}), but the non-commuting convergence
 theorem---which is a limit statement, not an algebraic identity---is new.
