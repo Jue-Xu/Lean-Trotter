@@ -153,7 +153,6 @@ where $T'$ is the triple-commutator sum \eqref{eq:R-bound} evaluated at
 $A' = A/2$. As throughout this appendix, the bound is stated for skew-adjoint
 $A, B$ in a C\textsuperscript{*}-algebra and for $t \ge 0$; these are exactly the
 hypotheses of the Lean theorem.
-	%\claude{CORRECTNESS: the boxed equation previously read ``$+\,T'\,t^4$''. With $T'$ defined as \eqref{eq:R-bound} at $A'=A/2$ (i.e.\ $T' = T$), that drops the $1/4$ and is $4\times$ looser than \cref{eq:strang-tighter} one line above --- and than the Lean theorem, which proves $\norm{D}/6 \cdot t^3 + T/4 \cdot t^4$. The threshold $t^*$ below also presumes the $T'/4$ normalisation. I have restored the $/4$; alternatively define $T' := T/4$ and leave the box as it was, but not both.}
 
 \subsection{Comparison with the standard bound}
 \label{sec:comparison-standard}
@@ -189,7 +188,6 @@ formalized: the displayed inequality is
 \leanref{StrangCommutatorScalingTight.lean}{576}{norm\_D\_le\_sum\_of\_norms}
 (axiom-free, no C*-structure), so the leading-coefficient domination is
 machine-checked, not merely argued.
-	%\claude{CORRECTNESS (2026-07-17): previously ``strictly smaller exactly when \ldots \emph{positively} aligned'' and ``Negative alignment gives no improvement at all''. Both hold only inside the proportional model $Y \approx cX$ below; in a general algebra strictness of the triangle inequality does not require scalar alignment, and the sweep below measures 24--33\% gains at exactly orthogonal double commutators ($c_{\mathrm{eff}} = 0$) and 9--16\% at negative alignment. Also scoped ``never weaker'' to the leading coefficient, since the full tight bound carries the $+T t^4/4$ correction.}
 
 \paragraph{When is the tightening significant?}
 The $O(t^4)$ correction in \eqref{eq:strang-tighter-final} is controlled
@@ -232,7 +230,6 @@ generic pairs of double commutators are not scalar multiples of one another,
 strictness of the triangle inequality does not require scalar alignment, and
 the sweep below finds strictly positive gains even in instances whose
 alignment proxy is zero or negative.
-	%\claude{CORRECTNESS: this paragraph previously claimed a $37.5\%$ reduction for ``symmetric Hamiltonians'' assuming $\comm{B}{\comm{B}{A}} \approx -2\comm{A}{\comm{A}{B}}$, i.e.\ $c = -1/2$. That is doubly wrong. (i)~The arithmetic: with $c=-1/2$ one has $\norm{Y} = \norm{X}/2$, so the standard coefficient is $\norm{X}/2 + \norm{X}/8 = \tfrac58\norm{X}$ --- \emph{equal} to $\norm{D} = \tfrac58\norm{X}$, giving ratio $1$ and no improvement. The old text obtained ``$\approx \norm{X}$'' for the standard bound by using $\norm{Y} = 2\norm{X}$, contradicting the assumption it had just made. (ii)~The sign: $c<0$ is precisely the worst case for a norm-of-\emph{difference} bound, not a favourable one. I have replaced the example with the exact ratio \eqref{eq:tighten-ratio}. \textbf{The physics claim now needs re-examination}: does an even/odd sublattice decomposition actually give $c>0$ (and if so, what $c$)? If it gives $c \le 0$, this appendix needs a different motivating example --- the result itself is unaffected, since $\norm{D} \le \norm{X}/2 + \norm{Y}/4$ always holds.}
 
 \paragraph{Numerical check on standard spin chains.}
 A sweep over spin-$\tfrac12$ open chains---Heisenberg XXZ
@@ -330,9 +327,6 @@ The formalization-driven insight here is that the Duhamel approach---by
 producing the residual $\mathcal{T}_2(\tau)$ as a \emph{single}
 algebraic expression---makes the norm-of-difference formulation natural,
 whereas the interface-by-interface expansion does not.
-	%\claude{RESOLVED (2026-07-17): the OPEN ISSUE below is settled positively by the numerical sweep now reported at the end of \cref{sec:comparison-standard} (scripts/sweep\_strang\_alignment.py; claude/strang\_alignment\_sweep.md): all 40 spin-chain configurations gain 9--50\%, including zero/negative-alignment instances, so ``strictly more informative'' is demonstrated rather than conditional. Prose above rewritten accordingly.}
-	%\claude{OPEN ISSUE (practical payoff untested). The tightening is nonzero \emph{only} under positive alignment ($c > 0$, \cref{eq:tighten-ratio}); we have not exhibited a Hamiltonian of genuine interest that satisfies it, at either second order (this bound) or fourth ($\norm{R_5}$, \cref{sec:why-absent}). The theorem---``never weaker''---is machine-checked (\texttt{norm\_D\_le\_sum\_of\_norms}); what is unproven is that the gain is ever \emph{nonzero} in practice. A numerical sweep of $\norm{D}$ against $\tfrac12\norm{\comm{B}{\comm{B}{A}}} + \tfrac14\norm{\comm{A}{\comm{A}{B}}}$ over local spin chains (Heisenberg/Ising, even/odd split) would settle it and is the natural next step. Until then, ``strictly more informative'' is conditional, not demonstrated.}
-	%\claude{CHECK: this paragraph previously asserted the tightening unconditionally (``the leading-term tightening dominates''). By \cref{eq:tighten-ratio} the gain is real only for $c > 0$ and is exactly \emph{zero} for every $c \le 0$, so ``how much tightening'' is an empirical question about the specific $A, B$ --- not something the appendix can promise in general. I have weakened the claim to what \eqref{eq:tighten-ratio} supports. \textbf{Open question for the author:} is there a Hamiltonian family of practical interest with $c > 0$? Without one, the appendix proves a real theorem but has no demonstrated application, and that should be said plainly rather than papered over. A numerical sweep of $\norm{D}$ vs.\ $\norm{X}/2 + \norm{Y}/4$ over (say) nearest-neighbour Heisenberg/Ising chains under an even/odd split would settle it in an afternoon.}
 
 \subsection{Extension to higher-order formulas}
 
@@ -364,14 +358,12 @@ unitary Duhamel estimate $\norm{e^{tH+\Delta} - e^{tH}} \le \norm{\Delta}$
 gives $\norm{S_4(t) - e^{tH}} \le \norm{R_5}\,t^5 + O(t^7)$; this local
 skew-adjointness argument is not yet formalized or script-checked, so we
 state the conservative tail.
-	%\claude{CORRECTNESS (2026-07-17, second pass): the display previously claimed $O(t^7)$ unconditionally, transferring the palindromic even-order vanishing from the logarithm to the operator difference; the exponentiation cross term $\tfrac{t^6}{2}(HR_5+R_5H)$ breaks that transfer, so $O(t^6)$ is the general-algebra tail and $O(t^7)$ needs the skew-adjoint/unitary-Duhamel route sketched above. (The earlier audit note below repeated the same error in its final sentence.)}
 Since $\norm{R_5} \le \sum_k \abs{\beta_k}\,\norm{C_k}
 \le \sum_k \gamma_k\,\norm{C_k} \le \sum_k \alpha_k\,\norm{C_k}$
 by the triangle inequality and \cref{sec:cas}, its leading $t^5$ coefficient
 is never larger than that of the Level~3 bound or of the standard one, and
 is strictly smaller whenever the 4-fold nested commutators $C_k$ partially
 cancel.
-	%\claude{CORRECTNESS: this display previously read $E_5 = \sum_k \alpha_k C_k$ --- Childs's $\alpha_k$ as the coefficients of an \emph{identity}. They cannot be: the $\alpha_k$ are nonnegative magnitudes produced by a triangle-inequality \emph{bound} (his Proposition~7), not the coefficients of any algebraic expansion, so ``$E_5 = \sum \alpha_k C_k$, where $E_5$ is the single algebraic error expression'' is a category error and the subsequent $\norm{E_5} \le \sum \abs{\alpha_k}\norm{C_k}$ is comparing the bound to itself. The object that \emph{is} an identity is $R_5$ with the signed $\beta_k(p)$, giving the three-step chain now displayed. Note this also shows the $S_4$ norm-of-difference bound would dominate our own Level~3, not merely Childs's. NOTATION: the appendix said $E_5$, the main text says $R_5$ for the same object; I have unified on $R_5$. The $O(t^6)$ tail was likewise wrong --- palindromic symmetry kills the even orders, so the next term is $O(t^7)$ (\cref{eq:log-s4}).}
 
 A companion numerical test on the same spin-chain families as the sweep of
 \cref{sec:comparison-standard} (60 rows; \texttt{scripts/test\_r5\_gain.py},
@@ -387,8 +379,6 @@ $\sum_k \alpha_k \norm{C_k}$ by roughly $24$--$45\times$ (measured
 $23.6$--$45.4\times$)---well beyond the worst-case
 termwise guarantee---because the operators weight the coefficients
 non-uniformly.
-	%\claude{RESOLVED (2026-07-17): the companion experiment requested in the note below has been run (scripts/test\_r5\_gain.py; claude/s4\_r5\_gain\_test.md): the $\norm{R_5}$ gain is 8--86\% over 60 spin-chain rows, all strictly positive, so ``at present conjectural'' is replaced by the measured values above. The $\norm{R_5}$-based $S_4$ bound itself remains unformalized; see the Formalization status subsection.}
-	%\claude{CHECK: the preceding sentence previously asserted flatly that ``many such cancellations occur \dots making the tightening practically significant''. That is the same untested premise that produced the discarded $37.5\%$ example (see the note after \cref{eq:tighten-ratio}), one level up: at second order the analogous claim was not merely unproven but \emph{backwards} for the sublattice split that was invoked to support it. So this sentence should be treated as a conjecture until a specific $H = A+B$ is exhibited with $\norm{R_5} < \sum_k \gamma_k \norm{C_k}$ by a non-negligible margin. It is cheap to test numerically ($R_5$ is a fixed Lie polynomial; the script that produced \cref{eq:bch-gamma} already emits it) and is the natural companion experiment to the $c > 0$ sweep proposed above. If no such family is found, the honest framing is that the $\norm{R_5}$ bound is provably never weaker and the size of the gain is an open empirical question.}
 
 \subsection{Formalization status}
 
@@ -412,4 +402,3 @@ bound of \cref{sec:why-absent}: every formalized $S_4$ bound in this development
 uses the sum $\sum_i \gamma_i \norm{C_i}$, never $\norm{R_5}$; the measured
 $8$--$86\%$ gap reported in \cref{sec:why-absent} is what formalizing it
 would recover.
-	%\claude{CORRECTNESS: this subsection previously said ``The tighter Strang bound \eqref{eq:strang-tighter-final} and its $S_4$ extension are work in progress.'' The Strang half is false --- the bound is fully proved and axiom-free --- and it contradicted \cref{sec:intro} (item~5) and the conclusion, both of which present it as a delivered result. Only the $S_4$ extension is open.}

@@ -49,10 +49,10 @@ enabling parallel development and independent verification.
 \leansrc{Suzuki4MultinomialExpand.lean}   & 787  & Multinomial formulas; h2 unconditional, h3 under Suzuki cubic \\
 \leansrc{Suzuki4Phase5.lean}              & 782  & Taylor reduction + Leibniz bridges + CAPSTONE \\
 \leansrc{Suzuki4OrderFive.lean}           & 440  & $O(t^5)$ abstract-form target \\
-\leansrc{Suzuki4ChildsForm.lean}          & 216  & Childs Prop pf4\_bound\_2term framework \\
-\leansrc{Suzuki4BchBound.lean}            & 495  & SLICE~1: single-step $O(\abs{\tau}^5)$ bound \\
+\leansrc{Suzuki4ChildsForm.lean}          & 216  & Childs arXiv Prop.~J.1 framework \\
+\leansrc{Suzuki4BchBound.lean}            & 496  & SLICE~1: single-step $O(\abs{\tau}^5)$ bound \\
 \leansrc{TaylorMatch.lean}                & 331  & SLICE~2: generic Taylor-match-from-norm \\
-\leansrc{Suzuki4ViaBCH.lean}              & 1\,436 & SLICE~3 wiring + L1/L2/L3/L4 BCH-derived bounds \\
+\leansrc{Suzuki4ViaBCH.lean}              & 1\,419 & SLICE~3 wiring + L1/L2/L3/L4 BCH-derived bounds \\
 \leansrc{Suzuki4Convergence.lean}         & 398  & Total error $O(1/n^4)$ + convergence \\
 \leansrc{Suzuki4TightConvergence.lean}    & 169  & Commutator-scaled $O(1/n^4)$ \\
 \leansrc{Suzuki4UnitaryTotalError.lean}   & 274  & Skew-adjoint total error, no growth factor \\
@@ -65,7 +65,7 @@ enabling parallel development and independent verification.
 \multicolumn{3}{@{}l}{\textit{Root}} \\
 \href{\repourl/LieTrotter.lean}{\texttt{LieTrotter.lean}} & 73 & Import aggregator \\
 \midrule
-\textbf{Total} & \textbf{14\,196} & \textbf{0 \texttt{sorry} axioms,
+\textbf{Total} & \textbf{14\,180} & \textbf{0 \texttt{sorry} axioms,
 0 own theorem-level BCH-interface axioms} \\
 \bottomrule
 \end{tabular}
@@ -79,20 +79,23 @@ coefficient.}
 \label{tab:files}
 \end{table}
 
-The development builds against Lean~4.29.0-rc8 and current \Mathlib.
+The development builds against Lean~4.29.0-rc8 and \Mathlib revision
+\texttt{06a46dae}.
 The companion
 \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project is imported
 as a git dependency, supplying the symmetric three-factor BCH identities,
 the two-factor palindromic quintic remainder, and the five-factor
 palindromic quintic identification used in the Suzuki~$S_4$ track.
-Lean-BCH is sorry-free as of revision~\texttt{d455ff0} (2026-05-19),
-which closed the previous B1.c (\texttt{symmetric\_bch\_quintic\_sub\_poly\_axiom})
-dependency; its single-step $O(\abs{\tau}^5)$ payoff lemma anchors
-our SLICE-1 bound in \leansrc{Suzuki4BchBound.lean}. Two private
-septic axioms remain in Lean-BCH and gate only the optional Level~4
-local small-$\tau$ ($\tau^7$) refinement (see \cref{sec:caveats}).
-Build time for the full project is under 2~minutes on a standard
-laptop after \Mathlib oleans are cached (\texttt{lake exe cache get}).
+The dependency is pinned at revision~\texttt{05e8c52} (2026-07-28).
+The earlier revision~\texttt{d455ff0} closed the previous B1.c
+(\texttt{symmetric\_bch\_quintic\_sub\_poly\_axiom}) dependency;
+the current pin also discharges the two former septic stepping stones
+for Level~4. Consequently both the single-step $O(\abs{\tau}^5)$
+payoff lemma anchoring \leansrc{Suzuki4BchBound.lean} and the local
+$\tau^7$ refinement depend only on \Lean's standard foundational
+axioms (see \cref{sec:caveats}). A clean build must compile the
+Lean-BCH dependency and can be substantially longer than an incremental
+build; \Mathlib oleans can be cached with \texttt{lake exe cache get}.
 
 \subsection{Type-level setup}
 \label{sec:type-setup}

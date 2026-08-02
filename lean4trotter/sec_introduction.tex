@@ -95,7 +95,6 @@ Our formalization proves the following hierarchy of results:
     zero whenever the compared commutators do not all vanish. An
     existential-$\delta$ small-$\tau$ refinement extends the CAS
     computation to order~$\tau^7$.
-	%\claude{CORRECTNESS (2026-07-17): (i) ``strictly smaller exactly when positively aligned'' stated an iff that is false outside the proportional model --- strict triangle inequality does not require scalar alignment, and the sweep (claude/strang\_alignment\_sweep.md) finds gains even at zero/negative alignment proxy; reworded to ``partially cancel'' with the measured 9--50\% range. (ii) ``Childs's heuristic prefactors ... machine-checked never to be weaker'': their Prop.~J.1 is rigorous (only tightness unproven), and Lean's comparison is at the leading coefficient, with full-bound domination near zero under the strict-gap hypothesis of \texttt{norm\_suzuki4\_le\_childs\_near\_zero}.}
 
   \item \textbf{Fourth-order convergence of $S_4$} (\cref{sec:s4-convergence}):
     compounding the single-step $O(t^5)$ bound over $n$ steps gives
@@ -105,7 +104,6 @@ Our formalization proves the following hierarchy of results:
     leading coefficient. Together with items~1
     and~2 this completes a verified convergence hierarchy
     $O(1/n) \to O(1/n^2) \to O(1/n^4)$.
-	%\claude{CORRECTNESS: (i) ``provably strictly tighter'' --- Lean proves only $\le$ (see the abstract's note). (ii) ``for $n$ beyond an \emph{explicit} threshold'' --- in \texttt{suzuki4\_total\_error\_quartic} both $C$ and $N$ are existentially quantified; nothing explicit is recorded. (iii) ``finite-$t$'' for the $\tau^7$ bound --- \texttt{norm\_suzuki4\_level4\_uniform} is $\exists \delta > 0, \forall \tau < \delta$, so it says nothing at any \emph{given} $t$; ``existential-$\delta$ finite-$t$'' was self-contradictory.}
 \end{enumerate}
 
 The entire development comprises 41 Lean source files totaling over 14\,000 lines,
@@ -115,27 +113,26 @@ axioms on the Lean-Trotter side. The three former BCH-interface axioms
 \texttt{bch\_w4Deriv\_level3\_tight},
 \texttt{bch\_uniform\_integrated})
 are now theorems composing Lean-BCH bridge corollaries with
-exp-Lipschitz lifts. As of Lean-BCH revision \texttt{d455ff0}
-(2026-05-19), the upstream B1.c quintic axiom has been discharged, so
-all $\tau^5$ Suzuki~$S_4$ headlines---together with the standard
-Lie--Trotter, Strang, and commutator-scaling theorems---depend only
-on the standard foundational axioms \texttt{[propext, Classical.choice,
-Quot.sound]}. In particular, axiom inspection on
+exp-Lipschitz lifts. At the current Lean-BCH pin \texttt{05e8c52}
+(2026-07-28), both the earlier B1.c quintic assumption and the two
+former septic stepping stones have been discharged. Thus all
+$\tau^5$ and $\tau^7$ Suzuki~$S_4$ headlines---together with the
+standard Lie--Trotter, Strang, and commutator-scaling theorems---depend
+only on the standard foundational axioms \texttt{[propext,
+Classical.choice, Quot.sound]}. In particular, axiom inspection on
 \texttt{norm\_suzuki4\_childs\_explicit} and
 \texttt{norm\_suzuki4\_le\_childs\_near\_zero} (the Level~1 Childs-form
 statements), \texttt{norm\_suzuki4\_level3\_explicit} (Level~3, with the
 certified $\gamma_i$ in the statement), \texttt{norm\_suzuki4\_level2\_explicit}
 (Level~2 unit coefficients), the abstract $S_4$ $O(t^5)$ identity
-(\texttt{bch\_iteratedDeriv\_s4Func\_order4}), and \texttt{lie\_trotter}
-returns the three foundational axioms only. Two transitive private
-axioms remain inside the companion
-\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project---both
-septic stepping stones
-(\texttt{symmetric\_bch\_septic\_sub\_poly\_axiom},
-\texttt{norm\_septic\_match\_residual\_le\_axiom}). They gate only
-the optional Level~4 local small-$\tau$ refinement with an explicit
-$\tau^7$ correction, not the core tight 4th-order bound. All other
-Lean-BCH content is fully sorry-free; the three-factor symmetric BCH
+(\texttt{bch\_iteratedDeriv\_s4Func\_order4}),
+\texttt{norm\_suzuki4\_level4\_uniform}, and \texttt{lie\_trotter}
+returns the three foundational axioms only. The former septic
+assumptions \texttt{symmetric\_bch\_septic\_sub\_poly\_axiom} and
+\texttt{norm\_septic\_match\_residual\_le\_axiom} have theorem-level
+replacements in the pinned companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project. The
+three-factor symmetric BCH
 cubic identities, the two-factor palindromic quintic remainder, and
 the five-factor palindromic quintic identification are theorems
 specialized to $\mathbb{K} = \mathbb{R}$ and imported directly.

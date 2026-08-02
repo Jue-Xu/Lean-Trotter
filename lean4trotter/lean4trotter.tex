@@ -19,9 +19,6 @@
 \usepackage{graphicx}
 \usepackage{microtype}
 
-% Draft comment commands
-\newcommand{\claude}[1]{\textcolor{red}{\textbf{[Claude:} #1\textbf{]}}}
-
 \newcommand{\Lean}{\textsc{Lean}~4\xspace}
 \newcommand{\Mathlib}{\textsc{Mathlib}\xspace}
 \newcommand{\A}{\mathfrak{A}}
@@ -122,7 +119,7 @@
 
 \title{Formalizing the Lie--Trotter Product Formula and \\
 Tightening Commutator-Scaling Error Bounds in Lean~4}
-% \author{Jue Xu}
+\author{Jue Xu}
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -155,14 +152,12 @@ comparison machine-checked at the leading $t^5$ coefficient; compounding the
 single-step bound over $n$ steps yields a machine-checked $O(1/n^4)$
 convergence theorem with a commutator-scaled leading coefficient,
 completing a verified hierarchy $O(1/n) \to O(1/n^2) \to O(1/n^4)$.
-	%\claude{CORRECTNESS (2026-07-17): ``heuristic prefactors'' mischaracterized Childs et al. --- their Prop.~J.1 (arXiv numbering, verified against the compiled PDF) is a rigorous proposition; only tightness is unproven, in their own words ``we do not have a rigorous proof of the tightness of these bounds''. And ``machine-checked never to be weaker'' overstated: Lean compares the leading coefficients (\texttt{bchTightPrefactors\_le\_childs}), with full-bound domination near $0$ only under the strict-gap hypothesis of \texttt{norm\_suzuki4\_le\_childs\_near\_zero}, while the full L3 bound carries a $K'\tau^6$ remainder. Reworded to ``rigorous upper bounds not proven tight'' + ``machine-checked at the leading $t^5$ coefficient''.}
-	%\claude{CORRECTNESS: previously ``a provably strictly tighter refinement''. Lean proves only the non-strict \texttt{bchTightPrefactors.boundSum $\le$ childsBoundSum} --- and it must, since the two sides coincide (both $0$) when $A$ and $B$ commute. Strictness holds per-coefficient (a numeric fact about the stored rationals) and holds for the bound itself exactly when the relevant commutators do not all vanish; that is the hypothesis \texttt{hgap} of \texttt{norm\_suzuki4\_le\_childs\_near\_zero}. Also: the smallest tightening ratio is $0.0057/0.000663 = 8.6\times$, not $9\times$.}
 The formalization spans over 14\,000 lines with zero \texttt{sorry}
-axioms; the tight 4th-order Trotter bound is fully proved down to
-\Lean's standard foundational axioms, while a local small-$\tau$
-refinement at order $\tau^7$ still depends on two private axioms
-inside the companion
-\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project.
+axioms. At the pinned revision of the companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project, every
+release headline---including the tight 4th-order Trotter bound and the
+local small-$\tau$ refinement at order $\tau^7$---depends only on
+\Lean's standard foundational axioms.
 \end{abstract}
 
 \tableofcontents
@@ -180,10 +175,9 @@ inside the companion
 \input{apd_tighter_strang}
 
 \section*{Acknowledgments}
-The Lean formalization was developed with assistance from
-Claude Code (Anthropic), which was used both as a coding assistant for
-filling proof obligations and as a writing assistant in the preparation
-of this manuscript.
+The Lean formalization was developed with assistance from Claude Code
+(Anthropic) and Codex (OpenAI), used for proof search, repository review,
+numerical verification, and manuscript preparation.
 
 \bibliographystyle{plainnat}
 \bibliography{references,ref_aps}

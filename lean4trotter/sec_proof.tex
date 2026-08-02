@@ -292,7 +292,6 @@ exponential inflation factor. The sign condition $t \ge 0$ is likewise a
 hypothesis of the Lean theorem
 (\leanref{StrangCommutatorScaling.lean}{301}{norm\_strang\_comm\_scaling}),
 since the bound's right-hand side is odd in $t$.
-	%\claude{CORRECTNESS: \eqref{eq:strang-bound} was previously stated with skew-adjointness mentioned but with neither $0 \le t$ nor the C*-algebra typeclasses, both of which \texttt{norm\_strang\_comm\_scaling} carries. Contrast the $\tau^5$ Suzuki bounds of \cref{sec:suzuki4}, which need none of this.}
 
 The proof applies the same Duhamel strategy to
 $w(\tau) = e^{-\tau H}\,S_2(\tau)$, but now requires:
@@ -355,4 +354,3 @@ $\tfrac{1}{2}\cdot\tfrac{1}{3} = \tfrac{1}{6}$ gives
 $\tfrac16 \cdot \tfrac12 = \tfrac{1}{12}$ for $\norm{\comm{B}{\comm{B}{A}}}$
 and $\tfrac16 \cdot \tfrac14 = \tfrac{1}{24}$ for $\norm{\comm{A}{\comm{A}{B}}}$,
 the final coefficients in \eqref{eq:strang-bound}.
-	%\claude{CORRECTNESS: the previous sentence attributed the constants to ``$1/6$ from the cubic integral and $1/2$ from the double FTC''. Those multiply to $1/12$ \emph{before} the half-scalings, so the stated recipe yields $1/24$ and $1/48$, not $1/12$ and $1/24$. The outer integral of $\tau^2$ contributes $1/3$, not $1/6$; $1/6$ is the \emph{product} of the two integration constants. Cf.\ steps~5--6 of the \texttt{norm\_strang\_comm\_scaling} docstring.}

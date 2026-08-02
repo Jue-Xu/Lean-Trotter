@@ -35,7 +35,6 @@ result is integrated with our Lean formalization.
 
 \subsection{Childs et al.'s prefactors: rigorous, but not proven tight}
 \label{sec:childs-heuristic}
-	%\claude{CORRECTNESS (2026-07-17): this subsection was titled ``Why Childs's prefactors are heuristic'', and the abstract/introduction/conclusion called the $\alpha_i$ ``heuristic prefactors'' --- suggesting the bound itself lacked rigor. In fact their Prop.~J.1 is a rigorous proposition; ``heuristic'' is their own word for the tightening \emph{strategies}, and what is unproven is tightness only. Retitled and reworked; the tightness quotation moved to the opening paragraph. Also fixed the citation numbers: the manuscript cited this result as ``Proposition~7'' and the second-order tight bound as ``Proposition~6'', but the arXiv-v3 numbering (verified against the compiled PDF) is Prop.~J.1 and Prop.~16 respectively.}
 
 A point of precision first: \cref{eq:childs-bound} is a \emph{rigorous}
 upper bound. It is stated and proved as a proposition (Prop.~J.1 in the
@@ -47,7 +46,7 @@ and what they leave unproven is tightness: ``we do not have a rigorous
 proof of the tightness of these bounds.''
 
 Concretely, they derive \cref{eq:childs-bound} by an elegant but
-\emph{non-optimal} ``balanced factoring'' of the twelve-factor Duhamel
+``balanced factoring,'' whose optimality is not proved, of the twelve-factor Duhamel
 representation of the $S_4$ error integrand. The 4-fold commutator structure
 emerges naturally from this Duhamel form; the specific numerical values of
 $\alpha_i$ come from bounding the factored integrals term by term.
@@ -72,7 +71,6 @@ bound $\sum_i \abs{\beta_i}\norm{C_i}$, and minimizing this weighted,
 instance-dependent objective over representations (not an ordinary
 coefficient $\ell^1$ norm) would generally give something smaller than any
 fixed choice, including ours.
-	%\claude{CORRECTNESS (2026-07-17, second pass): previously ``Childs's specific choice is one projection'' --- the same category error corrected at the $R_5$ display in \cref{apd:tighter}: the $\alpha_i$ are triangle-inequality bound coefficients from the factored Duhamel integral, not signed coordinates of $R_5$. Also the ``minimum-$\ell^1$'' objective is weighted by $\norm{C_i}$ and instance-dependent, so it is not an ordinary coefficient $\ell^1$ minimization.}
 
 \paragraph{Balanced factoring vs.\ exact expansion.}
 Childs's derivation bounds the Duhamel integral \emph{without} computing the
@@ -114,7 +112,6 @@ block coefficients and
 \end{equation}
 is the Strang BCH cubic coefficient. The Suzuki parameter $p = 1/(4-4^{1/3})$ is
 precisely the root of
-	%\claude{CORRECTNESS: this previously read $E_3 = \tfrac{1}{24}([B,[B,A]] - [A,[A,B]])$, i.e.\ coefficient $1/24$ on $\comm{B}{\comm{B}{A}}$. That is wrong by a factor of~2, and it contradicted the paper's own \cref{eq:comm-strang}, whose coefficients are $1/12$ and $1/24$. Lean-BCH's \texttt{symmetric\_bch\_cubic\_poly} (\texttt{RemainderBounds.lean:7339}) is $-\tfrac{1}{24}\comm{a}{\comm{a}{b}} + \tfrac{1}{12}\comm{b}{\comm{b}{a}}$, which is the standard symmetric-BCH value. The $\sum_i c_i^3 = 0$ argument is unaffected, since $E_3$ factors out regardless of its internal coefficients.}
 \begin{equation}
   \sum_{i=1}^{5} c_i^3 \;=\; 4p^3 + (1-4p)^3 \;=\; 0.
 \end{equation}
@@ -232,7 +229,6 @@ theorem is fully proved at the project level: \texttt{\#print axioms
 norm\_suzuki4\_level3\_explicit} returns only \texttt{[propext,
 Classical.choice, Quot.sound]}, and it requires no C*-algebra or anti-Hermitian
 structure---any complete normed algebra suffices.
-	%\claude{CORRECTNESS: this paragraph previously displayed the bound $\norm{S_4(t)-e^{t(A+B)}} \le t^5\sum\gamma_i\norm{C_i}$ and attributed it to \texttt{norm\_suzuki4\_level3\_bch}. That theorem's actual statement was $\exists C \ge 0,\ \norm{\cdot} \le C t^5$ --- the $\gamma_i$ occurred nowhere in its type, only as a witness chosen inside the proof, so the displayed equation was not what was formalized. \texttt{norm\_suzuki4\_level3\_explicit} (new) does state it, modulo the honest $K' t^6$ remainder that the exp-Lipschitz lift genuinely incurs. The weak $\exists C$ form is retained under the old name as a corollary.}
 
 The intermediate bridge theorem
 \texttt{bch\_w4Deriv\_level3\_tight}---historically axiomatized as the
@@ -240,7 +236,7 @@ BCH-derived pointwise residual---is now a theorem composing the
 five-factor palindromic quintic identification from the companion
 \href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project
 (\texttt{suzuki5\_log\_product\_quintic\_tight\_at\_suzukiP}, revision
-\texttt{d455ff0}) with the per-$i$ numerical bounds
+\texttt{05e8c52}) with the per-$i$ numerical bounds
 $\abs{\beta_i(\text{suzukiP})} \le \gamma_i$ proved by \texttt{nlinarith}
 on the tight rational interval $41449/100000 < \text{suzukiP} <
 41450/100000$.
@@ -303,7 +299,6 @@ $\alpha$-sum) and, under the strict-gap hypothesis, to a neighbourhood of
 $0$ on which the full BCH bound undercuts the $\alpha$-envelope
 (\texttt{norm\_suzuki4\_le\_childs\_near\_zero}). Global or uniform
 optimality---of either family of coefficients---remains unknown.
-	%\claude{CORRECTNESS (2026-07-17, third pass): this block was headed ``Childs's bound is not tight uniformly either'', called the uniform-tightness worry ``unfounded'', and said the quoted admission ``closes the matter''. ``Not proven tight'' does not imply ``not tight''. Reframed around what is actually proved (local leading-coefficient gap) with uniform optimality explicitly left open.}
 
 \paragraph{A uniform BCH bound via \texorpdfstring{$R_7$}{R7}.}
 To produce a rigorously uniform bound (not merely asymptotic), we extend
@@ -381,17 +376,17 @@ pipeline can extend the CAS to arbitrary order with correspondingly
 smaller corrections.
 
 The Lean formalization adds the uniform constant
-\leanref{Suzuki4ViaBCH.lean}{1099}{bchR7UniformConstant}
+\leanref{Suzuki4ViaBCH.lean}{1116}{bchR7UniformConstant}
 and the bound
 \begin{equation}
   \norm{R_7} \;\le\; K \cdot \max(\norm{A}, \norm{B})^7,
 \end{equation}
-encoded as \leanref{Suzuki4ViaBCH.lean}{1105}{bchR7Bound}.
+encoded as \leanref{Suzuki4ViaBCH.lean}{1122}{bchR7Bound}.
 The Lean-BCH bridge corollary
 \texttt{suzuki5\_log\_product\_septic\_at\_suzukiP} (now a theorem
 upstream, with its $\tau^7$ Childs-7-basis identification factored
-through two deeper Lean-BCH septic stepping stones described in
-\cref{sec:caveats}) composes with exp-Lipschitz on the Lean-Trotter
+through two deeper Lean-BCH septic theorems at the pinned revision;
+see \cref{sec:caveats}) composes with exp-Lipschitz on the Lean-Trotter
 side to yield the theorem
 \begin{leancode}
 theorem norm_suzuki4_level4_uniform (A B : 𝔸)
@@ -415,7 +410,7 @@ coefficient outright and only the $t^6$ remainder is existential.
 Absorbing that remainder into the $\alpha$--$\gamma$ gap yields Childs's
 \emph{own} bound with \emph{no} remainder term on a neighbourhood of the
 origin, which is exactly
-\leanref{Suzuki4ViaBCH.lean}{1404}{norm\_suzuki4\_le\_childs\_near\_zero}
+\leanref{Suzuki4ViaBCH.lean}{1387}{norm\_suzuki4\_le\_childs\_near\_zero}
 (stated in \cref{sec:cas}): write $K' t^6 = t^5 \cdot (K' t)$ and observe
 that $K' t$ falls below the gap $\sum_i (\alpha_i - \gamma_i) \norm{C_i}$
 as soon as $t < \mathrm{gap}/(K'+1)$.
@@ -427,7 +422,6 @@ termwise, it fails only in the degenerate case where every commutator with
 $\gamma_i < \alpha_i$ vanishes---e.g.\ $\comm{A}{B} = 0$, where both bounds
 are $0$ and there is nothing to beat. And because it routes through Level~3
 rather than Level~4, it needs neither anti-Hermiticity nor a C*-algebra.
-	%\claude{CORRECTNESS: this paragraph replaces one that cited a lemma \texttt{norm\_suzuki4\_level4\_le\_childs\_when\_small}, now deleted from the Lean source because it was \emph{vacuous}: its side condition constrained the very $C$ that its own conclusion existentially quantified, so a prover could always return a $C$ large enough to falsify the hypothesis and discharge the implication empty --- it was provable with no BCH content at all. The threshold inequality it displayed (formerly \texttt{eq:t-threshold}) is uncheckable for the same reason and has been dropped, along with the ``orders of magnitude tighter'' estimate that was read off it.}
 
 \paragraph{What Level 4 is, and is not.}
 L4 is not the bound one plugs a number into. Both $C$ and $\delta$ are
@@ -436,9 +430,9 @@ knows neither whether $t < \delta$ nor what $C$ is; and since $C$ multiplies
 the leading term as well, L4 certifies \emph{less} about the $t^5$ coefficient
 than \cref{eq:level3-sharp} does. For comparing certified leading
 coefficients---where the
-$8.6$--$64\times$ tightening of the $\gamma_i$ over the $\alpha_i$ \emph{would}
-translate into proportionally fewer Trotter steps in the small-$t$
-regime---the
+$8.6$--$64\times$ reduction of the $\gamma_i$ error prefactors \emph{would}
+translate into a fourth-root reduction in the required fourth-order steps
+in the small-$t$ regime---the
 statement to use is the sharp Level~3 bound \cref{eq:level3-sharp}, whose
 leading coefficient is the CAS-certified $\gamma$-sum verbatim. Since
 $\delta$ and $K'$ there (and $N$, $K'$ in the compounded bounds of
@@ -467,8 +461,6 @@ setting---so global bounds there carry exponential factors.) The
 existential $C$, by contrast, is an artifact
 of how the exp-Lipschitz inflation was packaged, and is precisely what
 \cref{eq:level3-sharp} avoids.
-	%\claude{CORRECTNESS (2026-07-17): previously ``The existential $\delta$ is intrinsic rather than an artifact'' here, and ``unavoidable in a general normed algebra'' above \cref{eq:level4}. Unsupported: the $\delta$ comes from the BCH convergence radius, not from norm growth --- Duhamel-route bounds (Childs et al.\ Prop.~J.1; our \cref{sec:s4-convergence}) need no such restriction. The exponential-growth observation rules out only global \emph{polynomial} right-hand sides. Reframed in both places as a limitation of the logarithmic/BCH proof route.}
-	%\claude{CORRECTNESS: the previous version of this paragraph claimed that feeding $\norm{C_i}, \norm{A}, \norm{B}$ and a step size $t < \delta$ into \cref{eq:level4} ``returns a certified numerical upper bound''. It does not: \texttt{norm\_suzuki4\_level4\_uniform} reads $\exists \delta > 0, \exists C \ge 0, \forall \tau < \delta, \ldots$, so no number is extractable at any given $t$, and the $t^5$ coefficient it certifies is $C \sum \gamma_i \norm{C_i}$ with $C$ unknown --- strictly weaker than Level~3's. Restoring the resource-estimation claim would require re-proving L4 with an \emph{explicit} $C$ and $\delta$ (the exp-Lipschitz constant is computable: it is $\exp(\delta \cdot \mathrm{const})$; nothing but effort blocks it).}
 
 \subsection{Summary of the four BCH-based bounds}
 \label{sec:summary-levels}
@@ -519,17 +511,13 @@ carries the stated Form; all are $\exists \delta > 0$ statements on $[0,\delta)$
 with $K'$ (and, in L4, $C$) existentially quantified but bound \emph{before} $\tau$.
 L1 is a \emph{corollary} of L3---no axiomatization of the Childs bound on
 Trotter's side---while L2/L3/L4 are Lean theorems composing the corresponding
-Lean-BCH bridge corollaries with exp-Lipschitz lifts. As of Lean-BCH
-revision \texttt{d455ff0} (2026-05-19), L1/L2/L3 are axiom-free
-(\texttt{\#print axioms} returns only the standard foundational axioms).
-L4 transitively depends on two surviving Lean-BCH septic axioms
-(\texttt{symmetric\_bch\_septic\_sub\_poly\_axiom},
-\texttt{norm\_septic\_match\_residual\_le\_axiom}) that gate the
-$\tau^7$ extension only.
+Lean-BCH bridge corollaries with exp-Lipschitz lifts. At Lean-BCH
+revision \texttt{05e8c52} (2026-07-28), all four levels are axiom-free
+(\texttt{\#print axioms} returns only the standard foundational axioms),
+including L4's $\tau^7$ extension.
 Hypotheses also differ: L1--L3 hold in any complete normed algebra with
 $\norm{1} = 1$, whereas L4 requires anti-Hermitian $A, B$ in a
 C\textsuperscript{*}-algebra (\cref{sec:s4-convergence}).
-	%\claude{CORRECTNESS: this table previously named \texttt{norm\_suzuki4\_childs\_form} (L1), \texttt{norm\_suzuki4\_level2\_bch} (L2) and \texttt{norm\_suzuki4\_level3\_bch} (L3) for the three Forms. None of those three theorems states its Form: all conclude only $\exists C \ge 0,\ \norm{\cdot} \le C\,\tau^5$, with the $\alpha_i$, unit and $\gamma_i$ coefficients appearing nowhere in their types (they were witnesses chosen inside the proofs). Worse, \texttt{norm\_suzuki4\_childs\_form} is a \emph{different} theorem from the intended \texttt{..\_via\_level3}: it is conditional on an unproved \texttt{w4Deriv} residual hypothesis and it carries \texttt{star A = -A}, \texttt{star B = -B} plus the full C*-typeclass stack --- so the caption's claim that ``L1--L3 hold in any complete normed algebra'' was false for it. The rows now cite the theorems that do carry the coefficients in the type; with those, the caption's hypothesis claim is true. The weak $\exists C$ forms are retained under the old names as corollaries.}}
 }
 \label{tab:levels}
 \end{table}
@@ -568,7 +556,7 @@ Telescoping (\cref{sec:telescoping}) gives
 $\norm{X^n - Y^n} \le n\,\norm{X-Y}\,\max(\norm{X},\norm{Y})^{n-1}$
 with $X = S_4(t/n)$ and $Y = e^{(t/n)(A+B)}$, and two ingredients feed it.
 The step error $\norm{X-Y} \le C_0\,\abs{t/n}^5$ is the single-step BCH bound
-(\leanref{Suzuki4BchBound.lean}{385}{exists\_norm\_s4Func\_sub\_exp\_le\_t5}),
+(\leanref{Suzuki4BchBound.lean}{386}{exists\_norm\_s4Func\_sub\_exp\_le\_t5}),
 valid once $\abs{t/n} < \delta$---which is exactly what the threshold $N$
 enforces. The damping factor is a \emph{constant}: writing $K$ for the sum of
 the magnitudes of the eleven $S_4$ coefficients weighted by $\norm{A}$ and
@@ -589,7 +577,7 @@ step size enters the BCH regime $\abs{\tau} < \delta$, and $C$ is inherited
 from the crude single-step bound, whose constant is expressed through
 $\norm{A}$ and $\norm{B}$. That establishes the \emph{order} but not the
 \emph{constant}. Two things distinguish it from the generic $O(1/n^2)$ rate for
-$S_4$ (\leanref{Suzuki4.lean}{375}{suzuki4\_error\_rate\_sq}), which holds for
+$S_4$ (\leanref{Suzuki4.lean}{376}{suzuki4\_error\_rate\_sq}), which holds for
 \emph{every} $n \ge 1$ and needs \emph{no} cubic condition: fourth order is
 precisely what the hypothesis $4p^3 + (1-4p)^3 = 0$ buys, and it is bought only
 beyond the threshold $N$. (Both constants are existentially quantified; the
@@ -616,7 +604,6 @@ no star structure). This is the commutator-scaling statement in the sense of
 Childs et al.: the coefficient of $1/n^4$ is a sum of \emph{nested-commutator
 norms}, so it collapses as $A$ and $B$ approach commutativity---behaviour that
 an $\exists C$ bound such as \cref{eq:s4-quartic} cannot express.
-	%\claude{This subsumes \cref{eq:s4-quartic} in content (same $O(1/n^4)$ order, but with an explicit commutator-scaled leading coefficient). Consider promoting \eqref{eq:s4-quartic-comm} to the headline of this subsection and demoting \eqref{eq:s4-quartic} to a remark, since the latter is now just the order statement.}
 
 \paragraph{No star structure is needed.}
 \Cref{eq:s4-quartic} and the Level~1--3 step bounds alike hold in \emph{any}
@@ -651,7 +638,7 @@ same object rather than inferred across two definitions.
 \subsection{Remaining caveats}
 \label{sec:caveats}
 
-Two caveats remain after the Level 4 uniform bound:
+Two methodological caveats remain after the Level 4 uniform bound:
 
 \paragraph{Caveat 1: Over-complete basis, non-unique projection.}
 The Childs basis of 8 commutators is over-complete (the weight-5 free Lie
@@ -669,37 +656,30 @@ $\gamma_i \le \alpha_i$ termwise for the certified ceilings---but that is a prop
 \emph{this} projection, not of valid projections in general: adding a large
 multiple of a relation vector yields another valid projection with
 arbitrarily large coefficients.
-	%\claude{CORRECTNESS: this last clause previously read ``any valid projection is strictly smaller than Childs's on all 8 coordinates'', which is false --- the projections form a two-parameter affine family and are unbounded. What is proved is $\abs{\gamma_i} \le \alpha_i$ for \emph{our} $\gamma$.}
 
-\paragraph{Caveat 2: Dependence on Lean-BCH-private axioms.}
-Lean-Trotter carries zero own theorem-level BCH-interface axioms. The
-L1, L2, L3 bounds are \emph{fully proved at the project level}:
+\paragraph{Caveat 2: Dependency boundary and generated constants.}
+Lean-Trotter carries zero own theorem-level BCH-interface axioms. All
+four levels are \emph{fully proved at the project level}:
 \texttt{\#print axioms norm\_suzuki4\_childs\_form\_via\_level3},
 \texttt{\#print axioms norm\_suzuki4\_level2\_bch}, and \texttt{\#print
-axioms norm\_suzuki4\_level3\_bch} each return only \texttt{[propext,
-Classical.choice, Quot.sound]} as of Lean-BCH revision~\texttt{d455ff0}
-(2026-05-19), which discharged the previous B1.c quintic axiom upstream.
+axioms norm\_suzuki4\_level3\_bch}, together with
+\texttt{\#print axioms norm\_suzuki4\_level4\_uniform}, each return only
+\texttt{[propext, Classical.choice, Quot.sound]} at Lean-BCH
+revision~\texttt{05e8c52} (2026-07-28). The earlier revision
+\texttt{d455ff0} discharged the previous B1.c quintic axiom; the current
+pin also discharges the two former septic stepping stones.
 The L2, L3 theorems compose, on the Lean-Trotter side, the Lean-BCH
 bridge corollaries
 \texttt{suzuki5\_log\_product\_quintic\_of\_IsSuzukiCubic} and
 \texttt{suzuki5\_log\_product\_quintic\_tight\_at\_suzukiP}, each via
 an exp-Lipschitz lift; L1 is a corollary of L3 via the Lean-proved
-termwise inequality $\gamma_i \le \alpha_i$. The optional L4 small-$\tau$
-($\tau^7$) refinement composes the new bridge corollary
-\texttt{suzuki5\_log\_product\_septic\_at\_suzukiP}, which still
-transitively depends on two private axioms inside the companion
-\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project:
-\begin{itemize}[leftmargin=1.2em, nosep]
-  \item \texttt{BCH.symmetric\_bch\_septic\_sub\_poly\_axiom}:
-    the symmetric BCH septic Taylor bridge---supplies the deg-7
-    remainder bound on the three-factor symmetric BCH expansion.
-  \item \texttt{BCH.norm\_septic\_match\_residual\_le\_axiom}:
-    bounds the matching residual between the explicit Childs-7-basis
-    R$_7$ polynomial and the deg-7 part of the five-factor palindromic
-    BCH log at Suzuki~$p$.
-\end{itemize}
-These two stepping stones gate only the $\tau^7$ uniform extension
-(L4), not the core tight 4th-order bound. The previously axiomatized
+termwise inequality $\gamma_i \le \alpha_i$. The L4 small-$\tau$
+($\tau^7$) refinement composes the bridge corollary
+\texttt{suzuki5\_log\_product\_septic\_at\_suzukiP}; its symmetric-BCH
+septic bridge and Childs-7-basis matching residual are both theorems in
+the pinned companion
+\href{https://github.com/Jue-Xu/Lean-BCH}{Lean-BCH} project.
+The previously axiomatized
 order-4 Taylor-coefficient identity
 \texttt{bch\_iteratedDeriv\_s4Func\_order4}, which supports the abstract
 $O(t^5)$ existence bound, is now a theorem via a three-slice chain
@@ -721,10 +701,9 @@ $\mathbb{K} = \mathbb{R}$. The $\gamma_i$ and $K$ literals are hard-coded
 in the Lean sources and validated there only through the inequalities they
 must satisfy (e.g.\ $\abs{\beta_i(\text{suzukiP})} \le \gamma_i$ via
 \texttt{nlinarith} on tight rational brackets); the Python computation and
-its transcription into Lean are \emph{not} themselves machine-checked. The
-two surviving Lean-BCH septic axioms each
-have documented multi-session discharge roadmaps in the upstream
-\texttt{BCH/} directory.
+its transcription into Lean are \emph{not} themselves machine-checked.
+The Lean theorem checks the inequalities actually used downstream, which is
+the relevant trust boundary for the stated bounds.
 
 \subsection{Summary}
 
@@ -763,14 +742,10 @@ documented in the project repository). Four bounds are formalized:
     order---not a bound one extracts a number from; that role belongs to
     \cref{eq:level3-sharp}.
 \end{itemize}
-	%\claude{CORRECTNESS: the L4 bullet previously read ``a rigorous uniform finite-$t$ bound \dots strictly tighter than Childs in the Trotter regime (by orders of magnitude for small~$t$)''. \texttt{norm\_suzuki4\_level4\_uniform} is $\exists \delta > 0, \exists C \ge 0, \forall \tau < \delta$: it is neither uniform in $t$ nor numerically comparable to Childs's, since $C$ is unknown. The L3 bullet's ratio range was $9\times$--$64\times$; $0.0057/0.000663 = 8.6\times$ is the true minimum, and the two vanishing $\gamma_i$ are not in any finite ratio at all.}
 
 Both the Lean formalization and the CAS computation are reproducible from
-the project repository. Levels L1, L2, L3 are now fully Lean-verified
-without any project-side axioms (Lean-BCH revision \texttt{d455ff0}, see
-\cref{sec:caveats}); only Level~4's $\tau^7$ uniform extension still
-depends on two surviving Lean-BCH-private septic axioms that will be
-closed as the upstream B1.c discharge template is extended one BCH
-order higher. The three-factor symmetric BCH interface on which L3/L4
-depend is imported from Lean-BCH as a git dependency and is no longer
-axiomatized on the Trotter side.
+the project repository. Levels L1--L4 are fully Lean-verified without
+project-specific axioms at Lean-BCH revision \texttt{05e8c52} (see
+\cref{sec:caveats}). The three-factor symmetric BCH interface on which
+L3/L4 depend is imported from Lean-BCH as a git dependency and is no
+longer axiomatized on the Trotter side.
